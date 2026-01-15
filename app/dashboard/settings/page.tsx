@@ -1,14 +1,17 @@
 import { getShop } from "@/app/actions/shop"
 import { updateShopSettings } from "@/app/actions/settings"
+import { isAdmin } from "@/app/actions/admin"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ShoppingBag, MapPin, Globe, Image as ImageIcon, CheckCircle2, CreditCard } from "lucide-react"
+import { ShoppingBag, MapPin, Globe, Image as ImageIcon, CheckCircle2, CreditCard, LogOut, Shield } from "lucide-react"
+import { signout } from "@/app/actions/auth"
 
 export default async function SettingsPage() {
   const shop = await getShop()
+  const isUserAdmin = await isAdmin()
 
   if (!shop) return null
 
@@ -171,6 +174,22 @@ export default async function SettingsPage() {
                Lihat Halaman Toko (Buyer POV)
             </a>
          </Button>
+         
+         {isUserAdmin && (
+            <Button variant="outline" className="border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800" asChild>
+               <a href="/admin">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin Dashboard
+               </a>
+            </Button>
+         )}
+
+         <form action={signout}>
+            <Button variant="destructive">
+               <LogOut className="h-4 w-4 mr-2" />
+               Keluar
+            </Button>
+         </form>
       </div>
     </div>
   )

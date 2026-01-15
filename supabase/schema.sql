@@ -293,7 +293,16 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (id, email, name, role)
-  VALUES (new.id, new.email, new.raw_user_meta_data->>'name', 'buyer');
+  VALUES (
+    new.id, 
+    new.email, 
+    new.raw_user_meta_data->>'name', 
+    CASE 
+      WHEN (new.raw_user_meta_data->>'role') = 'seller' THEN 'seller'::user_role
+      WHEN (new.raw_user_meta_data->>'role') = 'admin' THEN 'admin'::user_role
+      ELSE 'buyer'::user_role
+    END
+  );
   
   RETURN new;
 END;

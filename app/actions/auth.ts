@@ -11,7 +11,10 @@ export async function login(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -20,8 +23,26 @@ export async function login(formData: FormData) {
     return { error: error.message };
   }
 
-  revalidatePath("/", "layout");
-  redirect("/dashboard");
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const role = (profile as any)?.role;
+
+    revalidatePath("/", "layout");
+
+    if (role === "seller") {
+      redirect("/dashboard");
+    } else if (role === "admin") {
+      redirect("/admin");
+    } else {
+      // Buyer or default
+      redirect("/");
+    }
+  }
 }
 
 export async function signup(formData: FormData) {

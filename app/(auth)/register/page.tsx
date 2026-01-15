@@ -1,120 +1,52 @@
-'use client'
-
-import { useState } from 'react'
 import Link from 'next/link'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { SignupSchema } from '@/types/auth-schema'
-import { signup } from '@/app/actions/auth'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2 } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Store, ShoppingCart, ArrowRight } from 'lucide-react'
 
-type SignupForm = z.infer<typeof SignupSchema>
-
-export default function RegisterPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  
-  const form = useForm<SignupForm>({
-    resolver: zodResolver(SignupSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      password: '',
-      role: 'buyer', // Default to buyer, can be switched later or added as a field if mixed registration
-    },
-  })
-
-  async function onSubmit(data: SignupForm) {
-    setIsLoading(true)
-    setError(null)
-
-    const formData = new FormData()
-    formData.append('name', data.name)
-    formData.append('email', data.email)
-    formData.append('password', data.password)
-    formData.append('role', 'seller') // For now, let's force Seller registration for the "Daftar Penjual" flow. 
-                                      // Or we can add a toggle.
-                                      // Based on landing page "Daftar Penjual", we assume seller.
-
-    const result = await signup(formData)
-    
-    if (result?.error) {
-      setError(result.error)
-      setIsLoading(false)
-    }
-  }
-
+export default function RegisterSelectionPage() {
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Daftar Akun Baru</CardTitle>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="space-y-1 text-center">
+        <CardTitle className="text-2xl font-bold">Buat Akun Baru</CardTitle>
         <CardDescription>
-          Mulai jualan online dengan mudah
+          Pilih jenis akun yang ingin Anda buat.
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4">
-        {error && (
-            <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
-                {error}
+      <CardContent className="grid gap-6 py-6">
+        <Link 
+            href="/seller/register"
+            className="flex items-center justify-between p-4 border-2 rounded-xl border-primary/10 hover:border-primary/50 hover:bg-primary/5 transition-all group"
+        >
+            <div className="flex items-center gap-4">
+               <div className="bg-primary/10 p-3 rounded-full text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Store className="h-6 w-6" />
+               </div>
+               <div className="text-left">
+                  <h3 className="font-bold">Akun Penjual</h3>
+                  <p className="text-xs text-muted-foreground">Buka toko & mulai jualan</p>
+               </div>
             </div>
-        )}
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid gap-2">
-            <Label htmlFor="name">Nama Lengkap</Label>
-            <Input 
-                id="name" 
-                placeholder="John Doe" 
-                {...form.register('name')}
-                disabled={isLoading}
-            />
-            {form.formState.errors.name && (
-                <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-            )}
+            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+        </Link>
+
+        <Link 
+            href="/buyer/register"
+            className="flex items-center justify-between p-4 border-2 rounded-xl border-muted hover:border-primary/50 hover:bg-muted/50 transition-all group"
+        >
+            <div className="flex items-center gap-4">
+               <div className="bg-muted p-3 rounded-full text-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <ShoppingCart className="h-6 w-6" />
+               </div>
+               <div className="text-left">
+                  <h3 className="font-bold">Akun Pembeli</h3>
+                  <p className="text-xs text-muted-foreground">Untuk berbelanja saja</p>
+               </div>
             </div>
-            <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input 
-                id="email" 
-                type="email" 
-                placeholder="nama@email.com" 
-                {...form.register('email')}
-                disabled={isLoading}
-            />
-            {form.formState.errors.email && (
-                <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
-            )}
-            </div>
-            <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input 
-                id="password" 
-                type="password" 
-                {...form.register('password')}
-                disabled={isLoading}
-            />
-             {form.formState.errors.password && (
-                <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
-            )}
-            </div>
-            <Button className="w-full" type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Daftar Sekarang
-            </Button>
-        </form>
+            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+        </Link>
       </CardContent>
-      <CardFooter className="flex flex-col gap-2">
-        <div className="text-sm text-muted-foreground text-center">
-          Sudah punya akun?{' '}
-          <Link href="/login" className="text-primary hover:underline underline-offset-4">
-            Masuk disini
-          </Link>
-        </div>
-      </CardFooter>
+      <div className="text-center pb-8 text-sm text-muted-foreground">
+         Sudah punya akun? <Link href="/login" className="font-bold text-primary hover:underline">Masuk disini</Link>
+      </div>
     </Card>
   )
 }

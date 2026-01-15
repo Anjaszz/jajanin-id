@@ -3,6 +3,20 @@
 import { createClient } from "@/utils/supabase/server";
 import { Database } from "@/types/database.types";
 
+export async function getAllShops() {
+  const supabase = await createClient();
+  const { data: shops, error } = await supabase
+    .from("shops")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+  return shops as Database["public"]["Tables"]["shops"]["Row"][];
+}
+
 export async function getShopBySlug(slug: string) {
   const supabase = await createClient();
 
