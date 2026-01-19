@@ -24,7 +24,7 @@ export default async function SettingsPage() {
         <p className="text-muted-foreground">Kelola informasi publik dan branding toko Anda.</p>
       </div>
 
-      <form action={updateShopSettings} className="space-y-6">
+      <form action={updateShopSettings as any} className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
            {/* Basic Info */}
            <Card className="border-none shadow-lg">
@@ -184,7 +184,7 @@ export default async function SettingsPage() {
             </Button>
          )}
 
-         <form action={signOutSeller}>
+         <form action={signOutSeller as any}>
             <Button variant="destructive">
                <LogOut className="h-4 w-4 mr-2" />
                Keluar

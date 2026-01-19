@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { User, Save } from "lucide-react";
 
 export default async function BuyerProfilePage() {
-  const profile = await getBuyerProfile();
+  const profile = await getBuyerProfile() as any;
 
   if (!profile) return <div>Loading...</div>;
 
@@ -23,7 +23,7 @@ export default async function BuyerProfilePage() {
              <CardDescription>Update data diri untuk kemudahan pengiriman.</CardDescription>
         </CardHeader>
         <CardContent>
-            <form action={updateBuyerProfile} className="space-y-4">
+            <form action={updateBuyerProfile as any} className="space-y-4">
                  <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
                     <Input id="email" value={profile.email} disabled className="bg-muted" />

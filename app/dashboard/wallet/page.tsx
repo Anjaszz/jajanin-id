@@ -60,7 +60,7 @@ export default async function WalletPage() {
               <CardDescription>Saldo akan dikirimkan ke rekening yang terdaftar di pengaturan.</CardDescription>
            </CardHeader>
            <CardContent>
-              <form action={requestWithdrawal} className="grid gap-4 md:grid-cols-2">
+              <form action={requestWithdrawal as any} className="grid gap-4 md:grid-cols-2">
                  <div className="grid gap-1.5">
                     <Label htmlFor="bankName">Nama Bank</Label>
                     <Input 

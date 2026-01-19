@@ -49,7 +49,7 @@ export default async function AdminLayout({
           </AdminNavItem>
         </nav>
 
-        <form action={signOutSeller}>
+        <form action={signOutSeller as any}>
            <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-400 transition-all hover:text-white hover:bg-slate-800">
               <LogOut className="h-5 w-5" />
               Keluar Admin

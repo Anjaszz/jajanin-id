@@ -58,8 +58,7 @@ export async function updateShopSettings(formData: FormData) {
     }
   }
 
-  const { error } = await supabase
-    .from("shops")
+  const { error } = await (supabase.from("shops") as any)
     .update({
       name,
       description,

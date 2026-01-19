@@ -291,8 +291,7 @@ export async function updateProduct(id: string, formData: FormData) {
     category_id: result.data.category_id || null,
   };
 
-  const { error } = await supabase
-    .from("products")
+  const { error } = await (supabase.from("products") as any)
     .update(productData)
     .eq("id", id);
 

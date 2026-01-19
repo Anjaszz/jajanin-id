@@ -53,10 +53,10 @@ export default async function ProductsPage() {
                                                     <Pencil className="h-4 w-4" />
                                                 </Link>
                                             </Button>
-                                            <form action={async () => {
+                                            <form action={(async () => {
                                                 'use server'
                                                 await deleteProduct(product.id)
-                                            }}>
+                                            }) as any}>
                                                 <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
                                                      <Trash2 className="h-4 w-4" />
                                                 </Button>

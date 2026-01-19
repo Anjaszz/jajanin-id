@@ -28,7 +28,7 @@ export default function BuyerLayout({
             </Link>
           </nav>
           <div className="flex items-center gap-4">
-             <form action={signOutBuyer}>
+             <form action={signOutBuyer as any}>
                 <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
                    <LogOut className="h-4 w-4 mr-2" />
                    Keluar

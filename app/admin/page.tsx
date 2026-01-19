@@ -59,19 +59,19 @@ const WithdrawalCard = ({ withdrawal }: { withdrawal: any }) => {
               </div>
               
               <div className="flex gap-2 mt-8 w-full">
-                 <form action={async (formData) => {
+                 <form action={(async (formData: FormData) => {
                    'use server'
                    await processWithdrawal(withdrawal.id, 'rejected', formData.get('reason') as string)
-                 }} className="flex-1 flex gap-2">
+                 }) as any} className="flex-1 flex gap-2">
                     <Input name="reason" placeholder="Reject reason..." className="text-xs bg-white h-9" />
                     <Button variant="outline" size="sm" className="bg-white border-red-200 text-red-600 hover:bg-red-50 h-9">
                       <XCircle className="h-4 w-4" />
                     </Button>
                  </form>
-                 <form action={async () => {
+                 <form action={(async () => {
                    'use server'
                    await processWithdrawal(withdrawal.id, 'approved')
-                 }}>
+                 }) as any}>
                     <Button size="sm" className="bg-green-600 hover:bg-green-700 h-9">
                       <CheckCircle className="mr-2 h-4 w-4" /> Approve
                     </Button>

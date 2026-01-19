@@ -36,7 +36,7 @@ export default async function Home() {
                  <Link href="/buyer/profile" className="hidden md:flex text-sm font-medium hover:text-primary transition-colors items-center gap-2">
                    <User className="h-4 w-4" /> Profil
                  </Link>
-                 <form action={signOutBuyer}>
+                 <form action={signOutBuyer as any}>
                     <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
                        <LogOut className="h-4 w-4 mr-2" />
                        Keluar

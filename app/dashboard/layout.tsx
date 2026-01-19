@@ -75,7 +75,7 @@ export default async function DashboardLayout({
             </NavItem>
           </nav>
 
-          <form action={signOutSeller} className="mt-auto">
+          <form action={signOutSeller as any} className="mt-auto">
              <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground">
                 <LogOut className="h-5 w-5" />
                 Keluar

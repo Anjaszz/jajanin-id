@@ -17,7 +17,7 @@ export async function getBuyerOrders() {
       *,
       shop:shops(name, slug),
       items:order_items(*)
-    `
+    `,
     )
     .eq("buyer_id", user.id)
     .order("created_at", { ascending: false });
@@ -39,7 +39,7 @@ export async function getBuyerProfile() {
     .eq("id", user.id)
     .single();
 
-  return data;
+  return data as any;
 }
 
 export async function updateBuyerProfile(formData: FormData) {
@@ -54,8 +54,7 @@ export async function updateBuyerProfile(formData: FormData) {
   const phone = formData.get("phone") as string;
   const address = formData.get("address") as string;
 
-  const { error } = await supabase
-    .from("profiles")
+  const { error } = await (supabase.from("profiles") as any)
     .update({ name, phone, address })
     .eq("id", user.id);
 
