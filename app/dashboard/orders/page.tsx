@@ -163,7 +163,7 @@ export default async function OrdersPage({
                 </div>
 
                 <div className="bg-muted/10 p-6 md:border-l w-full md:w-64 flex flex-col gap-2 justify-center">
-                   {order.status === 'pending_confirmation' && (
+                   {['pending_confirmation', 'paid'].includes(order.status) && (
                       <div className="space-y-2">
                          <form action={async () => {
                            'use server'
