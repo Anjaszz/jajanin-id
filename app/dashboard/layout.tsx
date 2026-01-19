@@ -14,6 +14,7 @@ import {
   Wallet
 } from 'lucide-react'
 import { getShop } from '@/app/actions/shop'
+import { signOutSeller } from '@/app/actions/auth'
 import { headers } from 'next/headers'
 
 export default async function DashboardLayout({
@@ -25,7 +26,7 @@ export default async function DashboardLayout({
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/login')
+    redirect('/seller/login')
   }
 
   const shop = await getShop()
@@ -74,7 +75,7 @@ export default async function DashboardLayout({
             </NavItem>
           </nav>
 
-          <form action="/auth/signout" method="post" className="mt-auto">
+          <form action={signOutSeller} className="mt-auto">
              <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground">
                 <LogOut className="h-5 w-5" />
                 Keluar
@@ -94,11 +95,34 @@ export default async function DashboardLayout({
         
         {/* If user logged in but no shop, and not on create-shop, we might want to guide them. 
             But for now, let's just render children. Use page.tsx to enforce logic. */}
-        <div className="flex-1 p-4 md:p-8">
+        <div className="flex-1 p-4 md:p-8 pb-24 md:pb-8">
             {children}
         </div>
+
+        {/* Mobile Bottom Navigation */}
+        {showSidebar && (
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-lg flex justify-around items-center p-2 pb-6 z-50">
+            <MobileNavItem href="/dashboard" icon={<LayoutDashboard className="h-6 w-6" />} label="Ringkasan" />
+            <MobileNavItem href="/dashboard/products" icon={<Package className="h-6 w-6" />} label="Produk" />
+            <MobileNavItem href="/dashboard/orders" icon={<FileText className="h-6 w-6" />} label="Pesanan" />
+            <MobileNavItem href="/dashboard/wallet" icon={<Wallet className="h-6 w-6" />} label="Dompet" />
+            <MobileNavItem href="/dashboard/settings" icon={<Settings className="h-6 w-6" />} label="Profil" />
+          </nav>
+        )}
       </main>
     </div>
+  )
+}
+
+function MobileNavItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex flex-col items-center gap-1 px-3 py-1 text-muted-foreground hover:text-primary transition-colors"
+    >
+      {icon}
+      <span className="text-[10px] font-bold">{label}</span>
+    </Link>
   )
 }
 

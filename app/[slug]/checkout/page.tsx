@@ -8,6 +8,7 @@ interface PageProps {
 }
 
 import Script from 'next/script'
+import { getCurrentUser, getUserProfile } from '@/app/actions/auth'
 
 export default async function CheckoutPage({ params }: PageProps) {
   const { slug } = await params
@@ -16,6 +17,9 @@ export default async function CheckoutPage({ params }: PageProps) {
   if (!shop) {
     notFound()
   }
+
+  const user = await getCurrentUser()
+  const profile = user ? await getUserProfile(user.id) : null
 
   const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
 
@@ -26,7 +30,7 @@ export default async function CheckoutPage({ params }: PageProps) {
         data-client-key={clientKey}
         strategy="beforeInteractive"
       />
-      <CheckoutClient shop={shop as any} />
+      <CheckoutClient shop={shop as any} userProfile={profile} />
     </>
   )
 }

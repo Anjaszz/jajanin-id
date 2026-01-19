@@ -27,6 +27,10 @@ export default function CreateShopPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
+  // State for image previews
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  
   const form = useForm<CreateShopForm>({
     resolver: zodResolver(CreateShopSchema),
     defaultValues: {
@@ -58,6 +62,22 @@ export default function CreateShopPage() {
     formData.append('whatsapp', data.whatsapp)
     if (data.google_maps_link) formData.append('google_maps_link', data.google_maps_link)
     if (data.description) formData.append('description', data.description)
+
+    // Grab files directly from DOM inputs since they are not controlled by react-hook-form
+    const logoInput = document.getElementById('logo') as HTMLInputElement;
+    if (logoInput?.files?.[0]) {
+        formData.append('logo', logoInput.files[0]);
+    } else {
+        // Validation: Logo is required
+        setError("Logo toko wajib diupload");
+        setIsLoading(false);
+        return;
+    }
+
+    const coverInput = document.getElementById('cover_image') as HTMLInputElement;
+    if (coverInput?.files?.[0]) {
+        formData.append('cover_image', coverInput.files[0]);
+    }
 
     const result = await createShop(formData)
     
@@ -170,6 +190,91 @@ export default function CreateShopPage() {
                     {...form.register('description')}
                     disabled={isLoading}
                 />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="logo">Logo Toko (Wajib)</Label>
+                        <div className="flex flex-col gap-3">
+                            {logoPreview ? (
+                                <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-primary mx-auto group">
+                                    <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-cover" />
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            setLogoPreview(null)
+                                            const input = document.getElementById('logo') as HTMLInputElement
+                                            if (input) input.value = ''
+                                        }}
+                                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-bold"
+                                    >
+                                        Ganti
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="w-24 h-24 rounded-full bg-muted border-2 border-dashed flex items-center justify-center mx-auto text-muted-foreground">
+                                    <Store className="w-8 h-8 opacity-50" />
+                                </div>
+                            )}
+                            <Input 
+                                id="logo" 
+                                type="file"
+                                accept="image/*"
+                                name="logo"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0]
+                                    if (file) {
+                                        setLogoPreview(URL.createObjectURL(file))
+                                    }
+                                }}
+                                required
+                                disabled={isLoading}
+                                className="text-xs file:mr-4 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                            />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground text-center">Format: JPG, PNG. Maks 2MB.</p>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="cover_image">Foto Sampul (Opsional)</Label>
+                        <div className="flex flex-col gap-3">
+                            {coverPreview ? (
+                                <div className="relative w-full aspect-video rounded-md overflow-hidden border border-input group">
+                                    <img src={coverPreview} alt="Cover Preview" className="w-full h-full object-cover" />
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            setCoverPreview(null)
+                                            const input = document.getElementById('cover_image') as HTMLInputElement
+                                            if (input) input.value = ''
+                                        }}
+                                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-bold"
+                                    >
+                                        Ganti
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="w-full aspect-video rounded-md bg-muted border-2 border-dashed flex items-center justify-center text-muted-foreground">
+                                    <span className="text-xs">Preview Sampul</span>
+                                </div>
+                            )}
+                            <Input 
+                                id="cover_image" 
+                                type="file" 
+                                accept="image/*"
+                                name="cover_image"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0]
+                                    if (file) {
+                                        setCoverPreview(URL.createObjectURL(file))
+                                    }
+                                }}
+                                disabled={isLoading}
+                                className="text-xs file:mr-4 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-secondary-foreground hover:file:bg-secondary/80"
+                            />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground text-center">Format: JPG, PNG. Disarankan 16:9.</p>
+                    </div>
                 </div>
 
                 <Button className="w-full mt-4" type="submit" disabled={isLoading}>

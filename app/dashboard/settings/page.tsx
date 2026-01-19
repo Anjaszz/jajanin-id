@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ShoppingBag, MapPin, Globe, Image as ImageIcon, CheckCircle2, CreditCard, LogOut, Shield } from "lucide-react"
-import { signout } from "@/app/actions/auth"
+import { signOutSeller } from "@/app/actions/auth"
 
 export default async function SettingsPage() {
   const shop = await getShop()
@@ -184,7 +184,7 @@ export default async function SettingsPage() {
             </Button>
          )}
 
-         <form action={signout}>
+         <form action={signOutSeller}>
             <Button variant="destructive">
                <LogOut className="h-4 w-4 mr-2" />
                Keluar

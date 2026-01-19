@@ -5,6 +5,7 @@ import { Package, Clock, CheckCircle2, XCircle, Search } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
+import { CompleteOrderButton } from '@/components/complete-order-button'
 
 function BadgeItem({ children, variant = 'default' }: { children: React.ReactNode, variant?: string }) {
     const classes = {
@@ -187,12 +188,7 @@ export default async function OrdersPage({
                       </form>
                    )}
                    {order.status === 'ready' && (
-                      <form action={async () => {
-                        'use server'
-                        await updateOrderStatus(order.id, 'completed')
-                      }}>
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700">Selesaikan</Button>
-                      </form>
+                      <CompleteOrderButton orderId={order.id} className="w-full" />
                    )}
                    {order.status === 'completed' && (
                       <div className="flex items-center justify-center gap-2 text-green-600 bg-green-50 p-3 rounded-xl border border-green-100 font-bold text-sm">

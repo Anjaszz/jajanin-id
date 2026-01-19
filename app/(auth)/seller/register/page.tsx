@@ -22,7 +22,7 @@ export default function SellerRegisterPage() {
   const form = useForm<SignupForm>({
     resolver: zodResolver(SignupSchema),
     defaultValues: {
-      name: '',
+      name: 'Seller Baru', // Default placeholder name, since we removed the input
       email: '',
       password: '',
       role: 'seller', 
@@ -34,7 +34,7 @@ export default function SellerRegisterPage() {
     setError(null)
 
     const formData = new FormData()
-    formData.append('name', data.name)
+    formData.append('name', 'Seller Baru') // Send placeholder
     formData.append('email', data.email)
     formData.append('password', data.password)
     formData.append('role', 'seller') 
@@ -66,18 +66,6 @@ export default function SellerRegisterPage() {
         )}
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-2">
-            <Label htmlFor="name">Nama Toko / Pemilik</Label>
-            <Input 
-                id="name" 
-                placeholder="Nama Toko Anda" 
-                {...form.register('name')}
-                disabled={isLoading}
-            />
-            {form.formState.errors.name && (
-                <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-            )}
-            </div>
-            <div className="grid gap-2">
             <Label htmlFor="email">Email Bisnis</Label>
             <Input 
                 id="email" 
@@ -104,7 +92,7 @@ export default function SellerRegisterPage() {
             </div>
             <Button className="w-full h-11 font-bold" type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Buat Toko Sekarang
+                Buat Akun Seller
             </Button>
         </form>
       </CardContent>

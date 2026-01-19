@@ -43,10 +43,10 @@ export async function getShopProductsByCategory(shopId: string) {
     .select("*")
     .order("name", { ascending: true });
 
-  // Fetch all products for this shop
+  // Fetch all products for this shop with their variants
   const { data: products } = await supabase
     .from("products")
-    .select("*")
+    .select("*, product_variants(*), product_addons(*)")
     .eq("shop_id", shopId)
     .eq("is_active", true)
     .order("name", { ascending: true });
@@ -57,7 +57,7 @@ export async function getShopProductsByCategory(shopId: string) {
     ...(categories || []).map((cat) => ({
       ...(cat as any),
       products: products.filter(
-        (p) => (p as any).category_id === (cat as any).id
+        (p) => (p as any).category_id === (cat as any).id,
       ),
     })),
   ];
@@ -83,7 +83,7 @@ export async function getProductsByIds(ids: string[]) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select("*, product_variants(*), product_addons(*)")
     .in("id", ids);
 
   if (error) {

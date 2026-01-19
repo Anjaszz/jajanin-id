@@ -268,6 +268,11 @@ CREATE POLICY "Shop owners can manage their shop orders" ON orders FOR ALL USING
   EXISTS (SELECT 1 FROM shops WHERE shops.id = orders.shop_id AND shops.owner_id = auth.uid())
 );
 
+DROP POLICY IF EXISTS "Buyers can complete their own orders" ON orders;
+CREATE POLICY "Buyers can complete their own orders" ON orders FOR UPDATE 
+USING (auth.uid() = buyer_id AND status = 'ready')
+WITH CHECK (status = 'completed');
+
 -- Policy Order Items
 DROP POLICY IF EXISTS "Anyone can create order items" ON order_items;
 CREATE POLICY "Anyone can create order items" ON order_items FOR INSERT WITH CHECK (true);
@@ -292,7 +297,7 @@ CREATE POLICY "Shop owners manage their withdrawals" ON withdrawals FOR ALL USIN
 CREATE OR REPLACE FUNCTION public.handle_new_user() 
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, name, role)
+  INSERT INTO public.profiles (id, email, name, role, phone)
   VALUES (
     new.id, 
     new.email, 
@@ -301,7 +306,8 @@ BEGIN
       WHEN (new.raw_user_meta_data->>'role') = 'seller' THEN 'seller'::user_role
       WHEN (new.raw_user_meta_data->>'role') = 'admin' THEN 'admin'::user_role
       ELSE 'buyer'::user_role
-    END
+    END,
+    new.raw_user_meta_data->>'phone'
   );
   
   RETURN new;

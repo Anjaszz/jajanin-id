@@ -3,11 +3,16 @@
 import { createClient } from "@/utils/supabase/server";
 import { Database } from "@/types/database.types";
 import { revalidatePath } from "next/cache";
+import dns from "node:dns";
+
+dns.setDefaultResultOrder("ipv4first");
 
 interface OrderItem {
   product_id: string;
+  variant_id?: string;
   quantity: number;
   price: number;
+  selected_addons?: any[];
 }
 
 interface PlaceOrderParams {
@@ -29,7 +34,7 @@ export async function placeOrder(params: PlaceOrderParams) {
 
   const total_amount = params.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
-    0
+    0,
   );
 
   // Platform fee logic (Spec 5.2)
@@ -60,9 +65,11 @@ export async function placeOrder(params: PlaceOrderParams) {
   const itemsToInsert = params.items.map((item) => ({
     order_id: (order as any).id,
     product_id: item.product_id,
+    variant_id: item.variant_id || null,
     quantity: item.quantity,
     price_at_purchase: item.price,
     subtotal: item.price * item.quantity,
+    selected_addons: item.selected_addons || [],
   }));
 
   const { error: itemsError } = await supabase

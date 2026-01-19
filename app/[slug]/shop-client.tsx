@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ShoppingBag, ChevronRight, Plus, Minus, MapPin, Instagram, Facebook, Clock, X, ChevronLeft } from 'lucide-react'
+import { ShoppingBag, ChevronRight, Plus, Minus, MapPin, Instagram, Facebook, Clock, X, ChevronLeft, User, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -15,6 +15,17 @@ interface Product {
   image_url: string | null
   images: string[] | null
   stock: number
+  product_variants?: {
+    id: string
+    name: string
+    price_override: number | null
+    stock: number
+  }[]
+  product_addons?: {
+    id: string
+    name: string
+    price: number
+  }[]
 }
 
 interface CategoryWithProducts {
@@ -35,36 +46,72 @@ interface Shop {
   social_links: any
 }
 
-export default function ShopClient({ shop, categories }: { shop: Shop, categories: CategoryWithProducts[] }) {
+export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Shop, categories: CategoryWithProducts[], isLoggedIn?: boolean }) {
   const [cart, setCart] = useState<Record<string, number>>({})
   const [isScrolled, setIsScrolled] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [selectedVariant, setSelectedVariant] = useState<any>(null)
+  const [selectedAddons, setSelectedAddons] = useState<string[]>([])
   const [activeImageIndex, setActiveImageIndex] = useState(0)
+
+  useEffect(() => {
+    if (selectedProduct) {
+        setSelectedVariant(null)
+        setSelectedAddons([])
+    }
+  }, [selectedProduct])
 
   // Load cart from session storage? Maybe later. For now just state.
   
-  const addToCart = (productId: string) => {
+  const addToCart = (productId: string, variantId?: string, addonIds: string[] = []) => {
+    const addonPart = addonIds.length > 0 ? `:${addonIds.sort().join(',')}` : ''
+    const key = variantId ? `${productId}:${variantId}${addonPart}` : `${productId}:base${addonPart}`
+    
     setCart(prev => ({
       ...prev,
-      [productId]: (prev[productId] || 0) + 1
+      [key]: (prev[key] || 0) + 1
     }))
   }
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = (productId: string, variantId?: string, addonIds: string[] = []) => {
+    const addonPart = addonIds.length > 0 ? `:${addonIds.sort().join(',')}` : ''
+    const key = variantId ? `${productId}:${variantId}${addonPart}` : `${productId}:base${addonPart}`
+    
     setCart(prev => {
       const newCart = { ...prev }
-      if (newCart[productId] > 1) {
-        newCart[productId] -= 1
+      if (newCart[key] > 1) {
+        newCart[key] -= 1
       } else {
-        delete newCart[productId]
+        delete newCart[key]
       }
       return newCart
     })
   }
 
   const cartCount = Object.values(cart).reduce((sum, count) => sum + count, 0)
-  const cartTotal = categories.flatMap(c => c.products).reduce((sum, p) => {
-    return sum + (p.price * (cart[p.id] || 0))
+  const cartTotal = Object.entries(cart).reduce((sum, [key, count]) => {
+    const [productId, variantId, addonIdsRaw] = key.split(':')
+    const product = categories.flatMap(c => c.products).find(p => p.id === productId)
+    if (!product) return sum
+    
+    let price = product.price
+    if (variantId && variantId !== 'base' && product.product_variants) {
+        const variant = product.product_variants.find(v => v.id === variantId)
+        if (variant && variant.price_override !== null) {
+            price = variant.price_override
+        }
+    }
+
+    // Add Addons to price
+    if (addonIdsRaw && product.product_addons) {
+        const addonIds = addonIdsRaw.split(',')
+        const addonsPrice = product.product_addons
+            .filter(a => addonIds.includes(a.id))
+            .reduce((total, a) => total + a.price, 0)
+        price += addonsPrice
+    }
+    
+    return sum + (price * count)
   }, 0)
 
   useEffect(() => {
@@ -172,62 +219,120 @@ export default function ShopClient({ shop, categories }: { shop: Shop, categorie
                     )}
                     
                     {/* Floating Add Button for quick access */}
-                    {!cart[product.id] && (
-                      <Button
-                        size="icon"
-                        className="absolute bottom-3 right-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity scale-90 group-hover:scale-100 z-10"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          addToCart(product.id)
-                        }}
-                      >
-                        <Plus className="h-5 w-5" />
-                      </Button>
-                    )}
+                    {(() => {
+                        const hasOptions = (product.product_variants && product.product_variants.length > 0) || 
+                                         (product.product_addons && product.product_addons.length > 0)
+                        const isInCart = Object.keys(cart).some(key => key.startsWith(`${product.id}:`))
+
+                        if (isInCart) return null
+
+                        return (
+                          <Button
+                            size="icon"
+                            className="absolute bottom-3 right-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity scale-90 group-hover:scale-100 z-10"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (hasOptions) {
+                                setSelectedProduct(product)
+                                setActiveImageIndex(0)
+                              } else {
+                                addToCart(product.id)
+                              }
+                            }}
+                          >
+                            <Plus className="h-5 w-5" />
+                          </Button>
+                        )
+                    })()}
                   </div>
                   
                   <div className="p-4 flex flex-col flex-1 justify-between gap-3 border-t">
-                    <div>
-                      <h3 className="font-heading font-bold text-sm md:text-base leading-tight line-clamp-2 min-h-[2.5rem]">{product.name}</h3>
-                      <p className="text-[10px] md:text-xs text-muted-foreground mt-1 font-medium bg-muted w-fit px-2 py-0.5 rounded-full">Stok: {product.stock}</p>
+                    <div className="space-y-2">
+                      <div>
+                        <h3 className="font-heading font-bold text-sm md:text-base leading-tight line-clamp-2 min-h-[2.5rem]">{product.name}</h3>
+                        <p className="text-[10px] md:text-xs text-muted-foreground mt-1 font-medium bg-muted w-fit px-2 py-0.5 rounded-full text-nowrap">Stok: {product.stock}</p>
+                      </div>
+
+                      {/* Variants Preview on Card */}
+                      {product.product_variants && product.product_variants.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {product.product_variants.slice(0, 3).map(v => (
+                            <span key={v.id} className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-primary/5 text-primary border border-primary/10">
+                              {v.name}
+                            </span>
+                          ))}
+                          {product.product_variants.length > 3 && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
+                              +{product.product_variants.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex flex-col gap-3">
-                      <p className="text-primary font-black text-lg md:text-xl">Rp {product.price.toLocaleString('id-ID')}</p>
+                      <p className="text-primary font-black text-lg md:text-xl">
+                        {product.product_variants && product.product_variants.length > 0 
+                          ? `Mulai Rp ${Math.min(...product.product_variants.map(v => v.price_override ?? product.price)).toLocaleString('id-ID')}`
+                          : `Rp ${product.price.toLocaleString('id-ID')}`
+                        }
+                      </p>
                       
-                      {cart[product.id] ? (
-                        <div className="flex items-center justify-between bg-primary/5 rounded-2xl p-1.5 border border-primary/10" onClick={(e) => e.stopPropagation()}>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              removeFromCart(product.id)
-                            }}
-                            className="w-8 h-8 flex items-center justify-center rounded-xl bg-background border shadow-sm hover:text-destructive transition-colors"
-                          >
-                            <Minus className="h-4 w-4" />
-                          </button>
-                          <span className="text-sm font-black text-primary">{cart[product.id]}</span>
-                          <button 
+                      {(() => {
+                        const hasOptions = (product.product_variants && product.product_variants.length > 0) || 
+                                          (product.product_addons && product.product_addons.length > 0)
+                        
+                        // If has options (variants or addons), we show "Pilih" or "Tambah" that opens modal
+                        if (hasOptions) {
+                          return (
+                            <Button 
+                              className="w-full rounded-2xl font-bold shadow-md shadow-primary/10"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedProduct(product)
+                                setActiveImageIndex(0)
+                              }}
+                            >
+                              Tambah
+                            </Button>
+                          )
+                        }
+
+                        const baseKey = `${product.id}:base`
+                        return cart[baseKey] ? (
+                          <div className="flex items-center justify-between bg-primary/5 rounded-2xl p-1.5 border border-primary/10" onClick={(e) => e.stopPropagation()}>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removeFromCart(product.id)
+                              }}
+                              className="w-8 h-8 flex items-center justify-center rounded-xl bg-background border shadow-sm hover:text-destructive transition-colors"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+                            <span className="text-sm font-black text-primary">{cart[baseKey]}</span>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                addToCart(product.id)
+                              }}
+                              className="w-8 h-8 flex items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-transform active:scale-90"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <Button 
+                            className="w-full rounded-2xl font-bold shadow-md shadow-primary/10"
                             onClick={(e) => {
                               e.stopPropagation()
                               addToCart(product.id)
                             }}
-                            className="w-8 h-8 flex items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-transform active:scale-90"
                           >
-                            <Plus className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <Button 
-                          className="w-full rounded-2xl font-bold shadow-md shadow-primary/10"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            addToCart(product.id)
-                          }}
-                        >
-                          Tambah
-                        </Button>
-                      )}
+                            Tambah
+                          </Button>
+                        )
+                      })()}
                     </div>
                   </div>
                 </Card>
@@ -345,10 +450,83 @@ export default function ShopClient({ shop, categories }: { shop: Shop, categorie
                 <div>
                   <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight">{selectedProduct.name}</h2>
                   <div className="flex items-center gap-2 mt-2">
-                    <p className="text-primary text-2xl font-black">Rp {selectedProduct.price.toLocaleString('id-ID')}</p>
-                    <span className="text-xs font-medium bg-muted px-2 py-1 rounded-full text-muted-foreground">Stok: {selectedProduct.stock}</span>
+                    <p className="text-primary text-2xl font-black">
+                        Rp {(() => {
+                           let price = selectedVariant?.price_override ?? selectedProduct.price
+                           const addonsPrice = (selectedProduct as any).product_addons
+                             ?.filter((a: any) => selectedAddons.includes(a.id))
+                             .reduce((sum: number, a: any) => sum + a.price, 0) || 0
+                           return (price + addonsPrice).toLocaleString('id-ID')
+                        })()}
+                    </p>
+                    <span className="text-xs font-medium bg-muted px-2 py-1 rounded-full text-muted-foreground">
+                        Stok: {selectedVariant?.stock ?? selectedProduct.stock}
+                    </span>
                   </div>
                 </div>
+
+                {selectedProduct.product_variants && selectedProduct.product_variants.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Pilih Varian</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProduct.product_variants.map((v) => (
+                        <button
+                          key={v.id}
+                          onClick={() => setSelectedVariant(v)}
+                          className={cn(
+                            "px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all",
+                            selectedVariant?.id === v.id 
+                              ? "border-primary bg-primary/10 text-primary shadow-sm" 
+                              : "border-border hover:border-primary/50 text-muted-foreground"
+                          )}
+                        >
+                          {v.name}
+                          {v.price_override !== null && (
+                              <span className="ml-1 opacity-60 text-[10px]">
+                                (+Rp {(v.price_override - selectedProduct.price).toLocaleString('id-ID')})
+                              </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedProduct.product_addons && selectedProduct.product_addons.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Pilih Add-on (Bisa lebih dari satu)</h4>
+                    <div className="space-y-2">
+                       {selectedProduct.product_addons.map((a) => (
+                         <label
+                           key={a.id}
+                           className={cn(
+                             "flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all",
+                             selectedAddons.includes(a.id)
+                               ? "border-primary bg-primary/5 shadow-sm"
+                               : "border-border hover:border-primary/20"
+                           )}
+                         >
+                           <div className="flex items-center gap-3">
+                              <input 
+                                type="checkbox" 
+                                className="accent-primary h-4 w-4"
+                                checked={selectedAddons.includes(a.id)}
+                                onChange={() => {
+                                  setSelectedAddons(prev => 
+                                    prev.includes(a.id) 
+                                      ? prev.filter(id => id !== a.id) 
+                                      : [...prev, a.id]
+                                  )
+                                }}
+                              />
+                              <span className="text-sm font-bold">{a.name}</span>
+                           </div>
+                           <span className="text-xs font-black text-primary">+Rp {a.price.toLocaleString('id-ID')}</span>
+                         </label>
+                       ))}
+                    </div>
+                  </div>
+                )}
 
                 {selectedProduct.description && (
                   <div className="space-y-2">
@@ -359,39 +537,67 @@ export default function ShopClient({ shop, categories }: { shop: Shop, categorie
               </div>
 
               <div className="mt-8 pt-6 border-t">
-                {cart[selectedProduct.id] ? (
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center bg-muted rounded-2xl p-1 border">
-                      <button 
-                        onClick={() => removeFromCart(selectedProduct.id)}
-                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-background border shadow-sm hover:text-destructive transition-colors"
-                      >
-                        <Minus className="h-5 w-5" />
-                      </button>
-                      <span className="w-12 text-center text-lg font-black text-primary">{cart[selectedProduct.id]}</span>
-                      <button 
-                        onClick={() => addToCart(selectedProduct.id)}
-                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-transform active:scale-90"
-                      >
-                        <Plus className="h-5 w-5" />
-                      </button>
-                    </div>
-                    <p className="text-sm font-medium text-muted-foreground flex-1">Di keranjang</p>
-                  </div>
-                ) : (
-                  <Button 
-                    className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
-                    onClick={() => {
-                      addToCart(selectedProduct.id)
-                    }}
-                  >
-                    Tambah ke Keranjang
-                  </Button>
-                )}
+                {(() => {
+                  const addonPart = selectedAddons.length > 0 ? `:${selectedAddons.sort().join(',')}` : ''
+                  const key = selectedVariant ? `${selectedProduct.id}:${selectedVariant.id}${addonPart}` : `${selectedProduct.id}:base${addonPart}`
+                  const hasVariants = selectedProduct.product_variants && selectedProduct.product_variants.length > 0
+                  const isVariantSelected = !hasVariants || !!selectedVariant
+                  
+                  if (cart[key]) {
+                    return (
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center bg-muted rounded-2xl p-1 border">
+                          <button 
+                            onClick={() => removeFromCart(selectedProduct.id, selectedVariant?.id, selectedAddons)}
+                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-background border shadow-sm hover:text-destructive transition-colors"
+                          >
+                            <Minus className="h-5 w-5" />
+                          </button>
+                          <span className="w-12 text-center text-lg font-black text-primary">{cart[key]}</span>
+                          <button 
+                            onClick={() => addToCart(selectedProduct.id, selectedVariant?.id, selectedAddons)}
+                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-transform active:scale-90"
+                          >
+                            <Plus className="h-5 w-5" />
+                          </button>
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground flex-1">Di keranjang</p>
+                      </div>
+                    )
+                  }
+                  
+                  return (
+                    <Button 
+                      className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
+                      disabled={!isVariantSelected}
+                      onClick={() => {
+                        addToCart(selectedProduct.id, selectedVariant?.id, selectedAddons)
+                      }}
+                    >
+                      {isVariantSelected ? 'Tambah ke Keranjang' : 'Pilih Varian Terlebih Dahulu'}
+                    </Button>
+                  )
+                })()}
               </div>
             </div>
           </div>
         </div>
+      )}
+      {isLoggedIn && (
+        <nav className="md:hidden fixed bottom-0 w-full border-t bg-background flex justify-around p-4 z-50">
+           <Link href="/" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
+              <ShoppingBag className="h-5 w-5 mb-1" />
+              Belanja
+           </Link>
+           <Link href="/buyer/orders" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
+              <Package className="h-5 w-5 mb-1" />
+              Pesanan
+           </Link>
+           <Link href="/buyer/profile" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
+              <User className="h-5 w-5 mb-1" />
+              Profil
+           </Link>
+        </nav>
       )}
     </div>
   )

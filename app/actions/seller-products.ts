@@ -46,9 +46,37 @@ export async function getSellerProducts(page = 1, limit = 10) {
   }
 
   return {
-    data: data as Database["public"]["Tables"]["products"]["Row"][],
+    data: data as any[],
     count,
   };
+}
+
+export async function getProduct(id: string) {
+  // Basic UUID validation
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(id)) {
+    console.error("Invalid UUID format for getProduct:", id);
+    return null;
+  }
+
+  const supabase = await createClient();
+  const { data: product, error } = await supabase
+    .from("products")
+    .select("*, product_variants(*), product_addons(*)")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      "Supabase Error in getProduct:",
+      error.message,
+      error.details,
+    );
+    return null;
+  }
+
+  return product as any;
 }
 
 export async function createProduct(formData: FormData) {
@@ -127,10 +155,61 @@ export async function createProduct(formData: FormData) {
     is_active: true,
   };
 
-  const { error } = await supabase.from("products").insert(productData);
+  const { data: newProduct, error } = await supabase
+    .from("products")
+    .insert(productData)
+    .select()
+    .single();
 
   if (error) {
     return { error: error.message };
+  }
+
+  const newProductData = newProduct as any;
+
+  // Handle Variants
+  const variantsJson = formData.get("variants") as string;
+  if (variantsJson) {
+    try {
+      const variants = JSON.parse(variantsJson);
+      if (Array.isArray(variants) && variants.length > 0) {
+        const variantsData = variants.map((v) => ({
+          product_id: newProductData.id,
+          name: v.name,
+          price_override: v.price ? parseFloat(v.price) : null,
+          stock: parseInt(v.stock) || 0,
+        }));
+
+        const { error: variantError } = await supabase
+          .from("product_variants")
+          .insert(variantsData as any);
+
+        if (variantError) {
+          console.error("Gagal simpan varian:", variantError);
+        }
+      }
+    } catch (e) {
+      console.error("Gagal parse varian:", e);
+    }
+  }
+
+  // Handle Addons
+  const addonsJson = formData.get("addons") as string;
+  if (addonsJson) {
+    try {
+      const addons = JSON.parse(addonsJson);
+      if (Array.isArray(addons) && addons.length > 0) {
+        const addonsData = addons.map((a) => ({
+          product_id: newProductData.id,
+          name: a.name,
+          price: parseFloat(a.price) || 0,
+        }));
+
+        await supabase.from("product_addons").insert(addonsData as any);
+      }
+    } catch (e) {
+      console.error("Gagal parse addon:", e);
+    }
   }
 
   revalidatePath("/dashboard/products");
@@ -145,4 +224,125 @@ export async function deleteProduct(id: string) {
     return { error: error.message };
   }
   revalidatePath("/dashboard/products");
+}
+
+export async function updateProduct(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Unauthorized" };
+  }
+
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const price = formData.get("price");
+  const stock = formData.get("stock");
+  const category_id =
+    formData.get("category_id") === "none"
+      ? null
+      : (formData.get("category_id") as string);
+  const imageFiles = formData.getAll("image") as File[];
+  const existingImagesJson = formData.get("existing_images") as string;
+  let imageUrls: string[] = existingImagesJson
+    ? JSON.parse(existingImagesJson)
+    : [];
+
+  const result = ProductSchema.safeParse({
+    name,
+    description,
+    price,
+    stock,
+    category_id: category_id || undefined,
+  });
+
+  if (!result.success) {
+    return { error: result.error.flatten().fieldErrors };
+  }
+
+  // Handle New Image Uploads
+  const filesToUpload = imageFiles.filter((f) => f.size > 0).slice(0, 5);
+  for (const file of filesToUpload) {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Math.random()}-${Date.now()}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("products")
+      .upload(filePath, file);
+
+    if (!uploadError) {
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("products").getPublicUrl(filePath);
+      imageUrls.push(publicUrl);
+    }
+  }
+
+  const productData: any = {
+    name: result.data.name,
+    description: result.data.description || null,
+    price: result.data.price,
+    stock: result.data.stock,
+    image_url: imageUrls[0] || null,
+    images: imageUrls.slice(0, 5),
+    category_id: result.data.category_id || null,
+  };
+
+  const { error } = await supabase
+    .from("products")
+    .update(productData)
+    .eq("id", id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  // Handle Variants (Delete all and re-insert for simplicity in this MVP, or smart update)
+  const variantsJson = formData.get("variants") as string;
+  if (variantsJson) {
+    try {
+      // Delete existing variants first
+      await supabase.from("product_variants").delete().eq("product_id", id);
+
+      const variants = JSON.parse(variantsJson);
+      if (Array.isArray(variants) && variants.length > 0) {
+        const variantsData = variants.map((v: any) => ({
+          product_id: id,
+          name: v.name,
+          price_override: v.price ? parseFloat(v.price) : null,
+          stock: parseInt(v.stock) || 0,
+        }));
+
+        await supabase.from("product_variants").insert(variantsData as any);
+      }
+    } catch (e) {
+      console.error("Gagal update varian:", e);
+    }
+  }
+
+  // Handle Addons
+  const addonsJson = formData.get("addons") as string;
+  if (addonsJson) {
+    try {
+      await supabase.from("product_addons").delete().eq("product_id", id);
+      const addons = JSON.parse(addonsJson);
+      if (Array.isArray(addons) && addons.length > 0) {
+        const addonsData = addons.map((a: any) => ({
+          product_id: id,
+          name: a.name,
+          price: parseFloat(a.price) || 0,
+        }));
+        await supabase.from("product_addons").insert(addonsData as any);
+      }
+    } catch (e) {
+      console.error("Gagal update addon:", e);
+    }
+  }
+
+  revalidatePath("/dashboard/products");
+  revalidatePath(`/dashboard/products/edit/${id}`);
+  redirect("/dashboard/products");
 }

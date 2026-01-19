@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { createClient } from '@/utils/supabase/server'
-import { signout } from '@/app/actions/auth'
+import { signOutBuyer } from '@/app/actions/auth'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -36,7 +36,7 @@ export default async function Home() {
                  <Link href="/buyer/profile" className="hidden md:flex text-sm font-medium hover:text-primary transition-colors items-center gap-2">
                    <User className="h-4 w-4" /> Profil
                  </Link>
-                 <form action={signout}>
+                 <form action={signOutBuyer}>
                     <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
                        <LogOut className="h-4 w-4 mr-2" />
                        Keluar
@@ -133,11 +133,8 @@ export default async function Home() {
         <div className="container py-8 px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <p>© 2024 SaaSMarket. All rights reserved.</p>
           <div className="flex items-center gap-6">
-             <Link href="/seller/login" className="hover:text-foreground font-medium flex items-center gap-2">
-               <Store className="h-4 w-4" /> Login Seller
-             </Link>
-             <Link href="/seller/register" className="hover:text-foreground font-medium">
-               Daftar Jadi Penjual
+             <Link href="/business" className="hover:text-foreground font-medium flex items-center gap-2">
+               <Store className="h-4 w-4" /> Gabung Jadi Seller
              </Link>
           </div>
         </div>

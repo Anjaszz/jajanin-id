@@ -21,9 +21,12 @@ export async function getPublicOrderDetails(orderId: string) {
         products (
           name,
           image_url
+        ),
+        product_variants (
+          name
         )
       )
-    `
+    `,
     )
     .eq("id", orderId)
     .single();

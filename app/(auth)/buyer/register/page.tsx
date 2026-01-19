@@ -25,6 +25,7 @@ export default function BuyerRegisterPage() {
       name: '',
       email: '',
       password: '',
+      whatsapp: '',
       role: 'buyer', 
     },
   })
@@ -37,6 +38,7 @@ export default function BuyerRegisterPage() {
     formData.append('name', data.name)
     formData.append('email', data.email)
     formData.append('password', data.password)
+    formData.append('whatsapp', data.whatsapp)
     formData.append('role', 'buyer') 
 
     const result = await signup(formData)
@@ -88,6 +90,18 @@ export default function BuyerRegisterPage() {
             />
             {form.formState.errors.email && (
                 <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
+            )}
+            </div>
+            <div className="grid gap-2">
+            <Label htmlFor="whatsapp">Nomor WhatsApp</Label>
+            <Input 
+                id="whatsapp" 
+                placeholder="081234567890" 
+                {...form.register('whatsapp')}
+                disabled={isLoading}
+            />
+            {form.formState.errors.whatsapp && (
+                <p className="text-xs text-destructive">{form.formState.errors.whatsapp.message}</p>
             )}
             </div>
             <div className="grid gap-2">

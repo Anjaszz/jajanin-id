@@ -7,6 +7,8 @@ import { ShoppingBag, Clock, CheckCircle2, XCircle, MapPin, Phone, ArrowLeft, Re
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
+import { CompleteOrderButton } from "@/components/complete-order-button"
+
 export default async function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params
   const order = await getPublicOrderDetails(orderId)
@@ -70,6 +72,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                     timeStyle: 'short' 
                  })}
               </CardDescription>
+              {order.status === 'ready' && (
+                 <div className="pt-4 px-6 pb-2">
+                    <CompleteOrderButton orderId={order.id} className="w-full" />
+                 </div>
+              )}
            </CardHeader>
         </Card>
 
@@ -113,7 +120,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                     </div>
                     <div className="flex-1 min-w-0">
                        <p className="font-bold truncate">{item.products?.name || 'Produk'}</p>
-                       <p className="text-sm text-muted-foreground">{item.quantity}x {formatCurrency(item.price_at_purchase)}</p>
+                       <div className="flex flex-wrap gap-2 mt-1">
+                           {item.product_variants && (
+                              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold">Varian: {item.product_variants.name}</span>
+                           )}
+                           {item.selected_addons && item.selected_addons.map((a: any, i: number) => (
+                              <span key={i} className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md border font-medium">+{a.name}</span>
+                           ))}
+                        </div>
+                       <p className="text-sm text-muted-foreground mt-1">{item.quantity}x {formatCurrency(item.price_at_purchase)}</p>
                     </div>
                     <p className="font-bold">{formatCurrency(item.subtotal)}</p>
                  </div>

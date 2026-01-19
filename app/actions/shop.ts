@@ -65,10 +65,50 @@ export async function createShop(formData: FormData) {
     whatsapp: formData.get("whatsapp") as string,
   };
 
+  const logoFile = formData.get("logo") as File | null;
+  const coverFile = formData.get("cover_image") as File | null;
+
+  if (!logoFile || logoFile.size === 0) {
+    return { error: "Logo toko wajib diupload" };
+  }
+
   const result = CreateShopSchema.safeParse(rawData);
 
   if (!result.success) {
     return { error: result.error.flatten().fieldErrors };
+  }
+
+  // Upload Logo
+  const logoPath = `shops/${result.data.slug}/logo-${Date.now()}`;
+  const { error: logoUploadError } = await supabase.storage
+    .from("products")
+    .upload(logoPath, logoFile);
+
+  if (logoUploadError) {
+    return { error: `Gagal upload logo: ${logoUploadError.message}` };
+  }
+
+  const {
+    data: { publicUrl: logoUrl },
+  } = supabase.storage.from("products").getPublicUrl(logoPath);
+
+  // Upload Cover (Optional)
+  let coverUrl = null;
+  if (coverFile && coverFile.size > 0) {
+    const coverPath = `shops/${result.data.slug}/cover-${Date.now()}`;
+    const { error: coverUploadError } = await supabase.storage
+      .from("products")
+      .upload(coverPath, coverFile);
+
+    if (coverUploadError) {
+      // Optional, so maybe just log or ignore? safer to return error.
+      return { error: `Gagal upload cover: ${coverUploadError.message}` };
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("products").getPublicUrl(coverPath);
+    coverUrl = publicUrl;
   }
 
   const shopData: any = {
@@ -79,6 +119,8 @@ export async function createShop(formData: FormData) {
     address: result.data.address,
     google_maps_link: result.data.google_maps_link || null,
     whatsapp: result.data.whatsapp,
+    logo_url: logoUrl,
+    cover_url: coverUrl,
   };
 
   const { data, error } = await supabase

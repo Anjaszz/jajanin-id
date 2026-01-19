@@ -17,6 +17,16 @@ interface Product {
   name: string
   price: number
   image_url: string | null
+  product_variants?: {
+    id: string
+    name: string
+    price_override: number | null
+  }[]
+  product_addons?: {
+    id: string
+    name: string
+    price: number
+  }[]
 }
 
 declare global {
@@ -25,7 +35,7 @@ declare global {
   }
 }
 
-export default function CheckoutClient({ shop }: { shop: any }) {
+export default function CheckoutClient({ shop, userProfile }: { shop: any, userProfile?: any }) {
   const [cart, setCart] = useState<Record<string, number>>({})
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -47,7 +57,9 @@ export default function CheckoutClient({ shop }: { shop: any }) {
     const cartData = JSON.parse(savedCart)
     setCart(cartData)
     
-    const productIds = Object.keys(cartData)
+    // Extract product IDs from combined keys (productId:variantId)
+    const productIds = Array.from(new Set(Object.keys(cartData).map(key => key.split(':')[0])))
+    
     if (productIds.length > 0) {
       getProductsByIds(productIds).then(data => {
         setProducts(data as any)
@@ -58,7 +70,45 @@ export default function CheckoutClient({ shop }: { shop: any }) {
     }
   }, [shop.id, shop.slug, router])
 
-  const subtotal = products.reduce((sum, p) => sum + (p.price * (cart[p.id] || 0)), 0)
+  useEffect(() => {
+    if (userProfile) {
+      setGuestInfo({
+        name: userProfile.name || '',
+        email: userProfile.email || '',
+        phone: userProfile.phone || ''
+      })
+    }
+  }, [userProfile])
+
+  const subtotal = Object.entries(cart).reduce((sum, [key, count]) => {
+    const parts = key.split(':')
+    const productId = parts[0]
+    const variantId = parts[1]
+    const addonIdsRaw = parts[2]
+    
+    const product = products.find(p => p.id === productId)
+    if (!product) return sum
+    
+    let price = product.price
+    if (variantId && variantId !== 'base' && product.product_variants) {
+        const variant = product.product_variants.find(v => v.id === variantId)
+        if (variant && variant.price_override !== null) {
+            price = variant.price_override
+        }
+    }
+
+    // Add Addons to price
+    if (addonIdsRaw && product.product_addons) {
+        const addonIds = addonIdsRaw.split(',')
+        const addonsPrice = product.product_addons
+            .filter(a => addonIds.includes(a.id))
+            .reduce((total, a) => total + a.price, 0)
+        price += addonsPrice
+    }
+
+    return sum + (price * count)
+  }, 0)
+
   const gatewayFee = paymentMethod === 'gateway' ? (subtotal * 0.007) : 0 
   const total = subtotal + gatewayFee
 
@@ -69,17 +119,49 @@ export default function CheckoutClient({ shop }: { shop: any }) {
     }
 
     setIsOrdering(true)
+    
+    const items = Object.entries(cart).map(([key, count]) => {
+        const parts = key.split(':')
+        const productId = parts[0]
+        const variantId = parts[1]
+        const addonIdsRaw = parts[2]
+        
+        const product = products.find(p => p.id === productId)
+        
+        let price = product?.price || 0
+        if (variantId && variantId !== 'base' && product?.product_variants) {
+            const variant = product.product_variants.find(v => v.id === variantId)
+            if (variant && variant.price_override !== null) {
+                price = variant.price_override
+            }
+        }
+
+        // Add Addons to price
+        let selectedAddons: any[] = []
+        if (addonIdsRaw && product?.product_addons) {
+            const addonIds = addonIdsRaw.split(',')
+            selectedAddons = product.product_addons.filter(a => addonIds.includes(a.id))
+            const addonsPrice = selectedAddons.reduce((total, a) => total + a.price, 0)
+            price += addonsPrice
+        }
+
+        return {
+            product_id: productId,
+            variant_id: (variantId && variantId !== 'base') ? variantId : undefined,
+            quantity: count,
+            price: price,
+            selected_addons: selectedAddons.length > 0 ? selectedAddons : undefined
+        }
+    })
+
     const result = await placeOrder({
       shop_id: shop.id,
       payment_method: paymentMethod,
-      items: products.map(p => ({
-        product_id: p.id,
-        quantity: cart[p.id],
-        price: p.price
-      })),
+      items: items,
       guest_info: guestInfo
     })
-
+    
+    // ... rest of handlePlaceOrder remains same
     if (result.success) {
       if (paymentMethod === 'gateway' && result.snapToken) {
         window.snap.pay(result.snapToken, {
@@ -182,18 +264,55 @@ export default function CheckoutClient({ shop }: { shop: any }) {
             <CardTitle className="text-lg">Ringkasan Pesanan</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {products.map(product => (
-              <div key={product.id} className="flex gap-4">
-                <div className="h-16 w-16 rounded-md bg-muted overflow-hidden shrink-0">
-                   {product.image_url && <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />}
+            {Object.entries(cart).map(([key, count]) => {
+              const parts = key.split(':')
+              const productId = parts[0]
+              const variantId = parts[1]
+              const addonIdsRaw = parts[2]
+              
+              const product = products.find(p => p.id === productId)
+              if (!product) return null
+              
+              let price = product.price
+              let variantName = ''
+              if (variantId && variantId !== 'base' && product.product_variants) {
+                  const variant = product.product_variants.find(v => v.id === variantId)
+                  if (variant) {
+                      variantName = variant.name
+                      if (variant.price_override !== null) {
+                          price = variant.price_override
+                      }
+                  }
+              }
+
+              // Handle Addons
+              let selectedAddons: any[] = []
+              if (addonIdsRaw && product.product_addons) {
+                  const addonIds = addonIdsRaw.split(',')
+                  selectedAddons = product.product_addons.filter(a => addonIds.includes(a.id))
+                  const addonsPrice = selectedAddons.reduce((total, a) => total + a.price, 0)
+                  price += addonsPrice
+              }
+
+              return (
+                <div key={key} className="flex gap-4">
+                  <div className="h-16 w-16 rounded-md bg-muted overflow-hidden shrink-0">
+                     {product.image_url && <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                     <p className="font-medium truncate">{product.name}</p>
+                     <div className="flex flex-wrap gap-2 mt-1">
+                        {variantName && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold">Varian: {variantName}</span>}
+                        {selectedAddons.map(a => (
+                           <span key={a.id} className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md border font-medium">+{a.name}</span>
+                        ))}
+                     </div>
+                     <p className="text-sm text-muted-foreground mt-1">{count}x Rp {price.toLocaleString('id-ID')}</p>
+                  </div>
+                  <p className="font-bold">Rp {(price * count).toLocaleString('id-ID')}</p>
                 </div>
-                <div className="flex-1 min-w-0">
-                   <p className="font-medium truncate">{product.name}</p>
-                   <p className="text-sm text-muted-foreground">{cart[product.id]}x Rp {product.price.toLocaleString('id-ID')}</p>
-                </div>
-                <p className="font-bold">Rp {(product.price * cart[product.id]).toLocaleString('id-ID')}</p>
-              </div>
-            ))}
+              )
+            })}
             
             <div className="border-t pt-4 space-y-2">
               <div className="flex justify-between text-sm">

@@ -4,7 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button'
 import { CheckCircle2 } from 'lucide-react'
 
-export default function VerifyEmailPage() {
+export default function VerifyEmailPage({
+  searchParams,
+}: {
+  searchParams: { role?: string }
+}) {
+  const role = searchParams.role || 'buyer'
+  const loginUrl = role === 'seller' ? '/seller/login' : '/buyer/login'
+
   return (
     <Card className="text-center">
       <CardHeader>
@@ -21,12 +28,12 @@ export default function VerifyEmailPage() {
       <CardContent>
         <p className="text-sm text-muted-foreground">
             Silakan klik link di email tersebut untuk mengaktifkan akun Anda.
-            Jika tidak masuk, cek folder spam.
+            Setelah verifikasi, Anda dapat masuk kembali.
         </p>
       </CardContent>
       <CardFooter className="justify-center">
         <Button variant="outline" asChild>
-            <Link href="/login">Kembali ke Login</Link>
+            <Link href={loginUrl}>Kembali ke Login</Link>
         </Button>
       </CardFooter>
     </Card>

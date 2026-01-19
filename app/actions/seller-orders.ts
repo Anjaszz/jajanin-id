@@ -28,7 +28,7 @@ export async function getSellerOrders() {
         *,
         products (name)
       )
-    `
+    `,
     )
     .eq("shop_id", (shop as any).id)
     .order("created_at", { ascending: false });
@@ -51,5 +51,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
   if (error) return { error: error.message };
 
   revalidatePath("/dashboard/orders");
+  revalidatePath("/orders/[orderId]", "page");
+  revalidatePath("/", "layout");
   return { success: true };
 }

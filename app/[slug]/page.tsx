@@ -1,7 +1,7 @@
-
 import { getShopBySlug, getShopProductsByCategory } from '@/app/actions/public-shop'
 import { notFound } from 'next/navigation'
 import ShopClient from './shop-client'
+import { createClient } from '@/utils/supabase/server'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -9,6 +9,7 @@ interface PageProps {
 
 export default async function ShopPage({ params }: PageProps) {
   const { slug } = await params
+  const contentType = "shop" // Just a dummy var to maintain structure if needed, or simply proceed.
   const shop = await getShopBySlug(slug)
 
   if (!shop) {
@@ -16,8 +17,11 @@ export default async function ShopPage({ params }: PageProps) {
   }
 
   const categories = await getShopProductsByCategory(shop.id)
+  
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <ShopClient shop={shop as any} categories={categories as any} />
+    <ShopClient shop={shop as any} categories={categories as any} isLoggedIn={!!user} />
   )
 }
