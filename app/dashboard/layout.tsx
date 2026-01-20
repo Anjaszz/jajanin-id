@@ -11,7 +11,8 @@ import {
   PlusCircle,
   CreditCard,
   FileText,
-  Wallet
+  Wallet,
+  TrendingUp
 } from 'lucide-react'
 import { getShop } from '@/app/actions/shop'
 import { signOutSeller } from '@/app/actions/auth'
@@ -67,6 +68,9 @@ export default async function DashboardLayout({
             <NavItem href="/dashboard/orders" icon={<FileText className="h-5 w-5" />}>
               Pesanan
             </NavItem>
+            <NavItem href="/dashboard/income" icon={<TrendingUp className="h-5 w-5" />}>
+              Pemasukan
+            </NavItem>
              <NavItem href="/dashboard/wallet" icon={<Wallet className="h-5 w-5" />}>
               Dompet
             </NavItem>
@@ -105,7 +109,7 @@ export default async function DashboardLayout({
             <MobileNavItem href="/dashboard" icon={<LayoutDashboard className="h-6 w-6" />} label="Ringkasan" />
             <MobileNavItem href="/dashboard/products" icon={<Package className="h-6 w-6" />} label="Produk" />
             <MobileNavItem href="/dashboard/orders" icon={<FileText className="h-6 w-6" />} label="Pesanan" />
-            <MobileNavItem href="/dashboard/wallet" icon={<Wallet className="h-6 w-6" />} label="Dompet" />
+            <MobileNavItem href="/dashboard/income" icon={<TrendingUp className="h-6 w-6" />} label="Masuk" />
             <MobileNavItem href="/dashboard/settings" icon={<Settings className="h-6 w-6" />} label="Profil" />
           </nav>
         )}

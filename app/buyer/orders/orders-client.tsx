@@ -13,6 +13,22 @@ export default function OrdersClient({ initialOrders }: { initialOrders: any[] }
   const [orders, setOrders] = useState(initialOrders)
   const [loading, setLoading] = useState(false)
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending_payment': return 'Menunggu Pembayaran'
+      case 'pending_confirmation': return 'Perlu Konfirmasi'
+      case 'paid': return 'Sudah Dibayar'
+      case 'accepted': return 'Diterima'
+      case 'processing': return 'Sedang Proses'
+      case 'ready': return 'Siap Diambil'
+      case 'completed': return 'Selesai'
+      case 'rejected': return 'Ditolak'
+      case 'cancelled_by_seller':
+      case 'cancelled_by_buyer': return 'Dibatalkan'
+      default: return status.replace('_', ' ')
+    }
+  }
+
   useEffect(() => {
     // If we have initial orders (meaning user is logged in), don't do anything
     if (initialOrders.length > 0) return
@@ -73,14 +89,15 @@ export default function OrdersClient({ initialOrders }: { initialOrders: any[] }
               <span className="font-mono text-[10px]">#{order.id.slice(0, 8)}</span>
             </div>
             <Badge 
-              variant={order.status === 'paid' ? 'default' : 'secondary'} 
+              variant={order.status === 'paid' || order.status === 'completed' ? 'default' : 'secondary'} 
               className={cn(
                 "rounded-full uppercase text-[10px] font-bold px-3",
-                order.status === 'paid' && "bg-green-500 hover:bg-green-600",
-                order.status === 'pending_payment' && "bg-yellow-500 hover:bg-yellow-600"
+                (order.status === 'paid' || order.status === 'completed' || order.status === 'accepted') && "bg-green-500 hover:bg-green-600 text-white border-none",
+                order.status === 'pending_payment' && "bg-yellow-500 hover:bg-yellow-600 text-white border-none",
+                (order.status === 'rejected' || order.status.startsWith('cancelled')) && "bg-red-500 hover:bg-red-600 text-white border-none"
               )}
             >
-              {order.status.replace('_', ' ')}
+              {getStatusLabel(order.status)}
             </Badge>
           </CardHeader>
           <CardContent className="p-4">

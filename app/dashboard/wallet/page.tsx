@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Wallet, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle2, XCircle } from "lucide-react"
+import { SyncWalletButton } from "@/components/sync-wallet-button"
 
 export default async function WalletPage() {
   const data = await getWalletData()
@@ -36,6 +37,7 @@ export default async function WalletPage() {
           <h1 className="text-4xl font-heading font-bold tracking-tight bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">Dompet Toko</h1>
           <p className="text-muted-foreground mt-1">Kelola pendapatan dan penarikan dana Anda.</p>
         </div>
+        <SyncWalletButton />
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">

@@ -50,7 +50,19 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
   if (error) return { error: error.message };
 
+  // AUTOMATION: If order completed, sync the wallet balance automatically
+  if (status === "completed") {
+    try {
+      const { syncWalletBalance } = await import("./wallet");
+      await syncWalletBalance();
+    } catch (syncErr) {
+      console.error("Auto-sync wallet failed:", syncErr);
+    }
+  }
+
   revalidatePath("/dashboard/orders");
+  revalidatePath("/dashboard/wallet");
+  revalidatePath("/dashboard");
   revalidatePath("/orders/[orderId]", "page");
   revalidatePath("/", "layout");
   return { success: true };

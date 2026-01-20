@@ -187,7 +187,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
               </div>
               <div>
                  <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">Metode Pembayaran</p>
-                 <p className="font-bold uppercase">{order.payment_method}</p>
+                 <p className="font-bold uppercase">{order.payment_method === 'gateway' ? 'Digital / QRIS' : 'Tunai / Cash'}</p>
               </div>
               {order.scheduled_for && (
                  <div>

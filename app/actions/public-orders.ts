@@ -49,5 +49,23 @@ export async function getPublicOrderDetails(orderId: string) {
     return null;
   }
 
+  if (order) {
+    const orderAny = order as any;
+    // AUTO-EXPIRATION logic for detail page
+    if (orderAny.status === "pending_payment") {
+      const now = new Date();
+      const expiryTime = 24 * 60 * 60 * 1000;
+      if (
+        now.getTime() - new Date(orderAny.created_at).getTime() >
+        expiryTime
+      ) {
+        await (supabase.from("orders") as any)
+          .update({ status: "cancelled_by_buyer" })
+          .eq("id", orderAny.id);
+        orderAny.status = "cancelled_by_buyer";
+      }
+    }
+  }
+
   return order as any;
 }

@@ -126,3 +126,98 @@ export async function requestWithdrawal(formData: FormData) {
   revalidatePath("/dashboard/wallet");
   return { success: true };
 }
+
+export async function syncWalletBalance() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  // 1. Get Shop
+  const { data: shop, error: shopError } = await supabase
+    .from("shops")
+    .select("id")
+    .eq("owner_id", user.id)
+    .single();
+
+  if (shopError || !shop)
+    return { error: "Shop not found: " + (shopError?.message || "Empty") };
+
+  // 2. Get/Create Wallet
+  let { data: wallet, error: walletError } = await supabase
+    .from("wallets")
+    .select("id, balance")
+    .eq("shop_id", (shop as any).id)
+    .maybeSingle();
+
+  if (!wallet) {
+    const { data: newWallet, error: createError } = await (
+      supabase.from("wallets") as any
+    )
+      .insert({ shop_id: (shop as any).id, balance: 0 })
+      .select()
+      .single();
+    if (createError)
+      return { error: "Failed to create wallet: " + createError.message };
+    wallet = newWallet as any;
+  }
+
+  // 3. Calculate Income from VALID Gateway Orders ONLY (Cash is physical)
+  const { data: orders, error: ordersError } = await supabase
+    .from("orders")
+    .select("total_amount, platform_fee, status")
+    .eq("shop_id", (shop as any).id)
+    .eq("payment_method", "gateway")
+    .in("status", ["completed", "paid", "ready", "processing", "accepted"]);
+
+  if (ordersError)
+    return { error: "Failed to fetch orders: " + ordersError.message };
+
+  const totalIncome = ((orders as any[]) || []).reduce((sum, o) => {
+    const amt = Number(o.total_amount || 0);
+    const fee = Number(o.platform_fee || 0);
+    return sum + (amt - fee);
+  }, 0);
+
+  // 4. Calculate Expenses from SUCCESSFUL Withdrawals
+  const { data: withdrawals, error: wdError } = await supabase
+    .from("wallet_transactions")
+    .select("amount")
+    .eq("wallet_id", (wallet as any).id)
+    .eq("type", "withdrawal")
+    .eq("status", "completed");
+
+  const totalOut = ((withdrawals as any[]) || []).reduce(
+    (sum, w) => sum + Number(w.amount || 0),
+    0,
+  );
+
+  const finalBalance = Math.max(0, totalIncome - totalOut);
+
+  // 5. Hard Update Balance in DB (Use Service Role to bypass RLS for balance update)
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { error: updateError } = await (adminSupabase.from("wallets") as any)
+    .update({
+      balance: finalBalance,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", (wallet as any).id);
+
+  if (updateError)
+    return { error: "Database update failed: " + updateError.message };
+
+  console.log(
+    `[SYNC SUCCESS] Shop: ${(shop as any).id} | Income: ${totalIncome} | Out: ${totalOut} | Final: ${finalBalance}`,
+  );
+
+  revalidatePath("/dashboard/wallet");
+  revalidatePath("/dashboard");
+  return { success: true, balance: finalBalance };
+}

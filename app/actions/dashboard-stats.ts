@@ -28,7 +28,7 @@ export async function getDashboardStats() {
     (salesData as any[])?.reduce(
       (sum, order) =>
         sum + (Number(order.total_amount) - Number(order.platform_fee)),
-      0
+      0,
     ) || 0;
 
   const gatewayRevenue =
@@ -37,7 +37,7 @@ export async function getDashboardStats() {
       ?.reduce(
         (sum, order) =>
           sum + (Number(order.total_amount) - Number(order.platform_fee)),
-        0
+        0,
       ) || 0;
 
   const today = new Date();
@@ -49,7 +49,7 @@ export async function getDashboardStats() {
       ?.reduce(
         (sum, order) =>
           sum + (Number(order.total_amount) - Number(order.platform_fee)),
-        0
+        0,
       ) || 0;
 
   const orderCount = salesData?.length || 0;
@@ -68,11 +68,12 @@ export async function getDashboardStats() {
     .eq("shop_id", (shop as any).id)
     .single();
 
-  // Get recent orders
+  // Get recent orders (Excluding pending payment for gateway)
   const { data: recentOrders } = await supabase
     .from("orders")
     .select("*")
     .eq("shop_id", (shop as any).id)
+    .neq("status", "pending_payment")
     .order("created_at", { ascending: false })
     .limit(5);
 

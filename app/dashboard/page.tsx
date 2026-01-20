@@ -40,6 +40,22 @@ export default async function DashboardPage() {
     }
   }
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending_payment': return 'Menunggu Bayar'
+      case 'pending_confirmation': return 'Perlu Konfirmasi'
+      case 'paid': return 'Sudah Dibayar'
+      case 'accepted': return 'Diterima'
+      case 'processing': return 'Sedang Proses'
+      case 'ready': return 'Siap Diambil'
+      case 'completed': return 'Selesai'
+      case 'rejected': return 'Ditolak'
+      case 'cancelled_by_seller':
+      case 'cancelled_by_buyer': return 'Dibatalkan'
+      default: return status.replace('_', ' ')
+    }
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-2">
@@ -137,7 +153,7 @@ export default async function DashboardPage() {
                      </div>
                      <div className="text-right">
                         <p className="font-bold text-sm">{formatCurrency(order.total_amount)}</p>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{order.status}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{getStatusLabel(order.status)}</p>
                      </div>
                    </div>
                  ))
@@ -168,10 +184,16 @@ export default async function DashboardPage() {
                     Kelola Pesanan
                   </Link>
                </Button>
-               <Button variant="outline" className="w-full justify-start h-12" asChild>
+                <Button variant="outline" className="w-full justify-start h-12" asChild>
                   <Link href="/dashboard/wallet">
                     <Wallet className="mr-2 h-4 w-4" />
                     Dompet & Penarikan
+                  </Link>
+               </Button>
+               <Button variant="outline" className="w-full justify-start h-12 border-green-200 hover:bg-green-50 hover:text-green-700" asChild>
+                  <Link href="/dashboard/income">
+                    <TrendingUp className="mr-2 h-4 w-4 text-green-600" />
+                    Riwayat Pemasukan
                   </Link>
                </Button>
                

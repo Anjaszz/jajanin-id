@@ -174,30 +174,38 @@ export default function CheckoutClient({ shop, userProfile }: { shop: any, userP
           window.snap.pay(result.snapToken, {
             onSuccess: (res: any) => {
               localStorage.removeItem(`cart_${shop.id}`)
-              const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
-              orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
-              localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              if (!userProfile) {
+                const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
+                orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
+                localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              }
               router.push(`/orders/${result.orderId}`)
             },
             onPending: (res: any) => {
               localStorage.removeItem(`cart_${shop.id}`)
-              const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
-              orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
-              localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              if (!userProfile) {
+                const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
+                orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
+                localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              }
               router.push(`/orders/${result.orderId}`)
             },
             onError: (res: any) => {
               localStorage.removeItem(`cart_${shop.id}`)
-              const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
-              orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
-              localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              if (!userProfile) {
+                const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
+                orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
+                localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              }
               router.push(`/orders/${result.orderId}`)
             },
             onClose: () => {
               localStorage.removeItem(`cart_${shop.id}`)
-              const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
-              orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
-              localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              if (!userProfile) {
+                const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
+                orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
+                localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              }
               router.push(`/orders/${result.orderId}`)
             }
           })
@@ -207,9 +215,11 @@ export default function CheckoutClient({ shop, userProfile }: { shop: any, userP
         }
       } else {
         localStorage.removeItem(`cart_${shop.id}`)
-        const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
-        orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
-        localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+        if (!userProfile) {
+          const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
+          orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
+          localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+        }
         router.push(`/orders/${result.orderId}`)
       }
     } else {

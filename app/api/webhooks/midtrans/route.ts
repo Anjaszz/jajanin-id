@@ -68,14 +68,16 @@ export async function POST(req: Request) {
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       );
 
-      const { error } = await supabase
+      const { data: updateData, error } = await supabase
         .from("orders")
         .update({
           status: newStatus,
           payment_details: body,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", order_id);
+        .eq("id", order_id)
+        .select("id, shop_id, total_amount, platform_fee, status")
+        .single();
 
       if (error) {
         console.error("Database Error updating status:", error.message);
@@ -87,6 +89,10 @@ export async function POST(req: Request) {
           { status: 500 },
         );
       }
+
+      // NOTE: Wallet balance update is now handled by updateOrderStatus when status is 'completed'
+      // to ensure consistency across both cash and gateway payments. Money only enters
+      // the wallet after the seller fulfills the order.
 
       console.log(`Success! Order ${order_id} is now ${newStatus}`);
 

@@ -26,6 +26,30 @@ export async function getBuyerOrders(orderIds?: string[]) {
 
   const { data } = await query.order("created_at", { ascending: false });
 
+  if (data) {
+    // AUTO-EXPIRATION: Cancel orders pending payment for more than 24h
+    const now = new Date();
+    const expiryTime = 24 * 60 * 60 * 1000;
+    const expiredIds = (data as any[])
+      .filter(
+        (o) =>
+          o.status === "pending_payment" &&
+          now.getTime() - new Date(o.created_at).getTime() > expiryTime,
+      )
+      .map((o) => o.id);
+
+    if (expiredIds.length > 0) {
+      await (supabase.from("orders") as any)
+        .update({ status: "cancelled_by_buyer" })
+        .in("id", expiredIds);
+
+      // Update local data to reflect cancellation
+      (data as any[]).forEach((o) => {
+        if (expiredIds.includes(o.id)) o.status = "cancelled_by_buyer";
+      });
+    }
+  }
+
   return data || [];
 }
 

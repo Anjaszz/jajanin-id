@@ -30,7 +30,7 @@ export default async function OrdersPage({
   const filteredOrders = allOrders.filter(order => {
     switch (tab) {
       case 'pending': 
-        return ['pending_confirmation', 'paid', 'pending_payment'].includes(order.status)
+        return ['pending_confirmation', 'paid'].includes(order.status)
       case 'processing':
         return ['accepted', 'processing', 'ready'].includes(order.status)
       case 'completed':
@@ -57,7 +57,7 @@ export default async function OrdersPage({
   }
 
   const tabs = [
-    { id: 'pending', label: 'Menunggu', count: allOrders.filter(o => ['pending_confirmation', 'paid', 'pending_payment'].includes(o.status)).length },
+    { id: 'pending', label: 'Menunggu', count: allOrders.filter(o => ['pending_confirmation', 'paid'].includes(o.status)).length },
     { id: 'processing', label: 'Proses', count: allOrders.filter(o => ['accepted', 'processing', 'ready'].includes(o.status)).length },
     { id: 'completed', label: 'Selesai', count: allOrders.filter(o => o.status === 'completed').length },
     { id: 'cancelled', label: 'Batal', count: allOrders.filter(o => ['rejected', 'cancelled_by_seller', 'cancelled_by_buyer'].includes(o.status)).length },
