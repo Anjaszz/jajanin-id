@@ -1,31 +1,30 @@
 import Link from "next/link";
-import { Store, BarChart3, ShieldCheck, ArrowRight, Wallet, Globe, Smartphone, Check } from "lucide-react";
+import { Store, BarChart3, ShieldCheck, ArrowRight, Wallet, Globe, Smartphone, Check, Zap, ShoppingBag, Heart, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 export default function BusinessPage() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <div className="flex min-h-screen flex-col bg-background selection:bg-primary/10">
+      {/* Navbar - Consistent with Home */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl">
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2 font-heading font-bold text-xl tracking-tight">
-            <Store className="h-6 w-6 text-primary" />
-            <span>SaaSMarket Seller</span>
+          <Link href="/" className="flex items-center gap-2 font-heading font-black text-2xl tracking-tighter text-primary">
+            <ShoppingBag className="h-7 w-7 fill-primary/10" />
+            <span>YukJajan<span className="text-foreground">.</span> Business</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <Link href="#hero" className="transition-colors hover:text-primary">Beranda</Link>
-            <Link href="#features" className="transition-colors hover:text-primary">Fitur</Link>
-            <Link href="#pricing" className="transition-colors hover:text-primary">Harga</Link>
-            <Link href="#faq" className="transition-colors hover:text-primary">FAQ</Link>
+          <nav className="hidden md:flex items-center gap-8 text-sm font-bold">
+            <Link href="#fitur" className="transition-colors hover:text-primary text-muted-foreground">Fitur</Link>
+            <Link href="#harga" className="transition-colors hover:text-primary text-muted-foreground">Harga</Link>
           </nav>
           <div className="flex items-center gap-4">
-            <Link href="/seller/login" className="text-sm font-medium hover:text-primary transition-colors">
-              Masuk
-            </Link>
-            <Button asChild className="hidden sm:inline-flex rounded-full px-6">
-              <Link href="/seller/register">Mulai Gratis</Link>
+            <Button asChild variant="ghost" className="rounded-xl font-bold text-sm px-4">
+               <Link href="/seller/login">Masuk Seller</Link>
+            </Button>
+            <Button asChild className="rounded-xl font-black shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 px-6">
+              <Link href="/seller/register">Buka Toko Gratis</Link>
             </Button>
           </div>
         </div>
@@ -33,276 +32,243 @@ export default function BusinessPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section id="hero" className="relative pt-20 pb-32 md:pt-32 md:pb-48 bg-white overflow-hidden">
-          <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
-          <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/20 opacity-20 blur-[100px]"></div>
-          
-          <div className="container px-4 md:px-6 text-center space-y-8 relative z-10">
-            <div className="inline-flex items-center rounded-full border bg-primary/5 px-3 py-1 text-sm font-medium text-primary">
-               <span className="flex h-2 w-2 rounded-full bg-primary mr-2 animate-pulse"></span>
-               Platform Bisnis #1 di Indonesia
-            </div>
-            
-            <div className="mx-auto max-w-4xl space-y-4">
-              <h1 className="text-4xl font-heading font-black tracking-tight sm:text-6xl md:text-7xl text-slate-900 leading-[1.1]">
-                Bangun Kerajaan Bisnis <br/>
-                <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-blue-600">Digital Anda Disini</span>
-              </h1>
-              <p className="mx-auto max-w-[700px] text-slate-600 md:text-xl leading-relaxed">
-                Tinggalkan cara lama. Beralih ke sistem manajemen toko modern yang terintegrasi, aman, dan mudah digunakan. Tanpa biaya tersembunyi.
-              </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Button asChild size="lg" className="h-12 px-8 rounded-full text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-transform duration-200">
-                <Link href="/seller/register">
-                  Buka Toko Sekarang <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="h-12 px-8 rounded-full text-lg bg-white/50 backdrop-blur-sm border-slate-300 hover:bg-white hover:text-primary">
-                <Link href="/seller/login">Demonstrasi Dashboard</Link>
-              </Button>
-            </div>
+        <section className="relative pt-16 pb-24 md:pt-32 md:pb-40 overflow-hidden">
+           {/* Background Decor */}
+           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full -z-10 opacity-20 pointer-events-none">
+              <div className="absolute top-20 right-10 w-[500px] h-[500px] bg-primary rounded-full blur-[150px] animate-pulse" />
+              <div className="absolute bottom-10 left-10 w-[400px] h-[400px] bg-primary/40 rounded-full blur-[120px]" />
+           </div>
 
-            {/* Mockup Preview */}
-            <div className="mt-16 mx-auto max-w-5xl relative group">
-               <div className="absolute -inset-1 bg-linear-to-r from-primary to-blue-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-               <div className="relative rounded-xl border bg-card text-card-foreground shadow-2xl overflow-hidden aspect-[16/9] md:aspect-[21/9] flex items-center justify-center bg-slate-100">
-                  <div className="text-center space-y-2">
-                     <BarChart3 className="h-16 w-16 text-slate-300 mx-auto" />
-                     <p className="text-slate-400 font-medium">Dashboard Preview Placeholder</p>
-                  </div>
-               </div>
-            </div>
-          </div>
-        </section>
+           <div className="container px-4 text-center space-y-10">
+              <div className="inline-flex items-center gap-2 bg-primary/5 border border-primary/10 px-4 py-2 rounded-full text-primary text-xs font-black uppercase tracking-widest animate-in fade-in slide-in-from-top-4 duration-700">
+                 <Zap className="h-3 w-3 fill-primary" />
+                 Platform UMKM No. 1 di Indonesia
+              </div>
+              
+              <div className="space-y-6 max-w-4xl mx-auto">
+                <h1 className="text-5xl md:text-8xl font-heading font-black tracking-tighter leading-[0.9] md:leading-[0.85] animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+                  Digitalkan <br className="hidden md:block" />
+                  <span className="bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent italic pr-4">Toko mu</span> Disini.
+                </h1>
+                <p className="text-muted-foreground max-w-2xl mx-auto text-lg md:text-xl font-medium animate-in fade-in zoom-in-95 duration-700 delay-200">
+                  Kelola pesanan, stok, dan pembayaran dalam satu genggaman. YukJajan membantu UMKM naik kelas dengan sistem POS yang cerdas dan modern.
+                </p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center py-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                 <Button className="h-16 px-10 rounded-2xl text-xl font-black shadow-2xl shadow-primary/30 transition-all hover:scale-105" asChild>
+                   <Link href="/seller/register">Mulai Jualan Sekarang</Link>
+                 </Button>
+                 <button className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors group">
+                    <div className="p-3 bg-muted rounded-full group-hover:scale-110 transition-transform">
+                       <ArrowRight className="h-5 w-5" />
+                    </div>
+                    Tanya CS Kami
+                 </button>
+              </div>
 
-        {/* Stats Section */}
-        <section className="border-y bg-slate-50 py-12">
-           <div className="container grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              {[
-                 { label: "Pengguna Aktif", value: "10,000+" },
-                 { label: "Transaksi Harian", value: "Rp 5M+" },
-                 { label: "Negara Terjangkau", value: "5+" },
-                 { label: "Uptime Server", value: "99.99%" },
-              ].map((stat, i) => (
-                 <div key={i} className="space-y-2">
-                    <h3 className="text-3xl md:text-4xl font-black text-slate-900">{stat.value}</h3>
-                    <p className="text-sm text-slate-500 uppercase tracking-wider font-semibold">{stat.label}</p>
+              {/* Trust Badge */}
+              <div className="pt-12 flex flex-col items-center gap-4 animate-in fade-in duration-1000 delay-500">
+                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Dipercaya Oleh 500+ Pedagang Jajanan</p>
+                 <div className="flex flex-wrap justify-center gap-8 grayscale opacity-40">
+                    <Users className="h-10 w-10" />
+                    <Store className="h-10 w-10" />
+                    <Heart className="h-10 w-10" />
+                    <ShoppingBag className="h-10 w-10" />
                  </div>
-              ))}
+              </div>
            </div>
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-24 bg-white">
-          <div className="container px-4 md:px-6">
-            <div className="text-center mb-16 max-w-3xl mx-auto space-y-4">
-              <h2 className="text-3xl font-heading font-bold tracking-tight sm:text-5xl text-slate-900">Solusi Lengkap untuk Penjual</h2>
-              <p className="text-lg text-slate-600">Semua yang Anda butuhkan untuk mengelola, memasarkan, dan mengembangkan bisnis online Anda.</p>
+        <section id="fitur" className="container px-4 py-24">
+            <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-16">
+               <div className="max-w-xl space-y-4">
+                  <h2 className="text-4xl md:text-6xl font-heading font-black tracking-tighter leading-none">Fitur Canggih, <br className="hidden md:block" /><span className="text-primary italic">Kelola Gampang.</span></h2>
+                  <p className="text-muted-foreground font-medium text-lg leading-relaxed">
+                    Kami mendesain fitur yang benar-benar dibutuhkan oleh pedagang jajanan, tanpa ribet dan tanpa biaya admin yang mencekik.
+                  </p>
+               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                {[
                   {
                      icon: Globe,
-                     title: "Website Toko Custom",
-                     desc: "Dapatkan subdomain unik (contoh: tokoanda.saasmarket.com) yang bisa langsung diakses pelanggan."
+                     title: "Link Toko Digital",
+                     desc: "Pelanggan bisa langsung pesan melalui link toko unikmu. Tanpa aplikasi, cukup buka dari browser."
                   },
                   {
                      icon: Wallet,
-                     title: "Pembayaran Terintegrasi",
-                     desc: "Terima pembayaran via QRIS, Virtual Account, dan E-Wallet secara otomatis dengan fee rendah."
+                     title: "Kasir & POS Digital",
+                     desc: "Catat pesanan masuk secara real-time. Hitung total belanja otomatis tanpa perlu kalkulator manual."
                   },
                   {
                      icon: Smartphone,
-                     title: "Mobile Friendly",
-                     desc: "Kelola toko dari mana saja. Dashboard kami didesain responsif untuk penggunaan di HP."
+                     title: "Kelola dari HP",
+                     desc: "Terima notifikasi pesanan masuk langsung ke HP-mu. Bisa jualan sambil tetap santai di rumah."
                   },
                   {
                      icon: BarChart3,
-                     title: "Analitik Mendalam",
-                     desc: "Pantau performa penjualan, produk terlaris, dan perilaku pelanggan dengan data real-time."
+                     title: "Laporan Penjualan",
+                     desc: "Pantau omzet harian dan produk mana yang paling laris untuk strategi jualan esok hari."
                   },
                   {
                      icon: ShieldCheck,
-                     title: "Keamanan Tingkat Tinggi",
-                     desc: "Data Anda dan pelanggan diamankan dengan enkripsi standar industri dan backup berkala."
+                     title: "Transaksi Aman",
+                     desc: "Semua data transaksi tersimpan aman di cloud. Gak perlu takut catatan kertas hilang atau basah."
                   },
                   {
                      icon: Store,
-                     title: "Manajemen Inventaris",
-                     desc: "Atur stok produk varian, dan kategori dengan mudah. Notifikasi otomatis saat stok menipis."
+                     title: "Inventaris Akurat",
+                     desc: "Stok akan terpotong otomatis setiap ada pesanan. Alarm otomatis jika stok produk mulai habis."
                   }
                ].map((feature, i) => (
-                  <Card key={i} className="group hover:-translate-y-2 transition-transform duration-300 border-slate-200 hover:shadow-xl bg-slate-50/50 hover:bg-white">
-                     <CardHeader>
-                        <div className="h-12 w-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                           <feature.icon className="h-6 w-6" />
+                  <Card key={i} className="group border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-card rounded-[32px] overflow-hidden p-4">
+                     <CardHeader className="p-6">
+                        <div className="h-16 w-16 bg-primary/5 text-primary rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 shadow-sm border border-primary/10">
+                           <feature.icon className="h-8 w-8" />
                         </div>
-                        <CardTitle className="text-xl text-slate-900">{feature.title}</CardTitle>
-                     </CardHeader>
-                     <CardContent>
-                        <CardDescription className="text-base leading-relaxed text-slate-600">
+                        <CardTitle className="text-2xl font-black font-heading tracking-tight mb-2 leading-none">{feature.title}</CardTitle>
+                        <CardDescription className="text-muted-foreground text-sm font-medium leading-relaxed">
                            {feature.desc}
                         </CardDescription>
-                     </CardContent>
+                     </CardHeader>
                   </Card>
                ))}
             </div>
-          </div>
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="py-24 bg-slate-50 border-t">
-           <div className="container px-4 md:px-6">
-              <div className="text-center mb-16 max-w-3xl mx-auto space-y-4">
-                 <h2 className="text-3xl font-heading font-bold tracking-tight sm:text-5xl text-slate-900">Harga Transparan</h2>
-                 <p className="text-lg text-slate-600">Mulai gratis, upgrade saat bisnis Anda berkembang.</p>
+        <section id="harga" className="bg-muted/30 py-24 md:py-32">
+           <div className="container px-4">
+              <div className="text-center mb-20 space-y-4">
+                 <h2 className="text-4xl md:text-6xl font-heading font-black tracking-tight leading-none">Pilih Paket <br className="hidden md:block" /><span className="text-primary italic">Sesuai Kebutuhan.</span></h2>
+                 <p className="text-muted-foreground max-w-xl mx-auto font-medium text-lg leading-relaxed">Mulai jualan online secara gratis, upgrade kapan saja saat bisnismu mulai meledak.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                  {/* Free Tier */}
-                 <Card className="border-slate-200 shadow-sm hover:shadow-lg transition-all bg-white">
-                    <CardHeader>
-                       <CardTitle className="text-xl font-bold text-slate-900">Starter</CardTitle>
-                       <CardDescription className="text-slate-600">Untuk pemula yang baru memulai.</CardDescription>
-                       <div className="mt-4">
-                          <span className="text-4xl font-black text-slate-900">Rp 0</span>
-                          <span className="text-slate-500">/bulan</span>
+                 <Card className="border-none shadow-sm rounded-[40px] p-8 bg-background flex flex-col justify-between group hover:shadow-2xl transition-all duration-500">
+                    <div className="space-y-6">
+                       <div className="space-y-2">
+                          <h3 className="text-2xl font-black font-heading tracking-tight">Starter</h3>
+                          <p className="text-muted-foreground text-sm font-medium">Cocok buat kamu yang baru mau nyoba jualan digital.</p>
                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                       <ul className="space-y-2 text-sm text-slate-600">
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> 1 Toko</li>
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> 50 Produk</li>
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Basic Analytics</li>
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> 5% Platform Fee</li>
+                       <div className="flex items-baseline gap-1">
+                          <span className="text-5xl font-black tracking-tighter">Gratis</span>
+                          <span className="text-muted-foreground font-bold text-sm tracking-widest uppercase">/ Selamanya</span>
+                       </div>
+                       <div className="h-px bg-muted" />
+                       <ul className="space-y-4">
+                          {[
+                             "Maksimal 20 Produk",
+                             "Laporan Penjualan Harian",
+                             "Support Komunitas",
+                             "Fee Platform 5%"
+                          ].map((item, i) => (
+                             <li key={i} className="flex items-center gap-3 text-sm font-bold text-muted-foreground/80">
+                                <div className="h-5 w-5 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
+                                   <Check className="h-3 w-3 text-green-500" />
+                                </div>
+                                {item}
+                             </li>
+                          ))}
                        </ul>
-                       <Button asChild className="w-full mt-6" variant="outline">
-                          <Link href="/seller/register">Mulai Sekarang</Link>
-                       </Button>
-                    </CardContent>
+                    </div>
+                    <Button asChild variant="outline" className="w-full h-14 rounded-2xl border-2 font-black text-lg mt-12 hover:bg-primary/5 hover:border-primary/20">
+                       <Link href="/seller/register">Mulai Sekarang</Link>
+                    </Button>
                  </Card>
 
-                 {/* Pro Tier */}
-                 <Card className="border-primary shadow-2xl relative scale-105 z-10 bg-white">
-                    <div className="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">POPULAR</div>
-                    <CardHeader>
-                       <CardTitle className="text-xl font-bold text-primary">Pro Business</CardTitle>
-                       <CardDescription className="text-slate-600">Untuk bisnis yang sedang berkembang.</CardDescription>
-                       <div className="mt-4">
-                          <span className="text-4xl font-black text-slate-900">Rp 199rb</span>
-                          <span className="text-slate-500">/bulan</span>
+                 {/* Premium Tier */}
+                 <Card className="border-none shadow-2xl rounded-[40px] p-8 bg-slate-900 text-white relative flex flex-col justify-between overflow-hidden group hover:scale-[1.02] transition-all duration-500">
+                    <div className="absolute top-0 right-0 bg-primary px-6 py-2 rounded-bl-3xl font-black text-xs uppercase tracking-widest text-slate-900">Best Value</div>
+                    
+                    <div className="space-y-6 relative z-10">
+                       <div className="space-y-2">
+                          <h3 className="text-2xl font-black font-heading tracking-tight">Pro Seller</h3>
+                          <p className="text-slate-400 text-sm font-medium">Untuk UMKM yang mau serius kembangin bisnis.</p>
                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                       <ul className="space-y-2 text-sm text-slate-600">
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> 3 Toko</li>
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Unlimited Produk</li>
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Advanced Analytics</li>
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> 2% Platform Fee</li>
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Prioritas Support</li>
-                       </ul>
-                       <Button asChild className="w-full mt-6 shadow-lg shadow-primary/20">
-                          <Link href="/seller/register">Coba Gratis 14 Hari</Link>
-                       </Button>
-                    </CardContent>
-                 </Card>
-
-                 {/* Enterprise Tier */}
-                 <Card className="border-slate-200 shadow-sm hover:shadow-lg transition-all bg-white">
-                    <CardHeader>
-                       <CardTitle className="text-xl font-bold text-slate-900">Enterprise</CardTitle>
-                       <CardDescription className="text-slate-600">Solusi kustom untuk skala besar.</CardDescription>
-                       <div className="mt-4">
-                          <span className="text-4xl font-black text-slate-900">Hubungi</span>
+                       <div className="flex items-baseline gap-1">
+                          <span className="text-5xl font-black tracking-tighter text-primary italic">Rp 99rb</span>
+                          <span className="text-slate-400 font-bold text-sm tracking-widest uppercase">/ Bulan</span>
                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                       <ul className="space-y-2 text-sm text-slate-600">
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Unlimited Toko</li>
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Custom Domain</li>
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Dedicated Manager</li>
-                          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> API Access</li>
+                       <div className="h-px bg-white/10" />
+                       <ul className="space-y-4">
+                          {[
+                             "Produk Tanpa Batas",
+                             "Analitik Bisnis Lengkap",
+                             "Prioritas Chat Support 24/7",
+                             "Bebas Biaya Platform (0%)",
+                             "Fitur Promo & Diskon"
+                          ].map((item, i) => (
+                             <li key={i} className="flex items-center gap-3 text-sm font-bold text-slate-200">
+                                <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                                   <Check className="h-3 w-3 text-primary" />
+                                </div>
+                                {item}
+                             </li>
+                          ))}
                        </ul>
-                       <Button asChild className="w-full mt-6" variant="outline">
-                          <Link href="/contact">Kontak Kami</Link>
-                       </Button>
-                    </CardContent>
+                    </div>
+                    <Button asChild className="w-full h-14 rounded-2xl font-black text-lg mt-12 bg-primary hover:bg-primary/90 text-slate-900 shadow-xl shadow-primary/20">
+                       <Link href="/seller/register">Coba Pro Gratis 7 Hari</Link>
+                    </Button>
+                    
+                    {/* Background Decor for Premium */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
                  </Card>
               </div>
            </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-24 bg-white relative overflow-hidden">
-           <div className="absolute inset-0 bg-primary/5 -z-10 rotate-1 scale-150"></div>
-           <div className="container px-4 md:px-6">
-              <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-20 text-center text-white relative overflow-hidden shadow-2xl">
-                 <div className="relative z-10 space-y-8 max-w-3xl mx-auto">
-                    <h2 className="text-3xl md:text-5xl font-heading font-black tracking-tight leading-tight">
-                       Jangan Biarkan Kompetitor <br/> <span className="text-primary">Mendahului Anda</span>
-                    </h2>
-                    <p className="text-slate-300 text-lg md:text-xl leading-relaxed">
-                       Bergabunglah sekarang dengan ribuan pengusaha sukses lainnya. Setup toko Anda dalam waktu kurang dari 5 menit.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                       <Button asChild size="lg" className="h-14 px-10 rounded-full text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground">
-                          <Link href="/seller/register">Gabung Sekarang</Link>
-                       </Button>
-                    </div>
-                 </div>
-                 
-                 {/* Decorative elements */}
-                 <div className="absolute top-0 right-0 -m-20 w-96 h-96 bg-primary/20 rounded-full blur-3xl"></div>
-                 <div className="absolute bottom-0 left-0 -m-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"></div>
+        <section className="py-24 md:py-40 bg-background overflow-hidden relative">
+           <div className="container px-4 text-center space-y-12 relative z-10">
+              <div className="max-w-4xl mx-auto space-y-6">
+                <h2 className="text-5xl md:text-8xl font-heading font-black tracking-tighter leading-none animate-in fade-in duration-1000">
+                  Siap Bawa <br className="hidden md:block" />
+                  <span className="text-primary italic">Jajananmu</span> Go Digital?
+                </h2>
+                <p className="text-muted-foreground text-xl font-medium max-w-2xl mx-auto">
+                  Daftar sekarang dan rasakan kemudahan mengelola jualan jajan dengan sistem yang modern dan cerdas.
+                </p>
               </div>
+              <Button asChild className="h-20 px-12 rounded-[32px] text-2xl font-black shadow-2xl shadow-primary/30 transition-all hover:scale-110 active:scale-95">
+                 <Link href="/seller/register">Gabung Jadi Seller</Link>
+              </Button>
            </div>
+           
+           {/* Decorative elements */}
+           <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] -z-10" />
+           <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] -z-10" />
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t bg-slate-50 py-16">
-        <div className="container px-4 md:px-6">
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-              <div className="col-span-2 md:col-span-1 space-y-4">
-                 <div className="flex items-center gap-2 font-heading font-bold text-xl tracking-tight">
-                    <Store className="h-6 w-6 text-primary" />
-                    <span>SaaSMarket</span>
+      {/* Footer - Consistent with Home */}
+      <footer className="bg-muted/30 pt-20 pb-12 border-t border-primary/5">
+        <div className="container px-4">
+           <div className="text-center space-y-8">
+              <Link href="/" className="inline-flex items-center gap-2 font-heading font-black text-3xl tracking-tighter text-primary">
+                <ShoppingBag className="h-8 w-8 fill-primary/10" />
+                <span>YukJajan<span className="text-foreground">.</span></span>
+              </Link>
+              <p className="text-sm text-muted-foreground font-medium max-w-lg mx-auto leading-relaxed">
+                Sahabat digital UMKM Indonesia. Membantu pedagang jajanan naik kelas dengan teknologi kasir dan toko online tercanggih.
+              </p>
+              <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-xs font-black uppercase tracking-widest text-muted-foreground">
+                 <Link href="#fitur" className="hover:text-primary transition-colors">Fitur Utama</Link>
+                 <Link href="#harga" className="hover:text-primary transition-colors">Harga Paket</Link>
+                 <Link href="/buyer/login" className="hover:text-primary transition-colors">Halaman Pembeli</Link>
+                 <Link href="/seller/login" className="hover:text-primary transition-colors">Login Penjual</Link>
+              </nav>
+              <div className="pt-12 border-t flex flex-col md:flex-row items-center justify-between gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+                 <p>© {currentYear} YukJajan Indonesia. Digitalizing Indonesian Flavors.</p>
+                 <div className="flex gap-8">
+                    <Link href="#" className="hover:text-primary transition-colors">Terma & Layanan</Link>
+                    <Link href="#" className="hover:text-primary transition-colors">Privasi</Link>
                  </div>
-                 <p className="text-sm text-slate-500 leading-relaxed">
-                    Platform e-commerce masa depan untuk UMKM Indonesia.
-                 </p>
-              </div>
-              <div>
-                 <h4 className="font-bold mb-4">Produk</h4>
-                 <ul className="space-y-2 text-sm text-slate-600">
-                    <li><Link href="#" className="hover:text-primary">Fitur</Link></li>
-                    <li><Link href="#" className="hover:text-primary">Integrasi</Link></li>
-                    <li><Link href="#" className="hover:text-primary">Harga</Link></li>
-                 </ul>
-              </div>
-              <div>
-                 <h4 className="font-bold mb-4">Perusahaan</h4>
-                 <ul className="space-y-2 text-sm text-slate-600">
-                    <li><Link href="#" className="hover:text-primary">Tentang Kami</Link></li>
-                    <li><Link href="#" className="hover:text-primary">Karir</Link></li>
-                    <li><Link href="#" className="hover:text-primary">Blog</Link></li>
-                 </ul>
-              </div>
-              <div>
-                 <h4 className="font-bold mb-4">Legal</h4>
-                 <ul className="space-y-2 text-sm text-slate-600">
-                    <li><Link href="#" className="hover:text-primary">Privasi</Link></li>
-                    <li><Link href="#" className="hover:text-primary">Syarat</Link></li>
-                 </ul>
-              </div>
-           </div>
-           <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-400">
-              <p>&copy; 2024 SaaSMarket Inc. All rights reserved.</p>
-              <div className="flex gap-4">
-                 {/* Social icons placeholder */}
               </div>
            </div>
         </div>

@@ -9,7 +9,20 @@ export async function getPublicOrderDetails(orderId: string) {
     .from("orders")
     .select(
       `
-      *,
+      id,
+      shop_id,
+      buyer_id,
+      guest_info,
+      status,
+      payment_method,
+      total_amount,
+      platform_fee,
+      gateway_fee,
+      payment_details,
+      snap_token,
+      scheduled_for,
+      created_at,
+      updated_at,
       shops (
         name,
         slug,

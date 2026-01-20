@@ -25,6 +25,7 @@ export default function SellerRegisterPage() {
       name: 'Seller Baru', // Default placeholder name, since we removed the input
       email: '',
       password: '',
+      whatsapp: '',
       role: 'seller', 
     },
   })
@@ -37,6 +38,7 @@ export default function SellerRegisterPage() {
     formData.append('name', 'Seller Baru') // Send placeholder
     formData.append('email', data.email)
     formData.append('password', data.password)
+    formData.append('whatsapp', data.whatsapp)
     formData.append('role', 'seller') 
 
     const result = await signup(formData)
@@ -76,6 +78,18 @@ export default function SellerRegisterPage() {
             />
             {form.formState.errors.email && (
                 <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
+            )}
+            </div>
+            <div className="grid gap-2">
+            <Label htmlFor="whatsapp">Nomor WhatsApp</Label>
+            <Input 
+                id="whatsapp" 
+                placeholder="081234567890" 
+                {...form.register('whatsapp')}
+                disabled={isLoading}
+            />
+            {form.formState.errors.whatsapp && (
+                <p className="text-xs text-destructive">{form.formState.errors.whatsapp.message}</p>
             )}
             </div>
             <div className="grid gap-2">

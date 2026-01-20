@@ -17,8 +17,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "SaaS Marketplace | Platform Jual Beli Modern",
-  description: "Platform marketplace multi-tenant lengkap untuk penjual dan pembeli.",
+  title: "YukJajan | Jajan Lokal Jadi Mudah",
+  description: "Platform marketplace modern untuk menemukan jajanan favorit dan produk lokal terbaik.",
 };
 
 export default function RootLayout({

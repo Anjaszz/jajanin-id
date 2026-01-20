@@ -37,6 +37,10 @@ export async function placeOrder(params: PlaceOrderParams) {
     0,
   );
 
+  // Gateway fee: 0.7% of total
+  const gateway_fee =
+    params.payment_method === "gateway" ? Math.round(total_amount * 0.007) : 0;
+
   // Platform fee logic (Spec 5.2)
   // Example 5% fee
   const platform_fee =
@@ -55,6 +59,7 @@ export async function placeOrder(params: PlaceOrderParams) {
       payment_method: params.payment_method,
       total_amount: total_amount,
       platform_fee: platform_fee,
+      gateway_fee: gateway_fee,
     } as any)
     .select()
     .single();
@@ -84,10 +89,14 @@ export async function placeOrder(params: PlaceOrderParams) {
   if (params.payment_method === "gateway") {
     try {
       const { snap } = await import("@/lib/midtrans");
+
+      // Calculate final amount including gateway fee
+      const finalAmount = total_amount + gateway_fee;
+
       const transaction = await snap.createTransaction({
         transaction_details: {
           order_id: (order as any).id,
-          gross_amount: total_amount,
+          gross_amount: finalAmount,
         },
         customer_details: {
           first_name: params.guest_info?.name || "Customer",
@@ -99,9 +108,20 @@ export async function placeOrder(params: PlaceOrderParams) {
       snapUrl = transaction.redirect_url;
 
       // Update order with snap token
-      await (supabase.from("orders") as any)
+      const { data: updateData, error: updateError } = await (
+        supabase.from("orders") as any
+      )
         .update({ snap_token: snapToken } as any)
-        .eq("id", (order as any).id);
+        .eq("id", (order as any).id)
+        .select();
+
+      if (updateError) {
+        console.error("Failed to update snap_token:", updateError);
+      } else if (!updateData || updateData.length === 0) {
+        console.error("Update returned no data - possible RLS issue");
+      } else {
+        revalidatePath(`/orders/${(order as any).id}`);
+      }
     } catch (err) {
       console.error("Midtrans Error:", err);
       // We still return success for the order creation, but without snap token

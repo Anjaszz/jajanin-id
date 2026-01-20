@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { placeOrder } from '@/app/actions/orders'
 import { getProductsByIds } from '@/app/actions/public-shop'
 import { cn } from '@/lib/utils'
+import { isShopOpen } from '@/lib/shop-status'
 
 interface Product {
   id: string
@@ -48,6 +49,12 @@ export default function CheckoutClient({ shop, userProfile }: { shop: any, userP
   const router = useRouter()
 
   useEffect(() => {
+    const shopStatus = isShopOpen(shop)
+    if (!shopStatus.isOpen) {
+       router.push(`/${shop.slug}`)
+       return
+    }
+
     const savedCart = localStorage.getItem(`cart_${shop.id}`)
     if (!savedCart) {
       router.push(`/${shop.slug}`)
@@ -161,38 +168,48 @@ export default function CheckoutClient({ shop, userProfile }: { shop: any, userP
       guest_info: guestInfo
     })
     
-    // ... rest of handlePlaceOrder remains same
     if (result.success) {
       if (paymentMethod === 'gateway' && result.snapToken) {
-        window.snap.pay(result.snapToken, {
-          onSuccess: (res: any) => {
-            localStorage.removeItem(`cart_${shop.id}`)
-            // Store order in history
-            const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
-            orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
-            localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
-            
-            router.push(`/orders/${result.orderId}`)
-          },
-          onPending: (res: any) => {
-            localStorage.removeItem(`cart_${shop.id}`)
-            router.push(`/orders/${result.orderId}`)
-          },
-          onError: (res: any) => {
-            alert('Pembayaran gagal, silakan coba lagi.')
-            setIsOrdering(false)
-          },
-          onClose: () => {
-             setIsOrdering(false)
-          }
-        })
+        if (typeof window !== 'undefined' && window.snap) {
+          window.snap.pay(result.snapToken, {
+            onSuccess: (res: any) => {
+              localStorage.removeItem(`cart_${shop.id}`)
+              const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
+              orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
+              localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              router.push(`/orders/${result.orderId}`)
+            },
+            onPending: (res: any) => {
+              localStorage.removeItem(`cart_${shop.id}`)
+              const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
+              orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
+              localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              router.push(`/orders/${result.orderId}`)
+            },
+            onError: (res: any) => {
+              localStorage.removeItem(`cart_${shop.id}`)
+              const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
+              orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
+              localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              router.push(`/orders/${result.orderId}`)
+            },
+            onClose: () => {
+              localStorage.removeItem(`cart_${shop.id}`)
+              const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
+              orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
+              localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
+              router.push(`/orders/${result.orderId}`)
+            }
+          })
+        } else {
+          alert('Sistem pembayaran (Midtrans) belum siap. Mohon tunggu sebentar atau refresh halaman.')
+          setIsOrdering(false)
+        }
       } else {
         localStorage.removeItem(`cart_${shop.id}`)
-        // Store order in history
         const orders = JSON.parse(localStorage.getItem('guest_orders') || '[]')
         orders.unshift({ id: result.orderId, shopName: shop.name, date: new Date().toISOString() })
         localStorage.setItem('guest_orders', JSON.stringify(orders.slice(0, 10)))
-        
         router.push(`/orders/${result.orderId}`)
       }
     } else {

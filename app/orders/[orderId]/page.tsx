@@ -8,6 +8,10 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 
 import { CompleteOrderButton } from "@/components/complete-order-button"
+import { PayNowButton } from "@/components/pay-now-button"
+import Script from "next/script"
+
+export const dynamic = 'force-dynamic'
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params
@@ -42,9 +46,18 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
   }
 
   const statusInfo = getStatusInfo(order.status)
+  const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
 
   return (
-    <div className="min-h-screen bg-muted/20 py-12 px-4">
+    <>
+      {order.payment_method === 'gateway' && order.snap_token && (
+        <Script 
+          src="https://app.sandbox.midtrans.com/snap/snap.js" 
+          data-client-key={clientKey}
+          strategy="afterInteractive"
+        />
+      )}
+      <div className="min-h-screen bg-muted/20 py-12 px-4">
       <div className="container max-w-2xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
            <Button variant="ghost" asChild className="-ml-4">
@@ -72,6 +85,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                     timeStyle: 'short' 
                  })}
               </CardDescription>
+              {order.payment_method === 'gateway' && order.status === 'pending_payment' && order.snap_token && (
+                 <div className="pt-4 px-6 pb-2">
+                    <PayNowButton orderId={order.id} snapToken={order.snap_token} className="w-full" />
+                 </div>
+              )}
               {order.status === 'ready' && (
                  <div className="pt-4 px-6 pb-2">
                     <CompleteOrderButton orderId={order.id} className="w-full" />
@@ -181,5 +199,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
         </Card>
       </div>
     </div>
+    </>
   )
 }

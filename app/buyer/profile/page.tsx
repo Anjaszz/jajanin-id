@@ -4,11 +4,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Save } from "lucide-react";
+import Link from "next/link";
 
 export default async function BuyerProfilePage() {
   const profile = await getBuyerProfile() as any;
 
-  if (!profile) return <div>Loading...</div>;
+  if (!profile) {
+    return (
+      <div className="max-w-xl mx-auto py-20 text-center space-y-6">
+        <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+          <User className="h-10 w-10 text-primary" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Belum Masuk Akun</h1>
+          <p className="text-muted-foreground">Silakan masuk untuk mengelola profil dan alamat pengiriman Anda.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button asChild className="rounded-full px-8">
+            <Link href="/buyer/login">Masuk Sekarang</Link>
+          </Button>
+          <Button asChild variant="outline" className="rounded-full px-8">
+            <Link href="/buyer/register">Daftar Akun</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-xl mx-auto space-y-6">

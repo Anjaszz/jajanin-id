@@ -28,7 +28,7 @@ export default async function CheckoutPage({ params }: PageProps) {
       <Script 
         src="https://app.sandbox.midtrans.com/snap/snap.js" 
         data-client-key={clientKey}
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
       />
       <CheckoutClient shop={shop as any} userProfile={profile} />
     </>

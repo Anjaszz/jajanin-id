@@ -2,55 +2,65 @@ import Link from "next/link";
 import { ShoppingBag, User, LogOut, Package } from "lucide-react";
 import { signOutBuyer } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/utils/supabase/server";
 
-export default function BuyerLayout({
+export default async function BuyerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <div className="flex min-h-screen flex-col bg-muted/5">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl">
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2 font-heading font-bold text-xl">
-            <ShoppingBag className="h-6 w-6 text-primary" />
-            <span>SaaSMarket</span>
+          <Link href="/" className="flex items-center gap-2 font-heading font-black text-2xl tracking-tighter text-primary">
+            <ShoppingBag className="h-7 w-7 fill-primary/10" />
+            <span>YukJajan<span className="text-foreground">.</span></span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <Link href="/" className="transition-colors hover:text-primary">
+          <nav className="hidden md:flex items-center gap-8 text-sm font-bold">
+            <Link href="/" className="transition-colors hover:text-primary text-muted-foreground">
               Belanja
             </Link>
-            <Link href="/buyer/orders" className="transition-colors hover:text-primary">
+            <Link href="/buyer/orders" className="transition-colors hover:text-primary text-muted-foreground">
               Pesanan Saya
             </Link>
-            <Link href="/buyer/profile" className="transition-colors hover:text-primary">
+            <Link href="/buyer/profile" className="transition-colors hover:text-primary text-muted-foreground">
               Profil
             </Link>
           </nav>
           <div className="flex items-center gap-4">
-             <form action={signOutBuyer as any}>
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
-                   <LogOut className="h-4 w-4 mr-2" />
-                   Keluar
+             {user ? (
+               <form action={signOutBuyer as any}>
+                  <Button variant="ghost" size="sm" className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/5 font-bold transition-all">
+                     <LogOut className="h-4 w-4 mr-2" />
+                     <span className="hidden sm:inline">Keluar</span>
+                  </Button>
+               </form>
+             ) : (
+                <Button asChild size="sm" className="rounded-xl font-bold px-6 shadow-lg shadow-primary/20">
+                    <Link href="/buyer/login">Masuk</Link>
                 </Button>
-             </form>
+             )}
           </div>
         </div>
       </header>
-      <main className="flex-1 container py-8">
+      <main className="flex-1 container py-8 pb-32">
         {children}
       </main>
-      <nav className="md:hidden fixed bottom-0 w-full border-t bg-background flex justify-around p-4 z-50">
-         <Link href="/" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
-            <ShoppingBag className="h-5 w-5 mb-1" />
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-xl flex justify-around p-4 pb-8 z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+         <Link href="/" className="flex flex-col items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
+            <ShoppingBag className="h-6 w-6 mb-1 p-1" />
             Belanja
          </Link>
-         <Link href="/buyer/orders" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
-            <Package className="h-5 w-5 mb-1" />
+         <Link href="/buyer/orders" className="flex flex-col items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
+            <Package className="h-6 w-6 mb-1 p-1" />
             Pesanan
          </Link>
-         <Link href="/buyer/profile" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
-            <User className="h-5 w-5 mb-1" />
+         <Link href="/buyer/profile" className="flex flex-col items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
+            <User className="h-6 w-6 mb-1 p-1" />
             Profil
          </Link>
       </nav>

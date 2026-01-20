@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ShoppingBag, ChevronRight, Plus, Minus, MapPin, Instagram, Facebook, Clock, X, ChevronLeft, User, Package } from 'lucide-react'
+import { ShoppingBag, ChevronRight, Plus, Minus, MapPin, Instagram, Facebook, Clock, X, ChevronLeft, User, Package, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from '@/lib/utils'
+
+import { isShopOpen } from '@/lib/shop-status'
 
 interface Product {
   id: string
@@ -47,6 +49,7 @@ interface Shop {
 }
 
 export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Shop, categories: CategoryWithProducts[], isLoggedIn?: boolean }) {
+  const shopStatus = isShopOpen(shop)
   const [cart, setCart] = useState<Record<string, number>>({})
   const [isScrolled, setIsScrolled] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -147,7 +150,23 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
           </div>
           
           <div className="space-y-1">
-            <h1 className="text-2xl md:text-3xl font-heading font-bold">{shop.name}</h1>
+            <div className="flex flex-col items-center gap-2">
+               <h1 className="text-2xl md:text-3xl font-heading font-bold">{shop.name}</h1>
+               {(() => {
+                  const status = isShopOpen(shop);
+                  return (
+                     <div className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                        status.isOpen 
+                           ? "bg-green-500/10 text-green-600 border-green-500/20" 
+                           : "bg-destructive/10 text-destructive border-destructive/20"
+                     )}>
+                        <div className={cn("h-1.5 w-1.5 rounded-full animate-pulse", status.isOpen ? "bg-green-500" : "bg-destructive")} />
+                        {status.message}
+                     </div>
+                  );
+               })()}
+            </div>
             {shop.description && <p className="text-muted-foreground text-sm max-w-md">{shop.description}</p>}
           </div>
 
@@ -286,6 +305,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                         if (hasOptions) {
                           return (
                             <Button 
+                              disabled={!shopStatus.isOpen}
                               className="w-full rounded-2xl font-bold shadow-md shadow-primary/10"
                               onClick={(e) => {
                                 e.stopPropagation()
@@ -293,7 +313,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                                 setActiveImageIndex(0)
                               }}
                             >
-                              Tambah
+                              {shopStatus.isOpen ? "Tambah" : "Tutup"}
                             </Button>
                           )
                         }
@@ -323,13 +343,14 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                           </div>
                         ) : (
                           <Button 
+                            disabled={!shopStatus.isOpen}
                             className="w-full rounded-2xl font-bold shadow-md shadow-primary/10"
                             onClick={(e) => {
                               e.stopPropagation()
                               addToCart(product.id)
                             }}
                           >
-                            Tambah
+                            {shopStatus.isOpen ? "Tambah" : "Tutup"}
                           </Button>
                         )
                       })()}
@@ -344,7 +365,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
 
       {/* Floating Cart */}
       {cartCount > 0 && (
-        <div className="fixed inset-x-0 bottom-6 z-50 px-4 flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed inset-x-0 bottom-6 z-[70] px-4 flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-300">
            <Link 
              href={`/${shop.slug}/checkout`}
              onClick={() => localStorage.setItem(`cart_${shop.id}`, JSON.stringify(cart))}
@@ -370,7 +391,10 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
       )}
       {/* Product Detail Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div className={cn(
+          "fixed inset-0 z-[60] flex items-center justify-center p-4 transition-all duration-300",
+          cartCount > 0 ? "pb-32 md:pb-4" : "pb-4"
+        )}>
           <div 
             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => setSelectedProduct(null)}
@@ -445,8 +469,8 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
             </div>
 
             {/* Info Section */}
-            <div className="md:w-1/2 p-6 md:p-8 flex flex-col h-full overflow-y-auto">
-              <div className="flex-1 space-y-6">
+            <div className="md:w-1/2 flex flex-col h-full overflow-hidden">
+              <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight">{selectedProduct.name}</h2>
                   <div className="flex items-center gap-2 mt-2">
@@ -536,7 +560,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                 )}
               </div>
 
-              <div className="mt-8 pt-6 border-t">
+              <div className="p-4 md:p-8 border-t bg-background/50 backdrop-blur-xl shrink-0">
                 {(() => {
                   const addonPart = selectedAddons.length > 0 ? `:${selectedAddons.sort().join(',')}` : ''
                   const key = selectedVariant ? `${selectedProduct.id}:${selectedVariant.id}${addonPart}` : `${selectedProduct.id}:base${addonPart}`
@@ -546,7 +570,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                   if (cart[key]) {
                     return (
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center bg-muted rounded-2xl p-1 border">
+                        <div className="flex items-center justify-between bg-muted rounded-2xl p-1 border w-full">
                           <button 
                             onClick={() => removeFromCart(selectedProduct.id, selectedVariant?.id, selectedAddons)}
                             className="w-10 h-10 flex items-center justify-center rounded-xl bg-background border shadow-sm hover:text-destructive transition-colors"
@@ -561,7 +585,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                             <Plus className="h-5 w-5" />
                           </button>
                         </div>
-                        <p className="text-sm font-medium text-muted-foreground flex-1">Di keranjang</p>
+                        
                       </div>
                     )
                   }
@@ -583,22 +607,20 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
           </div>
         </div>
       )}
-      {isLoggedIn && (
-        <nav className="md:hidden fixed bottom-0 w-full border-t bg-background flex justify-around p-4 z-50">
-           <Link href="/" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
-              <ShoppingBag className="h-5 w-5 mb-1" />
-              Belanja
-           </Link>
-           <Link href="/buyer/orders" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
-              <Package className="h-5 w-5 mb-1" />
-              Pesanan
-           </Link>
-           <Link href="/buyer/profile" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
-              <User className="h-5 w-5 mb-1" />
-              Profil
-           </Link>
-        </nav>
-      )}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background flex justify-around p-4 pb-8 z-50">
+          <Link href="/" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
+             <ShoppingBag className="h-5 w-5 mb-1" />
+             Belanja
+          </Link>
+          <Link href="/buyer/orders" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
+             <Package className="h-5 w-5 mb-1" />
+             Pesanan
+          </Link>
+          <Link href="/buyer/profile" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
+             <User className="h-5 w-5 mb-1" />
+             Profil
+          </Link>
+      </nav>
     </div>
   )
 }

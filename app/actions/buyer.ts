@@ -2,25 +2,29 @@
 
 import { createClient } from "@/utils/supabase/server";
 
-export async function getBuyerOrders() {
+export async function getBuyerOrders(orderIds?: string[]) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return [];
-
-  const { data } = await supabase
-    .from("orders")
-    .select(
-      `
+  let query = supabase.from("orders").select(
+    `
       *,
       shop:shops(name, slug),
       items:order_items(*)
     `,
-    )
-    .eq("buyer_id", user.id)
-    .order("created_at", { ascending: false });
+  );
+
+  if (user) {
+    query = query.eq("buyer_id", user.id);
+  } else if (orderIds && orderIds.length > 0) {
+    query = query.in("id", orderIds);
+  } else {
+    return [];
+  }
+
+  const { data } = await query.order("created_at", { ascending: false });
 
   return data || [];
 }

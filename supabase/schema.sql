@@ -78,6 +78,8 @@ CREATE TABLE IF NOT EXISTS shops (
   social_links JSONB DEFAULT '{}'::JSONB, -- { "instagram": "...", "tiktok": "..." }
   bank_name TEXT,
   bank_account TEXT,
+  is_manual_closed BOOLEAN DEFAULT FALSE,
+  operating_hours JSONB DEFAULT '{}'::JSONB,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

@@ -79,3 +79,38 @@ export async function updateShopSettings(formData: FormData) {
   revalidatePath("/dashboard");
   return { success: true };
 }
+
+export async function toggleManualShopStatus(isClosed: boolean) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { error } = await (supabase.from("shops") as any)
+    .update({
+      is_manual_closed: isClosed,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("owner_id", user.id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard/settings");
+  return { success: true };
+}
+
+export async function updateOperatingHours(hours: any) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { error } = await (supabase.from("shops") as any)
+    .update({ operating_hours: hours, updated_at: new Date().toISOString() })
+    .eq("owner_id", user.id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard/settings");
+  return { success: true };
+}

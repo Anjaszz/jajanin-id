@@ -56,6 +56,11 @@ export type Database = {
           logo_url: string | null;
           cover_url: string | null;
           social_links: Json | null;
+          whatsapp: string | null;
+          bank_name: string | null;
+          bank_account: string | null;
+          is_manual_closed: boolean;
+          operating_hours: Json | null;
           is_active: boolean;
           created_at: string;
           updated_at: string;
@@ -71,6 +76,11 @@ export type Database = {
           logo_url?: string | null;
           cover_url?: string | null;
           social_links?: Json | null;
+          whatsapp?: string | null;
+          bank_name?: string | null;
+          bank_account?: string | null;
+          is_manual_closed?: boolean;
+          operating_hours?: Json | null;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -86,6 +96,11 @@ export type Database = {
           logo_url?: string | null;
           cover_url?: string | null;
           social_links?: Json | null;
+          whatsapp?: string | null;
+          bank_name?: string | null;
+          bank_account?: string | null;
+          is_manual_closed?: boolean;
+          operating_hours?: Json | null;
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
