@@ -53,6 +53,9 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
   const shopStatus = isShopOpen(shop)
   const isDeactivated = shop.is_active === false
   const [cart, setCart] = useState<Record<string, number>>({})
+  /* ... inside ShopClient ... */
+  const [isClearCartOpen, setIsClearCartOpen] = useState(false)
+  const [isCartOpen, setIsCartOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [selectedVariant, setSelectedVariant] = useState<any>(null)
@@ -66,8 +69,23 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
     }
   }, [selectedProduct])
 
-  // Load cart from session storage? Maybe later. For now just state.
-  
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem(`cart_${shop.id}`)
+    if (savedCart) {
+      try {
+        setCart(JSON.parse(savedCart))
+      } catch (e) {
+        console.error("Failed to parse cart", e)
+      }
+    }
+  }, [shop.id])
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+     localStorage.setItem(`cart_${shop.id}`, JSON.stringify(cart))
+  }, [cart, shop.id])
+
   const addToCart = (productId: string, variantId?: string, addonIds: string[] = []) => {
     const addonPart = addonIds.length > 0 ? `:${addonIds.sort().join(',')}` : ''
     const key = variantId ? `${productId}:${variantId}${addonPart}` : `${productId}:base${addonPart}`
@@ -77,6 +95,8 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
       [key]: (prev[key] || 0) + 1
     }))
   }
+
+
 
   const removeFromCart = (productId: string, variantId?: string, addonIds: string[] = []) => {
     const addonPart = addonIds.length > 0 ? `:${addonIds.sort().join(',')}` : ''
@@ -162,8 +182,8 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
         <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-background to-transparent" />
       </div>
 
-      <div className="container max-w-4xl px-4 -mt-12 relative z-10">
-        <div className="bg-card rounded-2xl shadow-xl border p-6 flex flex-col items-center text-center space-y-4">
+      <div className="container max-w-full flex justify-center px-4 -mt-12 relative z-10">
+        <div className="bg-card rounded-2xl max-w-4xl w-full shadow-xl border p-6 flex flex-col items-center text-center space-y-4">
           <div className="w-24 h-24 rounded-2xl border-4 border-background bg-muted overflow-hidden -mt-20 shadow-lg">
             {shop.logo_url ? (
               <img src={shop.logo_url} alt="Logo" className="w-full h-full object-cover" />
@@ -210,7 +230,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                 href={shop.google_maps_link || '#'} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-primary hover:underline"
+                className="flex items-center gap-1.5 text-blue-600 hover:underline"
               >
                 <MapPin className="h-4 w-4" />
                 {shop.address}
@@ -242,14 +262,26 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
               {category.products.map((product) => (
                 <Card 
                   key={product.id} 
-                  className="overflow-hidden group hover:shadow-xl transition-all duration-300 border bg-card flex flex-col relative cursor-pointer"
+                  className={cn(
+                    "overflow-hidden group hover:shadow-xl transition-all duration-300 border bg-card flex flex-col relative cursor-pointer",
+                    product.stock <= 0 && "opacity-60 grayscale hover:shadow-none hover:scale-100 cursor-not-allowed"
+                  )}
                   onClick={() => {
-                    setSelectedProduct(product)
-                    setActiveImageIndex(0)
+                    if (product.stock > 0) {
+                        setSelectedProduct(product)
+                        setActiveImageIndex(0)
+                    }
                   }}
                 >
                   {/* Image Header */}
                   <div className="aspect-square w-full relative overflow-hidden bg-muted">
+                    {product.stock <= 0 && (
+                        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/10 backdrop-blur-[1px]">
+                            <div className="bg-black/70 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-white/20">
+                                Stok Habis
+                            </div>
+                        </div>
+                    )}
                     {product.image_url ? (
                       <img 
                         src={product.image_url} 
@@ -343,39 +375,49 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                           )
                         }
 
+// ... inside card loop
                         const baseKey = `${product.id}:base`
-                        return cart[baseKey] ? (
-                          <div className="flex items-center justify-between bg-primary/5 rounded-2xl p-1.5 border border-primary/10" onClick={(e) => e.stopPropagation()}>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                removeFromCart(product.id)
-                              }}
-                              className="w-8 h-8 flex items-center justify-center rounded-xl bg-background border shadow-sm hover:text-destructive transition-colors"
-                            >
-                              <Minus className="h-4 w-4" />
-                            </button>
-                            <span className="text-sm font-black text-primary">{cart[baseKey]}</span>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                addToCart(product.id)
-                              }}
-                              className="w-8 h-8 flex items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-transform active:scale-90"
-                            >
-                              <Plus className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ) : (
+                        const isStockEmpty = product.stock <= 0
+
+                        if (cart[baseKey]) {
+                          return (
+                            <div className="flex items-center justify-between bg-primary/5 rounded-2xl p-1.5 border border-primary/10" onClick={(e) => e.stopPropagation()}>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  removeFromCart(product.id)
+                                }}
+                                className="w-8 h-8 flex items-center justify-center rounded-xl bg-background border shadow-sm hover:text-destructive transition-colors"
+                              >
+                                <Minus className="h-4 w-4" />
+                              </button>
+                              <span className="text-sm font-black text-primary">{cart[baseKey]}</span>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  if (product.stock > cart[baseKey]) {
+                                      addToCart(product.id)
+                                  }
+                                }}
+                                disabled={product.stock <= cart[baseKey]}
+                                className="w-8 h-8 flex items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-transform active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </button>
+                            </div>
+                          )
+                        } 
+                        
+                        return (
                           <Button 
-                            disabled={!shopStatus.isOpen}
-                            className="w-full rounded-2xl font-bold shadow-md shadow-primary/10"
+                            disabled={!shopStatus.isOpen || isStockEmpty}
+                            className="w-full rounded-2xl font-bold shadow-md shadow-primary/10 disabled:opacity-50"
                             onClick={(e) => {
                               e.stopPropagation()
                               addToCart(product.id)
                             }}
                           >
-                            {shopStatus.isOpen ? "Tambah" : "Tutup"}
+                            {!shopStatus.isOpen ? "Tutup" : (isStockEmpty ? "Stok Habis" : "Tambah")}
                           </Button>
                         )
                       })()}
@@ -386,15 +428,128 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
             </div>
           </section>
         ))}
+      
       </div>
+
+      {/* Cart Edit Modal */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center sm:p-4 transition-all duration-300">
+           <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setIsCartOpen(false)}
+           />
+           <div className="bg-card w-full max-w-lg h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-3xl sm:rounded-3xl shadow-2xl relative flex flex-col animate-in slide-in-from-bottom-10 duration-300">
+              <div className="p-4 border-b flex items-center justify-between shrink-0">
+                  <h3 className="text-lg font-heading font-bold">Keranjang Belanja</h3>
+                  <div className="flex items-center gap-2">
+                       <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive hover:bg-destructive/10 h-8"
+                          onClick={() => setIsClearCartOpen(true)}
+                        >
+                           Bersihkan
+                        </Button>
+                      <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-muted rounded-full transition-colors">
+                        <X className="h-5 w-5" />
+                      </button>
+                  </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+                 {Object.entries(cart).map(([key, count]) => {
+                    const [productId, variantId, addonIdsRaw] = key.split(':')
+                    const product = categories.flatMap(c => c.products).find(p => p.id === productId)
+                    if (!product) return null
+
+                    let price = product.price
+                    let variantName = ''
+                    let variantStock = product.stock
+
+                    if (variantId && variantId !== 'base' && product.product_variants) {
+                        const variant = product.product_variants.find(v => v.id === variantId)
+                        if (variant) {
+                            if (variant.price_override !== null) price = variant.price_override
+                            variantName = variant.name
+                            variantStock = variant.stock
+                        }
+                    }
+
+                    // Addons
+                    const addonIds = addonIdsRaw ? addonIdsRaw.split(',') : []
+                    const addons = product.product_addons?.filter(a => addonIds.includes(a.id)) || []
+                    const addonsPrice = addons.reduce((sum, a) => sum + a.price, 0)
+                    const finalPrice = price + addonsPrice
+
+                    const isStockMax = count >= variantStock
+
+                    return (
+                        <div key={key} className="flex gap-3 p-3 bg-muted/30 rounded-2xl border">
+                             <div className="h-16 w-16 bg-white rounded-xl overflow-hidden shrink-0 border">
+                                {product.image_url ? (
+                                    <img src={product.image_url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
+                                        <ShoppingBag className="h-6 w-6" />
+                                    </div>
+                                )}
+                             </div>
+                             <div className="flex-1 min-w-0">
+                                 <h4 className="font-bold truncate">{product.name}</h4>
+                                 <div className="flex flex-wrap text-[10px] gap-1 mt-1 text-muted-foreground">
+                                    {variantName && <span className="bg-primary/5 text-primary px-1 rounded-md border border-primary/10">{variantName}</span>}
+                                    {addons.map((addon, i) => (
+                                       <span key={i} className="bg-muted px-1 rounded-md border">+{addon.name}</span>
+                                    ))}
+                                 </div>
+                                 <p className="text-sm font-bold mt-1 text-primary">Rp {(finalPrice * count).toLocaleString('id-ID')}</p>
+                             </div>
+                             
+                             <div className="flex flex-col items-end justify-between shrink-0">
+                                 <div className="flex items-center gap-2 bg-background border rounded-lg p-0.5 shadow-sm">
+                                      <button 
+                                        onClick={() => removeFromCart(product.id, variantId === 'base' ? undefined : variantId, addonIds)}
+                                        className="w-6 h-6 flex items-center justify-center hover:bg-destructive hover:text-white rounded-md transition-colors"
+                                      >
+                                          <Minus className="h-3 w-3" />
+                                      </button>
+                                      <span className="text-xs font-bold w-4 text-center">{count}</span>
+                                      <button 
+                                        onClick={() => addToCart(product.id, variantId === 'base' ? undefined : variantId, addonIds)}
+                                        disabled={isStockMax}
+                                        className="w-6 h-6 flex items-center justify-center hover:bg-primary hover:text-white rounded-md transition-colors disabled:opacity-30"
+                                      >
+                                          <Plus className="h-3 w-3" />
+                                      </button>
+                                 </div>
+                             </div>
+                        </div>
+                    )
+                 })}
+              </div>
+
+              <div className="p-4 border-t bg-muted/10 shrink-0 space-y-3">
+                  <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">Total Pembayaran</span>
+                      <span className="text-xl font-black text-primary">Rp {cartTotal.toLocaleString('id-ID')}</span>
+                  </div>
+                  <Button asChild className="w-full h-12 rounded-2xl text-lg font-bold shadow-lg shadow-primary/20">
+                     <Link href={`/${shop.slug}/checkout`}>
+                        Lanjut ke Pembayaran
+                        <ChevronRight className="ml-2 h-5 w-5" />
+                     </Link>
+                  </Button>
+              </div>
+           </div>
+        </div>
+      )}
 
       {/* Floating Cart */}
       {cartCount > 0 && (
         <div className="fixed inset-x-0 bottom-6 z-[70] px-4 flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-300">
-           <Link 
-             href={`/${shop.slug}/checkout`}
-             onClick={() => localStorage.setItem(`cart_${shop.id}`, JSON.stringify(cart))}
-             className="w-full max-w-md bg-primary text-primary-foreground rounded-2xl p-4 shadow-2xl flex items-center justify-between group hover:scale-[1.02] transition-transform active:scale-95"
+           <button 
+             onClick={() => setIsCartOpen(true)}
+             className="w-full max-w-md bg-primary text-primary-foreground rounded-2xl p-4 shadow-2xl flex items-center justify-between group hover:scale-[1.02] transition-transform active:scale-95 cursor-pointer"
            >
              <div className="flex items-center gap-3">
                <div className="relative">
@@ -403,17 +558,61 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                    {cartCount}
                  </span>
                </div>
-               <div>
-                 <p className="text-xs opacity-80 uppercase font-bold tracking-widest leading-none">Checkout</p>
+               <div className="text-left">
+                 <p className="text-xs opacity-80 uppercase font-bold tracking-widest leading-none">Total Keranjang</p>
                  <p className="text-lg font-bold">Rp {cartTotal.toLocaleString('id-ID')}</p>
                </div>
              </div>
-             <div className="bg-white/20 p-2 rounded-xl group-hover:translate-x-1 transition-transform">
-                <ChevronRight className="h-6 w-6" />
+             <div className="bg-white/20 px-3 py-1.5 rounded-xl font-bold text-sm group-hover:bg-white/30 transition-colors flex items-center gap-2">
+                Lihat Detail
+                <ChevronRight className="h-4 w-4" />
              </div>
-           </Link>
+           </button>
         </div>
       )}
+      {/* Clear Cart Confirmation Modal */}
+      {isClearCartOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+           <div 
+             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+             onClick={() => setIsClearCartOpen(false)}
+           />
+           <div className="bg-card w-full max-w-sm rounded-3xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-300">
+             <div className="text-center space-y-4">
+               <div className="w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto">
+                 <ShoppingBag className="h-8 w-8" />
+               </div>
+               <div>
+                  <h3 className="text-lg font-bold">Hapus semua item?</h3>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Tindakan ini akan mengosongkan keranjang belanja Anda. Anda tidak dapat membatalkannya.
+                  </p>
+               </div>
+               <div className="grid grid-cols-2 gap-3 pt-2">
+                  <Button 
+                    variant="outline" 
+                    className="rounded-xl h-12 font-bold"
+                    onClick={() => setIsClearCartOpen(false)}
+                  >
+                    Batal
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    className="rounded-xl h-12 font-bold text-white"
+                    onClick={() => {
+                      setCart({})
+                      setIsClearCartOpen(false)
+                      setIsCartOpen(false)
+                    }}
+                  >
+                    Ya, Hapus
+                  </Button>
+               </div>
+             </div>
+           </div>
+        </div>
+      )}
+
       {/* Product Detail Modal */}
       {selectedProduct && (
         <div className={cn(
@@ -592,40 +791,53 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                   const hasVariants = selectedProduct.product_variants && selectedProduct.product_variants.length > 0
                   const isVariantSelected = !hasVariants || !!selectedVariant
                   
-                  if (cart[key]) {
-                    return (
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-between bg-muted rounded-2xl p-1 border w-full">
-                          <button 
-                            onClick={() => removeFromCart(selectedProduct.id, selectedVariant?.id, selectedAddons)}
-                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-background border shadow-sm hover:text-destructive transition-colors"
-                          >
-                            <Minus className="h-5 w-5" />
-                          </button>
-                          <span className="w-12 text-center text-lg font-black text-primary">{cart[key]}</span>
-                          <button 
-                            onClick={() => addToCart(selectedProduct.id, selectedVariant?.id, selectedAddons)}
-                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-transform active:scale-90"
-                          >
-                            <Plus className="h-5 w-5" />
-                          </button>
-                        </div>
-                        
-                      </div>
-                    )
-                  }
-                  
-                  return (
-                    <Button 
-                      className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20"
-                      disabled={!isVariantSelected}
-                      onClick={() => {
-                        addToCart(selectedProduct.id, selectedVariant?.id, selectedAddons)
-                      }}
-                    >
-                      {isVariantSelected ? 'Tambah ke Keranjang' : 'Pilih Varian Terlebih Dahulu'}
-                    </Button>
-                  )
+// ... inside shop-client.tsx component
+
+                        // Logic for Modal Button
+                        const isStockAvailable = (() => {
+                            if (selectedVariant) return selectedVariant.stock > 0
+                            return selectedProduct.stock > 0
+                        })()
+
+                        if (cart[key]) {
+                            return (
+                              <div className="flex items-center gap-4">
+                                <div className="flex items-center justify-between bg-muted rounded-2xl p-1 border w-full">
+                                  <button 
+                                    onClick={() => removeFromCart(selectedProduct.id, selectedVariant?.id, selectedAddons)}
+                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-background border shadow-sm hover:text-destructive transition-colors"
+                                  >
+                                    <Minus className="h-5 w-5" />
+                                  </button>
+                                  <span className="w-12 text-center text-lg font-black text-primary">{cart[key]}</span>
+                                  <button 
+                                    onClick={() => {
+                                        // Check max stock? For now just simple check
+                                        if (isStockAvailable && ((selectedVariant?.stock ?? selectedProduct.stock) > cart[key])) {
+                                             addToCart(selectedProduct.id, selectedVariant?.id, selectedAddons)
+                                        }
+                                    }}
+                                    disabled={!isStockAvailable || ((selectedVariant?.stock ?? selectedProduct.stock) <= cart[key])}
+                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-transform active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    <Plus className="h-5 w-5" />
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                        }
+                          
+                        return (
+                            <Button 
+                              className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 disabled:opacity-50"
+                              disabled={!isVariantSelected || !isStockAvailable}
+                              onClick={() => {
+                                addToCart(selectedProduct.id, selectedVariant?.id, selectedAddons)
+                              }}
+                            >
+                              {!isVariantSelected ? 'Pilih Varian Terlebih Dahulu' : (!isStockAvailable ? 'Stok Habis' : 'Tambah ke Keranjang')}
+                            </Button>
+                        )
                 })()}
               </div>
             </div>

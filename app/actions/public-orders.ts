@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { restoreOrderStock } from "./stock-utils";
 
 export async function getPublicOrderDetails(orderId: string) {
   const supabase = await createClient();
@@ -55,10 +56,15 @@ export async function getPublicOrderDetails(orderId: string) {
     if (orderAny.status === "pending_payment") {
       const now = new Date();
       const expiryTime = 24 * 60 * 60 * 1000;
+
+      // ... (in getPublicOrderDetails)
       if (
         now.getTime() - new Date(orderAny.created_at).getTime() >
         expiryTime
       ) {
+        // Restore Stock
+        await restoreOrderStock(orderAny.id);
+
         await (supabase.from("orders") as any)
           .update({ status: "cancelled_by_buyer" })
           .eq("id", orderAny.id);

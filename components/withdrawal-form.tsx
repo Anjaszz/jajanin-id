@@ -22,10 +22,11 @@ interface WithdrawalFormProps {
   balance: number;
   bankName: string;
   bankAccount: string;
+  bankHolderName: string;
   isActive: boolean;
 }
 
-export function WithdrawalForm({ balance, bankName, bankAccount, isActive }: WithdrawalFormProps) {
+export function WithdrawalForm({ balance, bankName, bankAccount, bankHolderName, isActive }: WithdrawalFormProps) {
   const [loading, setLoading] = useState(false);
   const [displayAmount, setDisplayAmount] = useState<string>('');
   const [showConfirm, setShowConfirm] = useState(false);
@@ -104,31 +105,36 @@ export function WithdrawalForm({ balance, bankName, bankAccount, isActive }: Wit
   return (
     <>
       <form ref={formRef} onSubmit={validateAndShowConfirm} className="grid gap-6">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="grid gap-1.5">
-            <Label htmlFor="bankName" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Nama Bank</Label>
-            <Input 
-              id="bankName" 
-              name="bankName" 
-              placeholder="Contoh: BCA" 
-              defaultValue={bankName} 
-              required 
-              className="rounded-xl border-slate-200"
-              disabled={loading || !isActive}
-            />
+        {/* Read-only Bank Info Card */}
+        <div className="bg-white/50 border border-slate-100 p-4 rounded-2xl flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
+              <CheckCircle2 className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Rekening Tujuan</p>
+              <h4 className="font-bold text-sm text-slate-900 leading-tight">
+                {bankName} • {bankAccount}
+              </h4>
+              <p className="font-bold text-[10px] text-blue-600 uppercase mt-0.5">{bankHolderName}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Dana akan dikirimkan ke rekening ini.</p>
+            </div>
           </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="accountNumber" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Nomor Rekening</Label>
-            <Input 
-              id="accountNumber" 
-              name="accountNumber" 
-              placeholder="000-000-000" 
-              defaultValue={bankAccount} 
-              required 
-              className="rounded-xl border-slate-200"
-              disabled={loading || !isActive}
-            />
+          <div className="text-right hidden sm:block">
+            <p className="text-[9px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-bold uppercase">Ready</p>
           </div>
+        </div>
+
+        {/* Hidden fields for server action compatibility */}
+        <input type="hidden" name="bankName" value={bankName} />
+        <input type="hidden" name="accountNumber" value={bankAccount} />
+        <input type="hidden" name="bankHolderName" value={bankHolderName} />
+
+        <div className="p-3 bg-blue-50/50 border border-blue-100/50 rounded-xl">
+          <p className="text-[10px] text-blue-600 font-medium flex items-center gap-2">
+            <AlertCircle className="h-3 w-3" />
+            Ingin ganti rekening? Silakan ubah melalui menu <strong>Pengaturan Toko</strong>.
+          </p>
         </div>
 
         <div className="grid gap-2">
@@ -200,7 +206,7 @@ export function WithdrawalForm({ balance, bankName, bankAccount, isActive }: Wit
             </div>
             <AlertDialogTitle className="text-2xl font-black text-center sm:text-left">Konfirmasi Penarikan</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-500 text-center sm:text-left text-base">
-              Anda akan menarik dana sebesar <strong className="text-slate-900">{formatCurrency(Number(deformatNumber(displayAmount)))}</strong> ke rekening <strong className="text-slate-900">{bankName} ({bankAccount})</strong>. Pastikan data sudah benar.
+              Anda akan menarik dana sebesar <strong className="text-slate-900">{formatCurrency(Number(deformatNumber(displayAmount)))}</strong> ke rekening <strong className="text-slate-900">{bankName} ({bankAccount})</strong> an. <strong className="text-slate-900">{bankHolderName}</strong>. Pastikan data sudah benar.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6 gap-3">

@@ -14,7 +14,7 @@ export async function getWalletData() {
   // Fetch shop details - making bank fields optional in case columns are not created yet
   let { data: shop, error: shopError } = await supabase
     .from("shops")
-    .select("id, bank_name, bank_account")
+    .select("id, bank_name, bank_account, bank_holder_name")
     .eq("owner_id", user.id)
     .single();
 
@@ -126,6 +126,7 @@ export async function requestWithdrawal(formData: FormData) {
 
   const bankName = formData.get("bankName") as string;
   const accountNumber = formData.get("accountNumber") as string;
+  const bankHolderName = formData.get("bankHolderName") as string;
   const amount = Number(formData.get("amount"));
 
   if (amount < 20000) {
@@ -189,7 +190,7 @@ export async function requestWithdrawal(formData: FormData) {
       status: "pending",
       bank_name: bankName,
       account_number: accountNumber,
-      account_holder: (profile as any)?.name || "Unknown",
+      account_holder: bankHolderName || "Unknown",
     } as any)
     .select()
     .single();

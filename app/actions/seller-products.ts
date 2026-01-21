@@ -14,7 +14,7 @@ const ProductSchema = z.object({
   category_id: z.string().uuid("Kategori tidak valid").optional(),
 });
 
-export async function getSellerProducts(page = 1, limit = 10) {
+export async function getSellerProducts(page = 1, limit = 10, search = "") {
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,10 +33,16 @@ export async function getSellerProducts(page = 1, limit = 10) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const { data, count, error } = await supabase
+  let query = supabase
     .from("products")
     .select("*", { count: "exact" })
-    .eq("shop_id", (shop as any).id)
+    .eq("shop_id", (shop as any).id);
+
+  if (search) {
+    query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+  }
+
+  const { data, count, error } = await query
     .range(from, to)
     .order("created_at", { ascending: false });
 
@@ -379,4 +385,23 @@ export async function updateProduct(id: string, formData: FormData) {
   revalidatePath("/dashboard/products");
   revalidatePath(`/dashboard/products/edit/${id}`);
   redirect("/dashboard/products");
+}
+
+export async function toggleProductStatus(id: string, currentStatus: boolean) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { error } = await (supabase.from("products") as any)
+    .update({ is_active: !currentStatus })
+    .eq("id", id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard/products");
+  return { success: true };
 }

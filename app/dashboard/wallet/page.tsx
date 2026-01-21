@@ -1,11 +1,10 @@
-import { getWalletData, requestWithdrawal } from "@/app/actions/wallet"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Wallet, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle2, XCircle } from "lucide-react"
+import { getWalletData } from "@/app/actions/wallet"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Wallet, Clock, Activity, TrendingUp } from "lucide-react"
 import { SyncWalletButton } from "@/components/sync-wallet-button"
 import { WithdrawalForm } from "@/components/withdrawal-form"
+import { WalletHistory } from "@/components/dashboard/wallet-history"
+import { formatCurrency } from "@/lib/utils"
 
 export default async function WalletPage() {
   const data = await getWalletData()
@@ -16,124 +15,74 @@ export default async function WalletPage() {
     <div className="p-12 text-center space-y-4">
       <Wallet className="h-12 w-12 text-muted-foreground opacity-20 mx-auto" />
       <h3 className="text-xl font-bold">Dompet Sedang Disiapkan</h3>
-      <p className="text-muted-foreground max-w-xs mx-auto">Kami sedang menyiapkan sistem keuangan untuk toko Anda. Silakan coba muat ulang halaman dalam beberapa saat.</p>
-      <Button onClick={() => window.location.reload()}>Muat Ulang Halaman</Button>
+      <p className="text-muted-foreground max-w-xs mx-auto text-sm">Kami sedang menyiapkan sistem keuangan untuk toko Anda.</p>
     </div>
   )
 
   const { wallet, transactions, shop } = data
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount)
-  }
-
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-heading font-bold tracking-tight bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">Dompet Toko</h1>
-          <p className="text-muted-foreground mt-1">Kelola pendapatan dan penarikan dana Anda.</p>
+    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 pb-10">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+           <div className="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center">
+              <Activity className="h-5 w-5 text-white" />
+           </div>
+           <div>
+              <h1 className="text-2xl font-black tracking-tight text-slate-900">
+                 Dompet <span className="text-blue-600">Toko</span>
+              </h1>
+              <p className="text-slate-500 text-xs font-medium">Kelola saldo dan penarikan dana ke rekening Anda.</p>
+           </div>
         </div>
         <SyncWalletButton />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Balace Card */}
-        <Card className="md:col-span-1 bg-primary text-primary-foreground shadow-2xl relative overflow-hidden flex flex-col justify-center min-h-[200px]">
-           <CardHeader>
-              <CardTitle className="text-primary-foreground/80 text-sm font-medium uppercase tracking-widest">Saldo Tersedia</CardTitle>
-           </CardHeader>
-           <CardContent>
-              <div className="text-4xl font-black mb-1">{formatCurrency((wallet as any).balance)}</div>
-              <p className="text-xs text-primary-foreground/60 italic">*Dapat ditarik kapan saja ke rekening terdaftar</p>
+      <div className="grid gap-4 md:grid-cols-12">
+        {/* Balance Card */}
+        <Card className="md:col-span-5 bg-blue-600 text-white shadow-lg shadow-blue-200 relative overflow-hidden flex flex-col justify-center min-h-[160px] border-none rounded-3xl">
+           <CardContent className="pt-6 relative z-10">
+              <p className="text-[10px] font-black uppercase tracking-widest text-blue-100 mb-1">Saldo Tersedia</p>
+              <div className="text-4xl font-black">{formatCurrency((wallet as any).balance)}</div>
+              <p className="text-[10px] text-blue-100/60 mt-2 font-medium italic">* Saldo bersih dari hasil penjualan Anda</p>
            </CardContent>
-           <div className="absolute -right-6 -bottom-6 opacity-10">
-              <Wallet className="h-32 w-32" />
+           <div className="absolute -right-4 -bottom-4 opacity-10">
+              <Wallet className="h-28 w-28" />
+           </div>
+           <div className="absolute top-4 right-4 h-8 w-8 bg-white/10 rounded-full flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-white" />
            </div>
         </Card>
 
-        {/* Withdrawal Form */}
-        <Card className="md:col-span-2 shadow-lg border-none bg-linear-to-br from-muted/50 to-background">
-           <CardHeader>
-              <CardTitle>Tarik Dana</CardTitle>
-              <CardDescription>Saldo akan dikirimkan ke rekening yang terdaftar di pengaturan.</CardDescription>
+        {/* Withdrawal Form Card */}
+        <Card className="md:col-span-7 shadow-xs border-none bg-white rounded-3xl overflow-hidden">
+           <CardHeader className="pb-3 pt-5">
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Tarik Saldo</CardTitle>
            </CardHeader>
-            <CardContent>
-               <WithdrawalForm 
-                  balance={(wallet as any).balance}
-                  bankName={(shop as any).bank_name || ''}
-                  bankAccount={(shop as any).bank_account || ''}
-                  isActive={shop.is_active !== false}
-               />
-            </CardContent>
+           <CardContent className="pb-5">
+              <WithdrawalForm 
+                balance={(wallet as any).balance}
+                bankName={(shop as any).bank_name || ''}
+                bankAccount={(shop as any).bank_account || ''}
+                bankHolderName={(shop as any).bank_holder_name || ''}
+                isActive={shop.is_active !== false}
+              />
+           </CardContent>
         </Card>
       </div>
 
-      <div className="space-y-4">
-         <h3 className="font-bold text-xl flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            Riwayat Penarikan
-         </h3>
-         
-         <div className="grid gap-4">
-            {transactions.length > 0 ? (
-               transactions.map((tx: any) => (
-                  <Card key={tx.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all">
-                     <div className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                           <div className={cn(
-                              "p-3 rounded-2xl",
-                              tx.type === 'deposit' ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
-                           )}>
-                              {tx.type === 'deposit' ? <ArrowDownLeft className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
-                           </div>
-                           <div>
-                              <p className="font-bold">{tx.description || (tx.type === 'deposit' ? 'Penjualan Keuntungan' : 'Penarikan Dana')}</p>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                                 <span>{new Date(tx.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                                 <span>•</span>
-                                 <span className="font-mono">{tx.reference_id}</span>
-                              </div>
-                           </div>
-                        </div>
-
-                        <div className="text-right">
-                           <p className={cn(
-                              "text-lg font-black",
-                              tx.type === 'deposit' ? "text-green-600" : "text-blue-600"
-                           )}>
-                              {tx.type === 'deposit' ? '+' : '-'} {formatCurrency(tx.amount)}
-                           </p>
-                           <div className="flex items-center justify-end gap-1 mt-1">
-                              {tx.status === 'completed' ? (
-                                 <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 uppercase">
-                                    <CheckCircle2 className="h-3 w-3" /> Berhasil
-                                 </span>
-                              ) : tx.status === 'pending' ? (
-                                 <span className="flex items-center gap-1 text-[10px] font-bold text-yellow-600 uppercase">
-                                    <Clock className="h-3 w-3" /> Diproses
-                                 </span>
-                              ) : (
-                                 <span className="flex items-center gap-1 text-[10px] font-bold text-destructive uppercase">
-                                    <XCircle className="h-3 w-3" /> Gagal
-                                 </span>
-                              )}
-                           </div>
-                        </div>
-                     </div>
-                  </Card>
-               ))
-            ) : (
-               <Card className="border-dashed py-12 flex flex-col items-center justify-center bg-muted/20">
-                  <Clock className="h-10 w-10 text-muted-foreground opacity-20 mb-4" />
-                  <p className="text-muted-foreground font-medium">Belum ada riwayat transaksi</p>
-               </Card>
-            )}
+      {/* Transaction History Section */}
+      <div className="space-y-4 pt-2">
+         <div className="flex items-center justify-between">
+            <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
+               <Clock className="h-5 w-5 text-blue-600" />
+               Riwayat Transaksi
+            </h3>
+            <span className="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded-full font-bold">HISTORY</span>
          </div>
+         
+         <WalletHistory initialTransactions={transactions} />
       </div>
     </div>
   )

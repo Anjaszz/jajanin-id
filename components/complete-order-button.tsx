@@ -11,9 +11,10 @@ import { cn } from '@/lib/utils'
 interface CompleteOrderButtonProps {
   orderId: string
   className?: string
+  onSuccess?: () => void
 }
 
-export function CompleteOrderButton({ orderId, className }: CompleteOrderButtonProps) {
+export function CompleteOrderButton({ orderId, className, onSuccess }: CompleteOrderButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isPending, setIsPending] = useState(false)
   const router = useRouter()
@@ -22,6 +23,7 @@ export function CompleteOrderButton({ orderId, className }: CompleteOrderButtonP
     setIsPending(true)
     try {
       await updateOrderStatus(orderId, 'completed')
+      if (onSuccess) onSuccess()
       router.refresh()
     } catch (error) {
       console.error('Failed to complete order:', error)

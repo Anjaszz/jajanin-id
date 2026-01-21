@@ -1,7 +1,9 @@
 import { getIncomeData } from "@/app/actions/finance"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, ArrowDownLeft, Clock, CheckCircle2 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { TrendingUp, TrendingDown, Clock, Calendar, Wallet, ShoppingBag, Minus } from "lucide-react"
+import { formatCurrency, cn } from "@/lib/utils"
+import { IncomeHistory } from "@/components/dashboard/income-history"
+import { IncomeChart } from "@/components/dashboard/income-chart"
 
 export default async function IncomePage() {
   const data = await getIncomeData()
@@ -10,102 +12,164 @@ export default async function IncomePage() {
 
   const { transactions, totalIncome } = data
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount)
+  // Monthly stats for chart
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonthIdx = now.getMonth()
+  
+  const monthlyData = months.map((month, idx) => {
+    const amount = transactions
+      .filter((tx: any) => {
+        const txDate = new Date(tx.created_at)
+        return txDate.getMonth() === idx && txDate.getFullYear() === currentYear
+      })
+      .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0)
+    
+    return { month, amount }
+  })
+
+  // Current vs Last Month Calculation
+  const thisMonthIncome = monthlyData[currentMonthIdx].amount
+  const lastMonthIncome = currentMonthIdx > 0 
+    ? monthlyData[currentMonthIdx - 1].amount 
+    : transactions
+        .filter((tx: any) => {
+          const txDate = new Date(tx.created_at)
+          return txDate.getMonth() === 11 && txDate.getFullYear() === currentYear - 1
+        })
+        .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0)
+
+  const monthDiff = thisMonthIncome - lastMonthIncome
+  const monthPercent = lastMonthIncome > 0 ? (monthDiff / lastMonthIncome) * 100 : 0
+
+  // Today vs Yesterday Calculation
+  const today = new Date()
+  today.setHours(0,0,0,0)
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  const todayIncome = transactions
+    .filter((tx: any) => {
+      const txDate = new Date(tx.created_at)
+      txDate.setHours(0,0,0,0)
+      return txDate.getTime() === today.getTime()
+    })
+    .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0)
+
+  const yesterdayIncome = transactions
+    .filter((tx: any) => {
+      const txDate = new Date(tx.created_at)
+      txDate.setHours(0,0,0,0)
+      return txDate.getTime() === yesterday.getTime()
+    })
+    .reduce((sum: number, tx: any) => sum + Number(tx.amount), 0)
+
+  const dayDiff = todayIncome - yesterdayIncome
+  const dayPercent = yesterdayIncome > 0 ? (dayDiff / yesterdayIncome) * 100 : 0
+
+  function GrowthIndicator({ percent, diff }: { percent: number, diff: number }) {
+    if (diff === 0 && percent === 0) return (
+      <div className="mt-4 flex items-center gap-1.5 text-slate-400">
+        <Minus className="h-3 w-3" />
+        <span className="text-[10px] font-black uppercase tracking-tighter">Stagnan</span>
+      </div>
+    )
+    
+    const isPositive = diff > 0
+    return (
+      <div className={cn(
+        "mt-4 flex items-center gap-1",
+        isPositive ? "text-green-400" : "text-red-400"
+      )}>
+        <div className={cn(
+          "p-1 rounded-lg",
+          isPositive ? "bg-green-400/10" : "bg-red-400/10"
+        )}>
+          {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-tight">
+          {isPositive ? "+" : ""}{percent.toFixed(1)}% {isPositive ? "Naik" : "Turun"}
+        </span>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-4xl font-heading font-bold tracking-tight bg-linear-to-r from-green-600 to-green-400 bg-clip-text text-transparent flex items-center gap-3">
-          <TrendingUp className="h-10 w-10 text-green-500" />
-          Riwayat Pemasukan
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-700 pb-10">
+      {/* Header */}
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
+          Laporan <span className="text-green-600">Pemasukan</span>
         </h1>
-        <p className="text-muted-foreground mt-1">Pantau semua dana yang masuk ke toko Anda.</p>
+        <p className="text-slate-500 text-sm sm:text-lg font-medium max-w-2xl">
+          Analisis performa finansial toko Anda secara detail dan transparan.
+        </p>
       </div>
 
-      <Card className="bg-green-600 text-white shadow-2xl relative overflow-hidden flex flex-col justify-center min-h-[160px] border-none">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-green-100 text-sm font-medium uppercase tracking-widest">Total Pemasukan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-5xl font-black mb-1">{formatCurrency(totalIncome)}</div>
-          <p className="text-xs text-green-100/60 italic">*Akumulasi dari semua transaksi pendapatan</p>
-        </CardContent>
-        <div className="absolute -right-6 -bottom-6 opacity-10">
-          <TrendingUp className="h-32 w-32" />
-        </div>
-      </Card>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Total Income */}
+        <Card className="border-none shadow-xl bg-slate-900 text-white rounded-3xl overflow-hidden relative group">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Akumulasi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black tracking-tight">{formatCurrency(totalIncome)}</div>
+            <div className="mt-4 flex items-center gap-2 text-green-400">
+               <div className="p-1 bg-green-400/10 rounded-lg">
+                  <TrendingUp className="h-3.5 w-3.5" />
+               </div>
+               <span className="text-[10px] font-black uppercase tracking-tighter">Performa Stabil</span>
+            </div>
+          </CardContent>
+          <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-500">
+             <Wallet className="h-24 w-24" />
+          </div>
+        </Card>
 
-      <div className="space-y-4">
-        <h3 className="font-bold text-xl flex items-center gap-2">
-          <Clock className="h-5 w-5 text-primary" />
-          Detail Pemasukan
-        </h3>
-        
-        <div className="grid gap-4">
-          {transactions.length > 0 ? (
-            transactions.map((tx: any) => (
-              <Card key={tx.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-all group">
-                <div className="p-4 flex items-center justify-between bg-card">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-green-100 text-green-700 group-hover:scale-110 transition-transform">
-                      <ArrowDownLeft className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-lg">{tx.description || 'Pendapatan Penjualan'}</p>
-                        {tx.payment_method && (
-                          <span className={cn(
-                            "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase",
-                            tx.payment_method === 'gateway' ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"
-                          )}>
-                            {tx.payment_method === 'gateway' ? 'Digital' : 'Tunai'}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                        <span>{new Date(tx.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                        {tx.reference_id && (
-                          <>
-                            <span>•</span>
-                            <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded uppercase">{tx.reference_id.slice(0, 8)}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+        {/* Monthly Income */}
+        <Card className="border-none shadow-xl bg-white border border-green-50 rounded-3xl overflow-hidden relative group">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400">Bulan Ini ({months[currentMonthIdx]})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black tracking-tight text-slate-900">{formatCurrency(thisMonthIncome)}</div>
+            <GrowthIndicator percent={Math.abs(monthPercent)} diff={monthDiff} />
+          </CardContent>
+          <div className="absolute -right-6 -bottom-6 opacity-5 group-hover:scale-110 transition-transform duration-500">
+             <Calendar className="h-24 w-24" />
+          </div>
+        </Card>
 
-                  <div className="text-right">
-                    <p className="text-2xl font-black text-green-600">
-                      + {formatCurrency(tx.amount)}
-                    </p>
-                    {tx.platform_fee > 0 && (
-                      <div className="text-[10px] text-muted-foreground flex flex-col items-end">
-                        <span>Harga: {formatCurrency(tx.gross_amount)}</span>
-                        <span className="text-red-400">Biaya Platform: -{formatCurrency(tx.platform_fee)}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-end gap-1 mt-1">
-                      <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 uppercase">
-                        <CheckCircle2 className="h-3 w-3" /> Berhasil
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))
-          ) : (
-            <Card className="border-dashed py-12 flex flex-col items-center justify-center bg-muted/20">
-              <Clock className="h-10 w-10 text-muted-foreground opacity-20 mb-4" />
-              <p className="text-muted-foreground font-medium">Belum ada riwayat pemasukan</p>
-            </Card>
-          )}
-        </div>
+        {/* Today's Income */}
+        <Card className="border-none shadow-xl bg-green-600 text-white rounded-3xl overflow-hidden relative group hidden lg:block">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-green-200">Hari Ini</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black tracking-tight">{formatCurrency(todayIncome)}</div>
+            <div className="mt-4 flex items-center gap-1">
+               <div className="p-1 bg-white/20 rounded-lg">
+                  {dayDiff >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+               </div>
+               <span className="text-[10px] font-black uppercase tracking-tight text-green-100">
+                  {dayDiff >= 0 ? "+" : ""}{Math.abs(dayPercent).toFixed(1)}% vs Kemarin
+               </span>
+            </div>
+          </CardContent>
+          <div className="absolute -right-6 -bottom-6 opacity-20 group-hover:scale-110 transition-transform duration-500">
+             <TrendingUp className="h-24 w-24" />
+          </div>
+        </Card>
+      </div>
+
+      <div className="space-y-6 sm:space-y-8">
+        {/* Chart Section - Full Width */}
+        <IncomeChart data={monthlyData} />
+
+        {/* History Section - Full Width */}
+        <IncomeHistory initialTransactions={transactions} />
       </div>
     </div>
   )

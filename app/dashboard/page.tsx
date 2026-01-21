@@ -67,30 +67,40 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="relative overflow-hidden group border-none shadow-lg bg-linear-to-br from-primary/10 to-transparent">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Penjualan Hari Ini</CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between pb-1 space-y-0 text-primary">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-70">Penjualan Hari Ini</CardTitle>
+            <TrendingUp className="h-4 w-4 opacity-50" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency((stats as any).todaySales)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Hingga pukul {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</p>
+          <CardContent className="pb-4">
+            <div className="text-2xl font-black text-slate-900">{formatCurrency((stats as any).todaySales)}</div>
+            
+            <div className="mt-2 flex items-center gap-3">
+               <div className="flex items-center gap-1.5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                  <p className="text-[10px] font-bold text-slate-500">Tunai: <span className="text-slate-700">{formatCurrency((stats as any).todayCashSales)}</span></p>
+               </div>
+               <div className="flex items-center gap-1.5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  <p className="text-[10px] font-bold text-blue-500">Digital: <span className="text-blue-700">{formatCurrency((stats as any).todayDigitalSales)}</span></p>
+               </div>
+            </div>
           </CardContent>
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500 pointer-events-none">
              <TrendingUp className="h-24 w-24" />
           </div>
         </Card>
 
-        <Card className="relative overflow-hidden group border-none shadow-lg">
+        <Card className="relative overflow-hidden group border-none shadow-lg bg-linear-to-br from-blue-500/10 to-transparent">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Pendapatan Gateway</CardTitle>
-            <CreditCard className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium">Pesanan Berhasil Hari Ini</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency((stats as any).gatewayRevenue)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Total pembayaran non-tunai</p>
+            <div className="text-2xl font-bold">{(stats as any).todayOrdersCount} Pesanan</div>
+            <p className="text-xs text-muted-foreground mt-1">Total pesanan selesai hari ini</p>
           </CardContent>
           <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
-             <CreditCard className="h-24 w-24" />
+             <ShoppingCart className="h-24 w-24 text-blue-600" />
           </div>
         </Card>
 

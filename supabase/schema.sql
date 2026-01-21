@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS shops (
   social_links JSONB DEFAULT '{}'::JSONB, -- { "instagram": "...", "tiktok": "..." }
   bank_name TEXT,
   bank_account TEXT,
+  bank_holder_name TEXT,
   is_manual_closed BOOLEAN DEFAULT FALSE,
   operating_hours JSONB DEFAULT '{}'::JSONB,
   is_active BOOLEAN DEFAULT TRUE,
@@ -122,6 +123,25 @@ CREATE TABLE IF NOT EXISTS products (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- PRODUCT VARIANTS
+CREATE TABLE IF NOT EXISTS product_variants (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  price_override DECIMAL(12, 2),
+  stock INTEGER DEFAULT 0 CHECK (stock >= 0),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- PRODUCT ADDONS
+CREATE TABLE IF NOT EXISTS product_addons (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  price DECIMAL(12, 2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- ORDERS (Pesanan)
 CREATE TABLE IF NOT EXISTS orders (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -151,7 +171,8 @@ CREATE TABLE IF NOT EXISTS order_items (
   product_id UUID REFERENCES products(id) ON DELETE SET NULL,
   quantity INTEGER NOT NULL CHECK (quantity > 0),
   price_at_purchase DECIMAL(12, 2) NOT NULL, -- Harga saat beli (takutnya harga produk berubah)
-  subtotal DECIMAL(12, 2) NOT NULL
+  subtotal DECIMAL(12, 2) NOT NULL,
+  metadata JSONB -- Untuk menyimpan varian, addon, atau catatan
 );
 
 -- WALLET_TRANSACTIONS (Riwayat Saldo)
@@ -186,6 +207,8 @@ ALTER TABLE wallets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shops ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_variants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_addons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wallet_transactions ENABLE ROW LEVEL SECURITY;
@@ -242,6 +265,28 @@ ON products FOR ALL USING (
   EXISTS (SELECT 1 FROM shops WHERE shops.id = products.shop_id AND shops.owner_id = auth.uid())
 );
 
+-- Policy Product Variants
+DROP POLICY IF EXISTS "Variants are viewable by everyone" ON product_variants;
+CREATE POLICY "Variants are viewable by everyone" 
+ON product_variants FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Shop owners can manage variants" ON product_variants;
+CREATE POLICY "Shop owners can manage variants" 
+ON product_variants FOR ALL USING (
+  EXISTS (SELECT 1 FROM products JOIN shops ON products.shop_id = shops.id WHERE products.id = product_variants.product_id AND shops.owner_id = auth.uid())
+);
+
+-- Policy Product Addons
+DROP POLICY IF EXISTS "Addons are viewable by everyone" ON product_addons;
+CREATE POLICY "Addons are viewable by everyone" 
+ON product_addons FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Shop owners can manage addons" ON product_addons;
+CREATE POLICY "Shop owners can manage addons" 
+ON product_addons FOR ALL USING (
+  EXISTS (SELECT 1 FROM products JOIN shops ON products.shop_id = shops.id WHERE products.id = product_addons.product_id AND shops.owner_id = auth.uid())
+);
+
 -- Policy Wallets & Transactions (Simple for now: owners can see their own)
 DROP POLICY IF EXISTS "Shop owners can view their wallet" ON wallets;
 CREATE POLICY "Shop owners can view their wallet" 
@@ -288,6 +333,11 @@ DROP POLICY IF EXISTS "Buyers can complete their own orders" ON orders;
 CREATE POLICY "Buyers can complete their own orders" ON orders FOR UPDATE 
 USING (auth.uid() = buyer_id AND status = 'ready')
 WITH CHECK (status = 'completed');
+
+DROP POLICY IF EXISTS "Allow cancelling pending orders" ON orders;
+CREATE POLICY "Allow cancelling pending orders" ON orders FOR UPDATE 
+USING (status = 'pending_payment')
+WITH CHECK (status = 'cancelled_by_buyer');
 
 -- Policy Order Items
 DROP POLICY IF EXISTS "Anyone can create order items" ON order_items;

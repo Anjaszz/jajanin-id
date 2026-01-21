@@ -18,6 +18,7 @@ export async function updateShopSettings(formData: FormData) {
   const google_maps_link = formData.get("google_maps_link") as string;
   const bank_name = formData.get("bank_name") as string;
   const bank_account = formData.get("bank_account") as string;
+  const bank_holder_name = formData.get("bank_holder_name") as string;
   const logoFile = formData.get("logo") as File;
   const coverFile = formData.get("cover") as File;
 
@@ -67,6 +68,7 @@ export async function updateShopSettings(formData: FormData) {
       google_maps_link,
       bank_name,
       bank_account,
+      bank_holder_name,
       logo_url: logoUrl,
       cover_url: coverUrl,
       updated_at: new Date().toISOString(),

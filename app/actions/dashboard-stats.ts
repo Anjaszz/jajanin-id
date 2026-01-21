@@ -43,14 +43,31 @@ export async function getDashboardStats() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const todayOrders =
+    (salesData as any[])?.filter((o) => new Date(o.created_at) >= today) || [];
+
   const todaySales =
-    (salesData as any[])
-      ?.filter((o) => new Date(o.created_at) >= today)
-      ?.reduce(
-        (sum, order) =>
-          sum + (Number(order.total_amount) - Number(order.platform_fee)),
-        0,
-      ) || 0;
+    todayOrders.reduce(
+      (sum, order) =>
+        sum + (Number(order.total_amount) - Number(order.platform_fee)),
+      0,
+    ) || 0;
+
+  const todayCashSales = todayOrders
+    .filter((o) => o.payment_method === "cash")
+    .reduce(
+      (sum, o) => sum + (Number(o.total_amount) - Number(o.platform_fee)),
+      0,
+    );
+
+  const todayDigitalSales = todayOrders
+    .filter((o) => o.payment_method === "gateway")
+    .reduce(
+      (sum, o) => sum + (Number(o.total_amount) - Number(o.platform_fee)),
+      0,
+    );
+
+  const todayOrdersCount = todayOrders.length;
 
   const orderCount = salesData?.length || 0;
 
@@ -82,7 +99,10 @@ export async function getDashboardStats() {
     shopSlug: (shop as any).slug,
     totalSales,
     todaySales,
+    todayCashSales,
+    todayDigitalSales,
     gatewayRevenue,
+    todayOrdersCount,
     orderCount,
     productCount: productCount || 0,
     balance: (wallet as any)?.balance || 0,

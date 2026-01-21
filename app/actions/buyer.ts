@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { restoreOrderStock } from "./stock-utils";
 
 export async function getBuyerOrders(orderIds?: string[]) {
   const supabase = await createClient();
@@ -38,7 +39,13 @@ export async function getBuyerOrders(orderIds?: string[]) {
       )
       .map((o) => o.id);
 
+    // ... (in getBuyerOrders)
     if (expiredIds.length > 0) {
+      // Restore stock for each expired order
+      for (const id of expiredIds) {
+        await restoreOrderStock(id);
+      }
+
       await (supabase.from("orders") as any)
         .update({ status: "cancelled_by_buyer" })
         .in("id", expiredIds);
