@@ -12,7 +12,7 @@ export default function AuthLayout({
        <div className="absolute top-4 left-4 md:top-8 md:left-8">
         <Link href="/" className="flex items-center gap-2 font-heading font-bold text-xl tracking-tight">
             <ShoppingBag className="h-6 w-6 text-primary" />
-            <span>SaaSMarket.</span>
+            <span>YukJajan.</span>
         </Link>
        </div>
       <div className="w-full max-w-md space-y-4">

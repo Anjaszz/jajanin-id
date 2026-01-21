@@ -50,19 +50,19 @@ export default async function BuyerLayout({
       <main className="flex-1 container py-8 pb-32">
         {children}
       </main>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-xl flex justify-around p-4 pb-8 z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
-         <Link href="/" className="flex flex-col items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
-            <ShoppingBag className="h-6 w-6 mb-1 p-1" />
-            Belanja
-         </Link>
-         <Link href="/buyer/orders" className="flex flex-col items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
-            <Package className="h-6 w-6 mb-1 p-1" />
-            Pesanan
-         </Link>
-         <Link href="/buyer/profile" className="flex flex-col items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
-            <User className="h-6 w-6 mb-1 p-1" />
-            Profil
-         </Link>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background flex justify-around p-4 pb-8 z-50">
+          <Link href="/" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
+             <ShoppingBag className="h-5 w-5 mb-1" />
+             Belanja
+          </Link>
+          <Link href="/buyer/orders" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
+             <Package className="h-5 w-5 mb-1" />
+             Pesanan
+          </Link>
+          <Link href="/buyer/profile" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
+             <User className="h-5 w-5 mb-1" />
+             Profil
+          </Link>
       </nav>
     </div>
   );

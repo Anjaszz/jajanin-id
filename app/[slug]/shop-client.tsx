@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ShoppingBag, ChevronRight, Plus, Minus, MapPin, Instagram, Facebook, Clock, X, ChevronLeft, User, Package, Save, ShieldOff } from 'lucide-react'
+import { useRef } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
+import { ShoppingBag, ChevronRight, Plus, Minus, MapPin, Instagram, Facebook, Clock, X, ChevronLeft, User, Package, Save, ShieldOff, Share2, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from '@/lib/utils'
@@ -54,6 +56,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
   const isDeactivated = shop.is_active === false
   const [cart, setCart] = useState<Record<string, number>>({})
   /* ... inside ShopClient ... */
+  /* ... inside ShopClient ... */
   const [isClearCartOpen, setIsClearCartOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -61,6 +64,61 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
   const [selectedVariant, setSelectedVariant] = useState<any>(null)
   const [selectedAddons, setSelectedAddons] = useState<string[]>([])
   const [activeImageIndex, setActiveImageIndex] = useState(0)
+
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  // Sync URL with Selected Product
+  useEffect(() => {
+    const productId = searchParams.get('productId')
+    if (productId) {
+      const product = categories.flatMap(c => c.products).find(p => p.id === productId)
+      if (product) {
+        setSelectedProduct(product)
+      }
+    } else {
+      setSelectedProduct(null)
+    }
+  }, [searchParams, categories])
+
+  const handleOpenProduct = (product: Product) => {
+    setSelectedProduct(product)
+    setActiveImageIndex(0)
+    // Update URL without refreshing
+    const newParams = new URLSearchParams(searchParams.toString())
+    newParams.set('productId', product.id)
+    router.replace(`${pathname}?${newParams.toString()}`, { scroll: false })
+  }
+
+  const handleCloseProduct = () => {
+    setSelectedProduct(null)
+    // Remove query param
+    const newParams = new URLSearchParams(searchParams.toString())
+    newParams.delete('productId')
+    router.replace(`${pathname}?${newParams.toString()}`, { scroll: false })
+  }
+
+  const handleShareProduct = async (product: Product) => {
+     const shareUrl = `${window.location.origin}${pathname}?productId=${product.id}`
+     const shareData = {
+        title: product.name,
+        text: `Cek produk ${product.name} di ${shop.name}!`,
+        url: shareUrl
+     }
+
+     if (navigator.share) {
+        try {
+           await navigator.share(shareData)
+        } catch (err) {
+           console.log('Error sharing:', err)
+        }
+     } else {
+        // Fallback to clipboard
+        navigator.clipboard.writeText(shareUrl)
+        alert('Link produk berhasil disalin!')
+     }
+  }
 
   useEffect(() => {
     if (selectedProduct) {
@@ -268,8 +326,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                   )}
                   onClick={() => {
                     if (product.stock > 0) {
-                        setSelectedProduct(product)
-                        setActiveImageIndex(0)
+                        handleOpenProduct(product)
                     }
                   }}
                 >
@@ -309,8 +366,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                             onClick={(e) => {
                               e.stopPropagation()
                               if (hasOptions) {
-                                setSelectedProduct(product)
-                                setActiveImageIndex(0)
+                                handleOpenProduct(product)
                               } else {
                                 addToCart(product.id)
                               }
@@ -366,8 +422,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                               className="w-full rounded-2xl font-bold shadow-md shadow-primary/10"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                setSelectedProduct(product)
-                                setActiveImageIndex(0)
+                                handleOpenProduct(product)
                               }}
                             >
                               {shopStatus.isOpen ? "Tambah" : "Tutup"}
@@ -375,7 +430,6 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                           )
                         }
 
-// ... inside card loop
                         const baseKey = `${product.id}:base`
                         const isStockEmpty = product.stock <= 0
 
@@ -621,15 +675,23 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
         )}>
           <div 
             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
-            onClick={() => setSelectedProduct(null)}
+            onClick={handleCloseProduct}
           />
           <div className="bg-card w-full max-w-2xl max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row animate-in zoom-in-95 duration-300">
-            <button 
-              onClick={() => setSelectedProduct(null)}
-              className="absolute top-4 right-4 z-20 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                <button
+                  onClick={() => handleShareProduct(selectedProduct)}
+                  className="p-2 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-colors"
+                >
+                   <Share2 className="h-5 w-5" />
+                </button>
+                <button 
+                  onClick={handleCloseProduct}
+                  className="p-2 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+            </div>
 
             {/* Gallery Section */}
             <div className="md:w-1/2 relative bg-muted flex flex-col">

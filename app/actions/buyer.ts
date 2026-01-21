@@ -12,7 +12,7 @@ export async function getBuyerOrders(orderIds?: string[]) {
   let query = supabase.from("orders").select(
     `
       *,
-      shop:shops(name, slug),
+      shop:shops(name, slug, logo_url),
       items:order_items(*)
     `,
   );

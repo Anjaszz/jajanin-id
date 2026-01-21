@@ -6,8 +6,7 @@ export async function restoreOrderStock(orderId: string) {
   const supabase = await createClient();
 
   // Fetch Order with Items
-  const { data: order, error } = await supabase
-    .from("orders")
+  const { data: order, error } = await (supabase.from("orders") as any)
     .select("*, order_items(*)")
     .eq("id", orderId)
     .single();
@@ -22,28 +21,24 @@ export async function restoreOrderStock(orderId: string) {
     if (item.product_id) {
       if (metadata.variant_id) {
         // Restore Variant Stock
-        const { data: v } = await supabase
-          .from("product_variants")
+        const { data: v } = await (supabase.from("product_variants") as any)
           .select("stock")
           .eq("id", metadata.variant_id)
           .single();
         if (v) {
-          await supabase
-            .from("product_variants")
-            .update({ stock: v.stock + qty } as any)
+          await (supabase.from("product_variants") as any)
+            .update({ stock: (v as any).stock + qty })
             .eq("id", metadata.variant_id);
         }
       } else {
         // Restore Product Stock
-        const { data: p } = await supabase
-          .from("products")
+        const { data: p } = await (supabase.from("products") as any)
           .select("stock")
           .eq("id", item.product_id)
           .single();
-        if (p && p.stock !== null) {
-          await supabase
-            .from("products")
-            .update({ stock: p.stock + qty } as any)
+        if (p && (p as any).stock !== null) {
+          await (supabase.from("products") as any)
+            .update({ stock: (p as any).stock + qty })
             .eq("id", item.product_id);
         }
       }

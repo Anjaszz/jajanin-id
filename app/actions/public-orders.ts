@@ -6,8 +6,7 @@ import { restoreOrderStock } from "./stock-utils";
 export async function getPublicOrderDetails(orderId: string) {
   const supabase = await createClient();
 
-  const { data: order, error } = await supabase
-    .from("orders")
+  const { data: order, error } = await (supabase.from("orders") as any)
     .select(
       `
       id,

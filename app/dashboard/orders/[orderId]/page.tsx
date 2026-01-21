@@ -119,6 +119,7 @@ export default async function OrderDetailPage({
                           status={status} 
                           paymentMethod={payment_method} 
                           snapToken={snap_token} 
+                          createdAt={created_at}
                       />
                  </div>
 

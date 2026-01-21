@@ -173,8 +173,9 @@ export async function processPosOrder(
   const platformFee = 0;
 
   // 2. Create Order
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
+  const { data: order, error: orderError } = await (
+    supabase.from("orders") as any
+  )
     .insert({
       shop_id: (shop as any).id,
       buyer_id: null,
@@ -189,7 +190,7 @@ export async function processPosOrder(
         change: receivedAmount ? receivedAmount - totalAmount : 0,
         type: "pos_transaction",
       },
-    } as any)
+    })
     .select()
     .single();
 
@@ -201,9 +202,9 @@ export async function processPosOrder(
     order_id: (order as any).id,
   }));
 
-  const { error: itemsError } = await supabase
-    .from("order_items")
-    .insert(itemsWithOrderId as any);
+  const { error: itemsError } = await (
+    supabase.from("order_items") as any
+  ).insert(itemsWithOrderId);
 
   if (itemsError) return { error: itemsError.message };
 
@@ -233,9 +234,8 @@ export async function processPosOrder(
       snapToken = transaction.token;
 
       // Update order with snap token
-      await supabase
-        .from("orders")
-        .update({ snap_token: snapToken } as any)
+      await (supabase.from("orders") as any)
+        .update({ snap_token: snapToken })
         .eq("id", orderIdStr);
     } catch (err) {
       console.error("Midtrans POS Error:", err);
@@ -249,14 +249,12 @@ export async function processPosOrder(
   // For POS, stock deduction happens immediately.
   for (const update of stockUpdates) {
     if (update.table === "products") {
-      await supabase
-        .from("products")
-        .update({ stock: update.current - update.deduct } as any)
+      await (supabase.from("products") as any)
+        .update({ stock: update.current - update.deduct })
         .eq("id", update.id);
     } else if (update.table === "product_variants") {
-      await supabase
-        .from("product_variants")
-        .update({ stock: update.current - update.deduct } as any)
+      await (supabase.from("product_variants") as any)
+        .update({ stock: update.current - update.deduct })
         .eq("id", update.id);
     }
   }
@@ -276,18 +274,17 @@ export async function processPosOrder(
       const netAmount = totalAmount - platformFee;
       const newBalance = currentBalance + netAmount;
 
-      await supabase
-        .from("wallets")
-        .update({ balance: newBalance } as any)
+      await (supabase.from("wallets") as any)
+        .update({ balance: newBalance })
         .eq("id", wallet.id);
 
-      await supabase.from("wallet_transactions").insert({
+      await (supabase.from("wallet_transactions") as any).insert({
         wallet_id: wallet.id,
         amount: netAmount,
         type: "sales_revenue",
         description: `Penjualan Kasir #${(order as any).id.slice(0, 8)}`,
         reference_id: (order as any).id,
-      } as any);
+      });
     }
   }
 

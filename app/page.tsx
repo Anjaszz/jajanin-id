@@ -217,9 +217,7 @@ export default async function Home() {
                     <Button className="h-16 px-10 rounded-2xl text-xl font-black shadow-2xl shadow-primary/30" asChild>
                        <Link href="/business">Daftar Jadi Seller</Link>
                     </Button>
-                    <Button variant="outline" className="h-16 px-10 rounded-2xl text-xl font-black border-slate-700 text-white hover:bg-slate-800 transition-colors" asChild>
-                       <Link href="/seller/login">Login Penjual</Link>
-                    </Button>
+                  
                  </div>
               </div>
               

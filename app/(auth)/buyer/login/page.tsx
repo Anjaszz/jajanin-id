@@ -99,12 +99,6 @@ export default function BuyerLoginPage() {
             Daftar Pembeli
           </Link>
         </div>
-        <div className="text-xs text-muted-foreground text-center mt-2">
-          Ingin jualan?{' '}
-          <Link href="/seller/login" className="text-muted-foreground/80 hover:text-primary underline underline-offset-2">
-            Masuk sebagai Penjual
-          </Link>
-        </div>
       </CardFooter>
     </Card>
   )
