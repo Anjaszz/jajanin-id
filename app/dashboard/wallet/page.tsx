@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Wallet, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle2, XCircle } from "lucide-react"
 import { SyncWalletButton } from "@/components/sync-wallet-button"
+import { WithdrawalForm } from "@/components/withdrawal-form"
 
 export default async function WalletPage() {
   const data = await getWalletData()
@@ -61,59 +62,21 @@ export default async function WalletPage() {
               <CardTitle>Tarik Dana</CardTitle>
               <CardDescription>Saldo akan dikirimkan ke rekening yang terdaftar di pengaturan.</CardDescription>
            </CardHeader>
-           <CardContent>
-              <form action={requestWithdrawal as any} className="grid gap-4 md:grid-cols-2">
-                 <div className="grid gap-1.5">
-                    <Label htmlFor="bankName">Nama Bank</Label>
-                    <Input 
-                      id="bankName" 
-                      name="bankName" 
-                      placeholder="Contoh: BCA" 
-                      defaultValue={(shop as any).bank_name || ''} 
-                      required 
-                    />
-                 </div>
-                 <div className="grid gap-1.5">
-                    <Label htmlFor="accountNumber">Nomor Rekening</Label>
-                    <Input 
-                      id="accountNumber" 
-                      name="accountNumber" 
-                      placeholder="000-000-000" 
-                      defaultValue={(shop as any).bank_account || ''} 
-                      required 
-                    />
-                 </div>
-                 <div className="grid gap-1.5 md:col-span-2">
-                    <Label htmlFor="amount">Nominal Penarikan</Label>
-                    <div className="relative">
-                       <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">Rp</span>
-                       <Input 
-                        id="amount" 
-                        name="amount" 
-                        type="number" 
-                        className="pl-10 h-11" 
-                        placeholder="Min. 50.000" 
-                        min="50000" 
-                        max={(wallet as any).balance}
-                        required 
-                      />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      Maksimal penarikan: <span className="font-bold text-primary">{formatCurrency((wallet as any).balance)}</span>
-                    </p>
-                 </div>
-                 <Button type="submit" className="md:col-span-2 shadow-lg shadow-primary/20 h-11 font-bold">
-                    Konfirmasi Penarikan
-                 </Button>
-              </form>
-           </CardContent>
+            <CardContent>
+               <WithdrawalForm 
+                  balance={(wallet as any).balance}
+                  bankName={(shop as any).bank_name || ''}
+                  bankAccount={(shop as any).bank_account || ''}
+                  isActive={shop.is_active !== false}
+               />
+            </CardContent>
         </Card>
       </div>
 
       <div className="space-y-4">
          <h3 className="font-bold text-xl flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />
-            Riwayat Transaksi
+            Riwayat Penarikan
          </h3>
          
          <div className="grid gap-4">

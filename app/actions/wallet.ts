@@ -67,15 +67,51 @@ export async function getWalletData() {
     wallet = newWallet;
   }
 
-  const { data: transactions } = await supabase
+  // Use Admin Client to bypass RLS for transaction history to ensure reliability
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  // 1. Get base transactions (deposits, income, etc.)
+  const { data: transactions, error: txError } = await adminSupabase
     .from("wallet_transactions")
     .select("*")
     .eq("wallet_id", (wallet as any).id)
     .order("created_at", { ascending: false });
 
+  if (txError) {
+    console.error("Fetch transactions error:", txError.message);
+  }
+
+  // 2. Get withdrawals status to merge with transactions list
+  const { data: withdrawals } = await adminSupabase
+    .from("withdrawals")
+    .select("id, status, bank_name, account_number")
+    .eq("wallet_id", (wallet as any).id);
+
+  // Merge status into transactions
+  const mergedTransactions = (transactions || []).map((tx) => {
+    if (tx.type === "withdrawal") {
+      const wd = withdrawals?.find((w) => w.id === tx.reference_id);
+      let status = wd?.status || "completed";
+      if (status === "approved") status = "completed";
+      if (status === "rejected") status = "failed";
+
+      return {
+        ...tx,
+        status,
+        amount: Math.abs(tx.amount), // For UI we use absolute amount
+      };
+    }
+    return { ...tx, status: "completed" };
+  });
+
   return {
     wallet,
-    transactions: transactions || [],
+    transactions: mergedTransactions,
     shop: shop as any,
   };
 }
@@ -92,13 +128,23 @@ export async function requestWithdrawal(formData: FormData) {
   const accountNumber = formData.get("accountNumber") as string;
   const amount = Number(formData.get("amount"));
 
+  if (amount < 20000) {
+    return { error: "Minimal penarikan adalah Rp 20.000" };
+  }
+
   const { data: shop } = await supabase
     .from("shops")
-    .select("id")
+    .select("id, is_active")
     .eq("owner_id", user.id)
     .single();
 
   if (!shop) return { error: "Shop not found" };
+  if ((shop as any).is_active === false) {
+    return {
+      error:
+        "Akun Anda sedang dinonaktifkan. Silakan hubungi CS untuk informasi lebih lanjut.",
+    };
+  }
 
   const { data: wallet } = await supabase
     .from("wallets")
@@ -110,20 +156,73 @@ export async function requestWithdrawal(formData: FormData) {
     return { error: "Saldo tidak mencukupi" };
   }
 
-  // Logic for withdrawal would go here (e.g., creating a transaction record with 'pending' status)
-  // For now, we'll just record it as a transaction
-  const { error } = await supabase.from("wallet_transactions").insert({
-    wallet_id: (wallet as any).id,
-    type: "withdrawal",
-    amount: amount,
-    status: "pending",
-    reference_id: `WD-${Date.now()}`,
-    description: `Penarikan ke ${bankName} (${accountNumber})`,
-  } as any);
+  // 1. Use Admin Client to update balance (RLS might block direct update)
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
 
-  if (error) return { error: error.message };
+  // 2. Start Withdrawal Process
+  // First, deduct the balance
+  const newBalance = Number((wallet as any).balance) - amount;
+  const { error: balanceError } = await (adminSupabase.from("wallets") as any)
+    .update({ balance: newBalance })
+    .eq("id", (wallet as any).id);
+
+  if (balanceError)
+    return { error: "Gagal memproses saldo: " + balanceError.message };
+
+  // 3. Create record in 'withdrawals' table for Admin
+  const { data: profile } = await adminSupabase
+    .from("profiles")
+    .select("name")
+    .eq("id", user.id)
+    .single();
+
+  const { data: withdrawal, error: withdrawalError } = await adminSupabase
+    .from("withdrawals")
+    .insert({
+      wallet_id: (wallet as any).id,
+      amount: amount,
+      status: "pending",
+      bank_name: bankName,
+      account_number: accountNumber,
+      account_holder: (profile as any)?.name || "Unknown",
+    } as any)
+    .select()
+    .single();
+
+  if (withdrawalError) {
+    // Rollback balance if possible (though in a real app you'd use a DB transaction/RPC)
+    await (adminSupabase.from("wallets") as any)
+      .update({ balance: Number((wallet as any).balance) })
+      .eq("id", (wallet as any).id);
+    return { error: "Gagal membuat pengajuan: " + withdrawalError.message };
+  }
+
+  // 4. Create record in 'wallet_transactions' for Seller history
+  // Using negative amount to follow project convention for withdrawals
+  const { error: txError } = await adminSupabase
+    .from("wallet_transactions")
+    .insert({
+      wallet_id: (wallet as any).id,
+      type: "withdrawal",
+      amount: -amount,
+      reference_id: (withdrawal as any).id,
+      description: `Penarikan ke ${bankName} (${accountNumber})`,
+    } as any);
+
+  if (txError) {
+    console.error("Wallet transaction error:", txError.message);
+    // Even if this fails, we don't necessarily want to rollback the withdrawal record
+    // because that's for admin, but we should know about it.
+  }
 
   revalidatePath("/dashboard/wallet");
+  revalidatePath("/admin/withdrawals");
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
@@ -133,6 +232,14 @@ export async function syncWalletBalance() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
+
+  // Initialize Admin Client to bypass RLS for critical sync calculations
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
 
   // 1. Get Shop
   const { data: shop, error: shopError } = await supabase
@@ -180,29 +287,23 @@ export async function syncWalletBalance() {
     return sum + (amt - fee);
   }, 0);
 
-  // 4. Calculate Expenses from SUCCESSFUL Withdrawals
-  const { data: withdrawals, error: wdError } = await supabase
+  // 4. Calculate Expenses (Negative amounts in wallet_transactions)
+  // We sum up everything in wallet_transactions that is a withdrawal or platform_fee
+  // These should be negative values in the database
+  const { data: txOut, error: wdError } = await adminSupabase
     .from("wallet_transactions")
     .select("amount")
     .eq("wallet_id", (wallet as any).id)
-    .eq("type", "withdrawal")
-    .eq("status", "completed");
+    .in("type", ["withdrawal", "platform_fee"]);
 
-  const totalOut = ((withdrawals as any[]) || []).reduce(
-    (sum, w) => sum + Number(w.amount || 0),
+  const totalOut = ((txOut as any[]) || []).reduce(
+    (sum, w) => sum + Math.abs(Number(w.amount || 0)),
     0,
   );
 
   const finalBalance = Math.max(0, totalIncome - totalOut);
 
   // 5. Hard Update Balance in DB (Use Service Role to bypass RLS for balance update)
-  const { createClient: createAdminClient } =
-    await import("@supabase/supabase-js");
-  const adminSupabase = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-
   const { error: updateError } = await (adminSupabase.from("wallets") as any)
     .update({
       balance: finalBalance,

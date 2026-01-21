@@ -12,6 +12,11 @@ export interface ShopStatus {
 export function isShopOpen(shop: any): ShopStatus {
   if (!shop) return { isOpen: false, message: "Toko tidak ditemukan" };
 
+  // 0. Check Deactivation (by Admin)
+  if (shop.is_active === false) {
+    return { isOpen: false, message: "Toko Dinonaktifkan" };
+  }
+
   // 1. Check manual override
   if (shop.is_manual_closed) {
     return { isOpen: false, message: "Toko sedang tutup (Manual)" };

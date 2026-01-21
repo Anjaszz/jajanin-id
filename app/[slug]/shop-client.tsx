@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ShoppingBag, ChevronRight, Plus, Minus, MapPin, Instagram, Facebook, Clock, X, ChevronLeft, User, Package, Save } from 'lucide-react'
+import { ShoppingBag, ChevronRight, Plus, Minus, MapPin, Instagram, Facebook, Clock, X, ChevronLeft, User, Package, Save, ShieldOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from '@/lib/utils'
@@ -46,10 +46,12 @@ interface Shop {
   logo_url: string | null
   cover_url: string | null
   social_links: any
+  is_active?: boolean
 }
 
 export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Shop, categories: CategoryWithProducts[], isLoggedIn?: boolean }) {
   const shopStatus = isShopOpen(shop)
+  const isDeactivated = shop.is_active === false
   const [cart, setCart] = useState<Record<string, number>>({})
   const [isScrolled, setIsScrolled] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -126,7 +128,30 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
   }, [])
 
   return (
-    <div className="min-h-screen bg-muted/5 pb-32">
+    <div className="min-h-screen bg-muted/5 pb-32 relative">
+      {/* Deactivation Overlay for Buyer */}
+      {isDeactivated && (
+        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md flex items-center justify-center p-6 text-center">
+          <Card className="max-w-md border-none shadow-2xl rounded-3xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="h-2 bg-destructive w-full" />
+            <CardHeader className="pt-10 pb-6">
+              <div className="h-20 w-20 bg-destructive/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                <ShieldOff className="h-10 w-10 text-destructive" />
+              </div>
+              <CardTitle className="text-2xl font-black">Toko Sedang Ditinjau</CardTitle>
+              <CardDescription className="text-base text-slate-500 font-medium leading-relaxed mt-2">
+                Maaf, toko ini sedang dalam masa peninjauan oleh moderator atau telah dinonaktifkan sementara. Silakan coba lagi nanti atau cari toko lain.
+              </CardDescription>
+            </CardHeader>
+            <CardFooter className="pb-10 flex flex-col gap-4">
+              <Button asChild className="w-full rounded-2xl h-12 bg-slate-900 font-bold">
+                <Link href="/">Kembali ke Beranda</Link>
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
+
       {/* Shop Header */}
       <div className="relative h-48 md:h-64 overflow-hidden">
         {shop.cover_url ? (

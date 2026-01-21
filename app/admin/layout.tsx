@@ -9,10 +9,13 @@ import {
   Users, 
   Settings,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from 'lucide-react'
 
 import { signOutSeller } from '@/app/actions/auth'
+import { ModeToggle } from '@/components/mode-toggle'
+import { AdminNavItem } from '@/components/admin/nav-item'
 
 export default async function AdminLayout({
   children,
@@ -36,16 +39,19 @@ export default async function AdminLayout({
         
         <nav className="flex-1 space-y-2">
           <AdminNavItem href="/admin" icon={<LayoutDashboard className="h-5 w-5" />}>
-            Overview
+            Statistik Utama
           </AdminNavItem>
           <AdminNavItem href="/admin/withdrawals" icon={<Banknote className="h-5 w-5" />}>
-            Withdrawals
+            Penarikan Dana
+          </AdminNavItem>
+          <AdminNavItem href="/admin/balance" icon={<Activity className="h-5 w-5" />}>
+            Arus Kas
           </AdminNavItem>
           <AdminNavItem href="/admin/users" icon={<Users className="h-5 w-5" />}>
-            Manage Users
+            Kelola Pengguna
           </AdminNavItem>
           <AdminNavItem href="/admin/settings" icon={<Settings className="h-5 w-5" />}>
-            Global Settings
+            Pengaturan
           </AdminNavItem>
         </nav>
 
@@ -65,6 +71,10 @@ export default async function AdminLayout({
               <ChevronRight className="h-4 w-4" />
               <span className="text-foreground font-medium">Dashboard</span>
            </div>
+           
+           <div className="flex items-center gap-4">
+              <ModeToggle />
+           </div>
         </header>
 
         <div className="flex-1 p-8">
@@ -72,19 +82,5 @@ export default async function AdminLayout({
         </div>
       </main>
     </div>
-  )
-}
-
-function AdminNavItem({ href, icon, children }: { href: string; icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-400 transition-all hover:bg-slate-800 hover:text-white group"
-    >
-      <div className="text-slate-500 group-hover:text-blue-400 transition-colors">
-        {icon}
-      </div>
-      {children}
-    </Link>
   )
 }

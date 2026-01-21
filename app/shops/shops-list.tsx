@@ -12,11 +12,13 @@ import { isShopOpen } from '@/lib/shop-status'
 export default function ShopsList({ initialShops }: { initialShops: any[] }) {
   const [search, setSearch] = useState('')
   
-  const filteredShops = initialShops.filter(shop => 
-    shop.name.toLowerCase().includes(search.toLowerCase()) ||
-    (shop.description && shop.description.toLowerCase().includes(search.toLowerCase())) ||
-    (shop.address && shop.address.toLowerCase().includes(search.toLowerCase()))
-  )
+  const filteredShops = initialShops
+    .filter(shop => isShopOpen(shop).isOpen)
+    .filter(shop => 
+      shop.name.toLowerCase().includes(search.toLowerCase()) ||
+      (shop.description && shop.description.toLowerCase().includes(search.toLowerCase())) ||
+      (shop.address && shop.address.toLowerCase().includes(search.toLowerCase()))
+    )
 
   return (
     <div className="space-y-12">

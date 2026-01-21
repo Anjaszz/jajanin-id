@@ -1,25 +1,41 @@
-
 import Link from 'next/link'
 import { getSellerProducts, deleteProduct } from '@/app/actions/seller-products'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { PlusCircle, Pencil, Trash2 } from 'lucide-react'
+import { PlusCircle, Pencil, Trash2, ShieldOff } from 'lucide-react'
+import { getShop } from '@/app/actions/shop'
+import { cn } from '@/lib/utils'
 
 export default async function ProductsPage() {
   const { data: products, count } = await getSellerProducts()
+  const shop = await getShop()
+  const isDeactivated = shop?.is_active === false
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-         <div>
-            <h1 className="text-3xl font-heading font-bold tracking-tight">Produk Saya</h1>
-            <p className="text-muted-foreground">Kelola katalog produk toko Anda.</p>
+         <div className="flex items-center gap-4">
+            <div>
+               <h1 className="text-3xl font-heading font-bold tracking-tight">Produk Saya</h1>
+               <p className="text-muted-foreground">Kelola katalog produk toko Anda.</p>
+            </div>
+            {isDeactivated && (
+               <div className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-100 flex items-center gap-1.5 animate-pulse">
+                  <ShieldOff className="h-3 w-3" /> Fitur Dibatasi
+               </div>
+            )}
          </div>
-         <Button asChild>
-            <Link href="/dashboard/products/create">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Tambah Produk
-            </Link>
+         <Button asChild disabled={isDeactivated} variant={isDeactivated ? "outline" : "default"}>
+            {isDeactivated ? (
+               <span className="flex items-center gap-2 opacity-50">
+                  <PlusCircle className="h-4 w-4" /> Tambah Produk
+               </span>
+            ) : (
+               <Link href="/dashboard/products/create">
+                   <PlusCircle className="mr-2 h-4 w-4" />
+                   Tambah Produk
+               </Link>
+            )}
          </Button>
       </div>
 
@@ -48,20 +64,29 @@ export default async function ProductsPage() {
                                     <td className="p-4 align-middle">{product.stock}</td>
                                     <td className="p-4 align-middle text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <Button variant="ghost" size="icon" asChild>
-                                                <Link href={`/dashboard/products/edit/${product.id}`}>
-                                                    <Pencil className="h-4 w-4" />
-                                                </Link>
-                                            </Button>
-                                            <form action={(async () => {
-                                                'use server'
-                                                await deleteProduct(product.id)
-                                            }) as any}>
-                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                                     <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </form>
-                                        </div>
+                                             <Button variant="ghost" size="icon" asChild disabled={isDeactivated}>
+                                                 {isDeactivated ? (
+                                                     <Pencil className="h-4 w-4 opacity-30" />
+                                                 ) : (
+                                                     <Link href={`/dashboard/products/edit/${product.id}`}>
+                                                         <Pencil className="h-4 w-4" />
+                                                     </Link>
+                                                 )}
+                                             </Button>
+                                             <form action={isDeactivated ? undefined : (async () => {
+                                                 'use server'
+                                                 await deleteProduct(product.id)
+                                             }) as any}>
+                                                 <Button 
+                                                     variant="ghost" 
+                                                     size="icon" 
+                                                     className="text-destructive hover:text-destructive"
+                                                     disabled={isDeactivated}
+                                                 >
+                                                      <Trash2 className={cn("h-4 w-4", isDeactivated && "opacity-30")} />
+                                                 </Button>
+                                             </form>
+                                         </div>
                                     </td>
                                 </tr>
                             ))}

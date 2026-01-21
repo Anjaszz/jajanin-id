@@ -202,7 +202,14 @@ ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
 DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile" 
-ON profiles FOR UPDATE USING (auth.uid() = id);
+ON profiles FOR UPDATE USING (
+  auth.uid() = id OR 
+  EXISTS (
+    SELECT 1 FROM profiles 
+    WHERE profiles.id = auth.uid() 
+    AND profiles.role = 'admin'
+  )
+);
 
 -- Policy Shops
 DROP POLICY IF EXISTS "Shops are viewable by everyone" ON shops;
@@ -215,7 +222,14 @@ ON shops FOR INSERT WITH CHECK (auth.uid() = owner_id);
 
 DROP POLICY IF EXISTS "Owners can update their shops" ON shops;
 CREATE POLICY "Owners can update their shops" 
-ON shops FOR UPDATE USING (auth.uid() = owner_id);
+ON shops FOR UPDATE USING (
+  auth.uid() = owner_id OR 
+  EXISTS (
+    SELECT 1 FROM profiles 
+    WHERE profiles.id = auth.uid() 
+    AND profiles.role = 'admin'
+  )
+);
 
 -- Policy Products
 DROP POLICY IF EXISTS "Products are viewable by everyone" ON products;
@@ -361,3 +375,33 @@ DROP POLICY IF EXISTS "Authenticated Upload" ON storage.objects;
 CREATE POLICY "Authenticated Upload" 
 ON storage.objects FOR INSERT 
 WITH CHECK (bucket_id = 'products' AND auth.role() = 'authenticated');
+-- 6. SYSTEM SETTINGS
+-- Pengaturan Global Platform
+CREATE TABLE IF NOT EXISTS system_settings (
+  id INTEGER PRIMARY KEY DEFAULT 1,
+  platform_fee DECIMAL(5, 2) DEFAULT 5.00,
+  gateway_fee DECIMAL(5, 2) DEFAULT 0.70,
+  is_maintenance BOOLEAN DEFAULT FALSE,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT one_row_only CHECK (id = 1)
+);
+
+-- Seed initial values
+INSERT INTO system_settings (id, platform_fee, gateway_fee)
+VALUES (1, 5.0, 0.7)
+ON CONFLICT (id) DO NOTHING;
+
+-- RLS for System Settings
+ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can view system settings" ON system_settings;
+CREATE POLICY "Anyone can view system settings" ON system_settings FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Only admin can update system settings" ON system_settings;
+CREATE POLICY "Only admin can update system settings" ON system_settings FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM profiles 
+    WHERE profiles.id = auth.uid() 
+    AND profiles.role = 'admin'
+  )
+);

@@ -17,6 +17,7 @@ interface ScheduleDay {
 interface ScheduleSettingsProps {
   initialHours: Record<string, ScheduleDay>;
   isManualClosed: boolean;
+  isDeactivated?: boolean;
 }
 
 const dayMap: Record<string, string> = {
@@ -31,7 +32,7 @@ const dayMap: Record<string, string> = {
 
 const days = Object.keys(dayMap);
 
-export default function ScheduleSettings({ initialHours, isManualClosed: initialManualClosed }: ScheduleSettingsProps) {
+export default function ScheduleSettings({ initialHours, isManualClosed: initialManualClosed, isDeactivated = false }: ScheduleSettingsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [innerManualClosed, setInnerManualClosed] = useState(initialManualClosed);
@@ -112,22 +113,23 @@ export default function ScheduleSettings({ initialHours, isManualClosed: initial
         <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-primary/5">
           <span className={cn(
             "text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors duration-300",
-            innerManualClosed ? "text-destructive" : "text-green-600"
+            (innerManualClosed || isDeactivated) ? "text-destructive" : "text-green-600"
           )}>
-            {innerManualClosed ? "Toko Tutup" : "Toko Buka"}
+            {isDeactivated ? "Toko Dinonaktifkan" : (innerManualClosed ? "Toko Tutup" : "Toko Buka")}
           </span>
-          <Label htmlFor="shop_open_instant" className="relative inline-flex items-center cursor-pointer group select-none">
+          <Label htmlFor="shop_open_instant" className={cn("relative inline-flex items-center group select-none", isDeactivated ? "cursor-not-allowed opacity-50" : "cursor-pointer")}>
             <input 
               type="checkbox" 
               id="shop_open_instant"
-              checked={!innerManualClosed}
+              checked={!innerManualClosed && !isDeactivated}
               onChange={handleManualToggle}
+              disabled={isDeactivated}
               className="sr-only peer" 
             />
             <div className="relative w-14 h-7.5 bg-muted rounded-full peer peer-checked:bg-green-500 transition-all duration-300 shadow-inner">
               <div className={cn(
                 "absolute top-1 left-1 w-5.5 h-5.5 bg-white rounded-full shadow-md transition-all duration-300 transform",
-                !innerManualClosed ? "translate-x-6.5" : "translate-x-0"
+                (!innerManualClosed && !isDeactivated) ? "translate-x-6.5" : "translate-x-0"
               )} />
             </div>
           </Label>

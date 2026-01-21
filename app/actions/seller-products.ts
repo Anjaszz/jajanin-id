@@ -91,12 +91,19 @@ export async function createProduct(formData: FormData) {
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("id")
+    .select("id, is_active")
     .eq("owner_id", user.id)
     .single();
 
   if (!shop) {
     return { error: "Shop not found" };
+  }
+
+  if ((shop as any).is_active === false) {
+    return {
+      error:
+        "Akun Anda sedang dinonaktifkan. Anda tidak dapat menambah produk.",
+    };
   }
 
   const name = formData.get("name") as string;
@@ -218,6 +225,21 @@ export async function createProduct(formData: FormData) {
 
 export async function deleteProduct(id: string) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: shop } = await supabase
+    .from("shops")
+    .select("is_active")
+    .eq("owner_id", user.id)
+    .single();
+
+  if (shop && (shop as any).is_active === false) {
+    return { error: "Akun dinonaktifkan. Tidak dapat menghapus produk." };
+  }
+
   const { error } = await supabase.from("products").delete().eq("id", id);
 
   if (error) {
@@ -234,6 +256,19 @@ export async function updateProduct(id: string, formData: FormData) {
 
   if (!user) {
     return { error: "Unauthorized" };
+  }
+
+  const { data: shop } = await supabase
+    .from("shops")
+    .select("is_active")
+    .eq("owner_id", user.id)
+    .single();
+
+  if (shop && (shop as any).is_active === false) {
+    return {
+      error:
+        "Akun Anda sedang dinonaktifkan. Anda tidak dapat mengubah produk.",
+    };
   }
 
   const name = formData.get("name") as string;

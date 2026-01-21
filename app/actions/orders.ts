@@ -32,19 +32,28 @@ export async function placeOrder(params: PlaceOrderParams) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const total_amount = params.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
+  const { total_amount } = params.items.reduce(
+    (acc, item) => ({
+      total_amount: acc.total_amount + item.price * item.quantity,
+    }),
+    { total_amount: 0 },
   );
 
-  // Gateway fee: 0.7% of total
+  // Fetch dynamic system settings
+  const { getSystemSettings } = await import("./system-settings");
+  const settings = await getSystemSettings();
+
+  // Gateway fee: dynamic % of total
   const gateway_fee =
-    params.payment_method === "gateway" ? Math.round(total_amount * 0.007) : 0;
+    params.payment_method === "gateway"
+      ? Math.round(total_amount * (settings.gateway_fee / 100))
+      : 0;
 
   // Platform fee logic (Spec 5.2)
-  // Example 5% fee
   const platform_fee =
-    params.payment_method === "gateway" ? total_amount * 0.05 : 0;
+    params.payment_method === "gateway"
+      ? total_amount * (settings.platform_fee / 100)
+      : 0;
 
   const { data: order, error: orderError } = await supabase
     .from("orders")

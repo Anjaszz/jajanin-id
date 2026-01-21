@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ShoppingBag, MapPin, Globe, Image as ImageIcon, CheckCircle2, CreditCard, LogOut, Shield, Clock } from "lucide-react"
+import { ShoppingBag, MapPin, Globe, Image as ImageIcon, CheckCircle2, CreditCard, LogOut, Shield, Clock, ShieldOff } from "lucide-react"
 import { signOutSeller } from "@/app/actions/auth"
 import { updateShopSettings } from "@/app/actions/settings"
 import ScheduleSettings from "./schedule-settings"
@@ -109,11 +109,12 @@ export default async function SettingsPage() {
                     <CardDescription className="text-sm font-medium">Atur jam operasional atau tutup toko secara instan. <span className="text-primary">(Simpan Otomatis)</span></CardDescription>
                  </CardHeader>
                  <CardContent className="p-5 sm:p-6 pt-0 sm:pt-0">
-                    <ScheduleSettings 
-                      key={shop.updated_at}
-                      initialHours={(shop as any).operating_hours || {}} 
-                      isManualClosed={(shop as any).is_manual_closed || false}
-                    />
+                     <ScheduleSettings 
+                       key={shop.updated_at}
+                       initialHours={(shop as any).operating_hours || {}} 
+                       isManualClosed={(shop as any).is_manual_closed || false}
+                       isDeactivated={shop.is_active === false}
+                     />
                  </CardContent>
               </Card>
            </div>
@@ -204,10 +205,29 @@ export default async function SettingsPage() {
                        <p className="text-lg font-black tracking-tight leading-none italic">Satu Klik Lebih Bagus!</p>
                        <p className="text-xs text-slate-400 font-medium leading-relaxed">Simpan perubahan Informasi Dasar, Kontak, dan Branding Anda agar tampil di halaman pembeli.</p>
                     </div>
-                    <Button type="submit" size="lg" className="w-full sm:w-auto px-10 h-14 text-base font-black uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_10px_40px_-10px] shadow-primary/40 rounded-2xl group transition-all">
-                       <CheckCircle2 className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
-                       Simpan Perubahan
+                    <Button 
+                       type="submit" 
+                       size="lg" 
+                       className="w-full sm:w-auto px-10 h-14 text-base font-black uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_10px_40px_-10px] shadow-primary/40 rounded-2xl group transition-all"
+                       disabled={shop.is_active === false}
+                    >
+                       {shop.is_active === false ? (
+                          <span className="flex items-center gap-2 opacity-50">
+                             <ShieldOff className="h-5 w-5 mr-3" />
+                             Fitur Dikunci
+                          </span>
+                       ) : (
+                          <>
+                             <CheckCircle2 className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
+                             Simpan Perubahan
+                          </>
+                       )}
                     </Button>
+                    {shop.is_active === false && (
+                       <p className="sm:hidden text-center text-[10px] text-red-100 font-bold opacity-80">
+                         Pengaturan dikunci sementara.
+                       </p>
+                    )}
                  </CardFooter>
               </Card>
            </div>

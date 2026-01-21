@@ -12,11 +12,12 @@ import {
   CreditCard,
   FileText,
   Wallet,
-  TrendingUp
+  TrendingUp,
+  ShieldOff
 } from 'lucide-react'
 import { getShop } from '@/app/actions/shop'
 import { signOutSeller } from '@/app/actions/auth'
-import { headers } from 'next/headers'
+import { ModeToggle } from '@/components/mode-toggle'
 
 export default async function DashboardLayout({
   children,
@@ -32,21 +33,8 @@ export default async function DashboardLayout({
 
   const shop = await getShop()
   
-  // Get current path to check if we are in create-shop page
-  // Headers solution is a bit flaky for pathname in SC, but for redirect logic:
-  // We can just rely on the fact that if shop is null, we render a limited layout 
-  // OR we strictly redirect if they are not in the create-shop page (done via middleware or client check usually, but let's try centralized logic here)
-  
-  // Actually, let's keep it simple:
-  // If no shop, we render a layout that basically just contains the children (which will be the create-shop form presumably)
-  // But wait, the children is determined by the URL. If URL is /dashboard, children is DashboardPage.
-  // So inside DashboardPage, we should also check shop status? 
-  // A cleaner way is: If no shop, render a "Onboarding Layout" or just the children with a specific "Create Shop" prompt.
-  
-  // Let's check headers for simplistic "current url" check or just let the page handle redirection?
-  // Use a variable to determine if we show sidebar.
-  
   const showSidebar = !!shop;
+  const isDeactivated = shop?.is_active === false;
 
   return (
     <div className="flex min-h-screen bg-muted/20">
@@ -89,17 +77,43 @@ export default async function DashboardLayout({
       )}
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+      <main className="flex-1 flex flex-col min-h-0 overflow-y-auto relative">
+        {/* Desktop Header for Theme Toggle */}
+        <header className="hidden md:flex h-16 items-center justify-end px-8 border-b bg-card shrink-0">
+          <ModeToggle />
+        </header>
+
         {/* Mobile Header (Simplified) */}
         {!showSidebar && (
-           <header className="flex h-16 items-center border-b bg-background px-6 md:hidden">
-              <Link href="/" className="font-bold">SaaSMarket.</Link>
+           <header className="flex h-16 items-center justify-between border-b bg-background px-6 md:hidden">
+              <Link href="/" className="font-bold">YukJajan.</Link>
+              <ModeToggle />
            </header>
         )}
+
+        {/* Deactivation Banner */}
+        {isDeactivated && (
+          <div className="bg-red-600 text-white px-6 py-4 flex items-center justify-between sticky top-0 z-100 animate-in slide-in-from-top duration-500 shadow-xl">
+             <div className="flex items-center gap-4">
+                <div className="bg-white/20 p-2 rounded-xl">
+                   <ShieldOff className="h-6 w-6" />
+                </div>
+                <div>
+                   <h4 className="font-bold text-lg leading-none">Akun Toko Dinonaktifkan</h4>
+                   <p className="text-red-100 text-sm mt-1">Toko Anda ditutup sementara oleh sistem. Beberapa fitur pengelolaan dibatasi.</p>
+                </div>
+             </div>
+             <a 
+              href="https://wa.me/628123456789" 
+              target="_blank" 
+              className="bg-white text-red-600 px-6 py-2 rounded-xl font-bold text-sm hover:bg-red-50 transition-colors whitespace-nowrap shadow-lg shadow-black/10"
+             >
+                Hubungi CS
+             </a>
+          </div>
+        )}
         
-        {/* If user logged in but no shop, and not on create-shop, we might want to guide them. 
-            But for now, let's just render children. Use page.tsx to enforce logic. */}
-        <div className="flex-1 p-4 md:p-8 pb-24 md:pb-8">
+        <div className="flex-1 p-4 md:p-8 pb-24 md:pb-8 relative">
             {children}
         </div>
 
@@ -111,6 +125,10 @@ export default async function DashboardLayout({
             <MobileNavItem href="/dashboard/orders" icon={<FileText className="h-6 w-6" />} label="Pesanan" />
             <MobileNavItem href="/dashboard/income" icon={<TrendingUp className="h-6 w-6" />} label="Masuk" />
             <MobileNavItem href="/dashboard/settings" icon={<Settings className="h-6 w-6" />} label="Profil" />
+            <div className="flex flex-col items-center justify-center px-3">
+              <ModeToggle />
+              <span className="text-[10px] font-bold text-muted-foreground">Mode</span>
+            </div>
           </nav>
         )}
       </main>
@@ -131,9 +149,6 @@ function MobileNavItem({ href, icon, label }: { href: string; icon: React.ReactN
 }
 
 function NavItem({ href, icon, children }: { href: string; icon: React.ReactNode; children: React.ReactNode }) {
-  // Logic to highlight active link would need 'use client' and usePathname. 
-  // Keeping it simple server component for now, or make this a client component.
-  // For MVP, standard styling.
   return (
     <Link
       href={href}

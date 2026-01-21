@@ -12,7 +12,7 @@ import { isShopOpen } from '@/lib/shop-status'
 export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const shops = await getAllShops()
+  const shops = (await getAllShops()).filter(shop => isShopOpen(shop).isOpen)
   const currentYear = new Date().getFullYear()
 
   return (

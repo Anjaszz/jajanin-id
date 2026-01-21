@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function isAdmin() {
   const supabase = await createClient();
@@ -22,7 +23,14 @@ export async function getPendingWithdrawals() {
   const supabase = await createClient();
   if (!(await isAdmin())) return [];
 
-  const { data } = await supabase
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data } = await adminSupabase
     .from("withdrawals")
     .select(
       `
@@ -30,7 +38,7 @@ export async function getPendingWithdrawals() {
       wallet:wallets(
         shop:shops(name)
       )
-    `
+    `,
     )
     .eq("status", "pending")
     .order("created_at", { ascending: true });
@@ -41,41 +49,52 @@ export async function getPendingWithdrawals() {
 export async function processWithdrawal(
   id: string,
   status: "approved" | "rejected",
-  note?: string
+  note?: string,
 ) {
   const supabase = await createClient();
   if (!(await isAdmin())) return { error: "Unauthorized" };
 
-  const { error } = await (supabase.from("withdrawals") as any)
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { error } = await (adminSupabase.from("withdrawals") as any)
     .update({ status, admin_note: note })
     .eq("id", id);
 
   if (error) return { error: error.message };
 
-  // If rejected, we should probably refund the wallet balance.
-  if (status === "rejected") {
-    const { data: withdrawal } = await supabase
-      .from("withdrawals")
-      .select("wallet_id, amount")
-      .eq("id", id)
-      .single();
-    if (withdrawal) {
-      const { data: wallet } = await (supabase.from("wallets") as any)
-        .select("balance")
-        .eq("id", (withdrawal as any).wallet_id)
-        .single();
-      if (wallet) {
-        await (supabase.from("wallets") as any)
-          .update({
-            balance:
-              Number((wallet as any).balance) +
-              Number((withdrawal as any).amount),
-          })
-          .eq("id", (withdrawal as any).wallet_id);
+  // Fetch withdrawal details to find corresponding transaction
+  const { data: withdrawal } = await adminSupabase
+    .from("withdrawals")
+    .select("wallet_id, amount")
+    .eq("id", id)
+    .single();
 
-        await (supabase.from("wallet_transactions") as any).insert({
-          wallet_id: (withdrawal as any).wallet_id,
-          amount: Number((withdrawal as any).amount),
+  if (withdrawal) {
+    const walletId = (withdrawal as any).wallet_id;
+    const amount = (withdrawal as any).amount;
+
+    // If rejected, we refund the wallet balance.
+    if (status === "rejected") {
+      const { data: wallet } = await (adminSupabase.from("wallets") as any)
+        .select("balance")
+        .eq("id", walletId)
+        .single();
+
+      if (wallet) {
+        await (adminSupabase.from("wallets") as any)
+          .update({
+            balance: Number((wallet as any).balance) + Number(amount),
+          })
+          .eq("id", walletId);
+
+        await (adminSupabase.from("wallet_transactions") as any).insert({
+          wallet_id: walletId,
+          amount: Number(amount),
           type: "refund",
           description: `Refund penarikan dana ditolak: ${note || "-"}`,
         } as any);
@@ -83,5 +102,342 @@ export async function processWithdrawal(
     }
   }
 
+  revalidatePath("/admin/withdrawals");
+  revalidatePath("/dashboard/wallet");
   return { success: true };
+}
+
+export async function getAdminStats() {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return null;
+
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { count: shopCount } = await adminSupabase
+    .from("shops")
+    .select("*", { count: "exact", head: true });
+
+  const { count: userCount } = await adminSupabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true });
+
+  const { count: orderCount } = await adminSupabase
+    .from("orders")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "completed");
+
+  const { data: wallets } = await adminSupabase
+    .from("wallets")
+    .select("balance");
+
+  const totalBalance =
+    (wallets as any[])?.reduce((sum, w) => sum + Number(w.balance || 0), 0) ||
+    0;
+
+  const { count: pendingWithdrawals } = await adminSupabase
+    .from("withdrawals")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "pending");
+
+  const { count: productCount } = await adminSupabase
+    .from("products")
+    .select("*", { count: "exact", head: true });
+
+  return {
+    shopCount: shopCount || 0,
+    userCount: userCount || 0,
+    orderCount: orderCount || 0,
+    productCount: productCount || 0,
+    totalBalance,
+    pendingWithdrawals: pendingWithdrawals || 0,
+  };
+}
+
+export async function getAdminUsers() {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return [];
+
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data } = await adminSupabase
+    .from("profiles")
+    .select(
+      `
+      *,
+      shops(name)
+    `,
+    )
+    .order("created_at", { ascending: false });
+
+  return data as any[];
+}
+
+export async function updateUserRole(userId: string, role: string) {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return { error: "Unauthorized" };
+
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { error } = await (adminSupabase.from("profiles") as any)
+    .update({ role })
+    .eq("id", userId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function getAllWithdrawals() {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return [];
+
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data } = await adminSupabase
+    .from("withdrawals")
+    .select(
+      `
+      *,
+      wallet:wallets(
+        shop:shops(name)
+      )
+    `,
+    )
+    .order("created_at", { ascending: false });
+
+  return data as any[];
+}
+
+export async function getAdminUserDetail(userId: string) {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return null;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select(
+      `
+      *,
+      shops(*)
+    `,
+    )
+    .eq("id", userId)
+    .single();
+
+  if (!profile) return null;
+
+  // Get recent orders as buyer
+  const { data: orders } = await supabase
+    .from("orders")
+    .select("*, shops(name)")
+    .eq("buyer_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  return {
+    profile: profile as any,
+    orders: orders || [],
+  };
+}
+
+export async function updateAdminUserProfile(
+  userId: string,
+  data: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    shop?: {
+      id?: string;
+      name?: string;
+      address?: string;
+      whatsapp?: string;
+    };
+  },
+) {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return { error: "Unauthorized" };
+
+  // 1. Update Profile
+  const { data: updateData, error: profileError } = await (
+    supabase.from("profiles") as any
+  )
+    .update({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      address: data.address,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", userId)
+    .select();
+
+  if (profileError) return { error: profileError.message };
+  if (!updateData || updateData.length === 0) {
+    return {
+      error:
+        "Gagal memperbarui profil: Data tidak ditemukan atau Anda tidak memiliki izin (RLS).",
+    };
+  }
+
+  // 2. Update Shop if provided
+  if (data.shop && data.shop.id) {
+    const { data: shopUpdateData, error: shopError } = await (
+      supabase.from("shops") as any
+    )
+      .update({
+        name: data.shop.name,
+        address: data.shop.address,
+        whatsapp: data.shop.whatsapp,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.shop.id)
+      .select();
+
+    if (shopError)
+      return {
+        error: `Profil berhasil diupdate, tapi update toko gagal: ${shopError.message}`,
+      };
+
+    if (!shopUpdateData || shopUpdateData.length === 0) {
+      return {
+        error:
+          "Profil berhasil, tapi GAGAL update Toko. Kemungkinan besar karena kebijakan keamanan (RLS) di tabel 'shops' belum Anda jalankan di SQL Editor Supabase.",
+      };
+    }
+  }
+
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${userId}`);
+  revalidatePath("/dashboard", "layout");
+
+  return { success: true };
+}
+
+export async function deleteUser(userId: string) {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return { error: "Unauthorized" };
+
+  // Use Service Role to permanently delete user from auth.users
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { error } = await adminSupabase.auth.admin.deleteUser(userId);
+
+  if (error) {
+    console.error("Auth delete error:", error.message);
+    // Fallback: try deleting from profile table at least
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", userId);
+    if (profileError) return { error: `Gagal menghapus: ${error.message}` };
+  }
+
+  revalidatePath("/admin/users");
+  revalidatePath("/dashboard", "layout");
+  return { success: true };
+}
+
+export async function toggleShopStatus(shopId: string, isActive: boolean) {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return { error: "Unauthorized" };
+
+  const { error } = await (supabase.from("shops") as any)
+    .update({ is_active: isActive })
+    .eq("id", shopId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/users");
+  revalidatePath("/dashboard", "layout");
+  return { success: true };
+}
+
+export async function deleteShop(shopId: string) {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return { error: "Unauthorized" };
+
+  const { error } = await supabase.from("shops").delete().eq("id", shopId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/users");
+  revalidatePath("/dashboard", "layout");
+  return { success: true };
+}
+
+export async function getAdminGlobalBalance() {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return 0;
+
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data: wallets } = await adminSupabase
+    .from("wallets")
+    .select("balance");
+
+  const totalBalance =
+    (wallets as any[])?.reduce((sum, w) => sum + Number(w.balance || 0), 0) ||
+    0;
+
+  return totalBalance;
+}
+
+export async function getAdminGlobalTransactions() {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return [];
+
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data, error } = await adminSupabase
+    .from("wallet_transactions")
+    .select(
+      `
+      *,
+      wallet:wallets(
+        shop:shops(name)
+      )
+    `,
+    )
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Fetch global transactions error:", error.message);
+    return [];
+  }
+
+  return data as any[];
 }
