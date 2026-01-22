@@ -15,23 +15,33 @@ export default async function AdminBalancePage() {
   const transactions = await getAdminGlobalTransactions()
 
   // Calculate some simple stats from transactions
+  // 1. Total In: Only from Digital Orders/Income
   const totalIn = transactions
-    .filter(tx => tx.amount > 0)
+    .filter(tx => tx.type === 'income' && tx.status === 'completed')
     .reduce((sum, tx) => sum + tx.amount, 0)
     
+  // 2. Total Out: Only Approved/Completed Withdrawals
   const totalOut = transactions
-    .filter(tx => tx.amount < 0)
+    .filter(tx => tx.type === 'withdrawal' && (tx.status === 'approved' || tx.status === 'completed'))
     .reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
 
   // Calculate Today stats
   const today = new Date().toLocaleDateString('id-ID')
   
   const todayIn = transactions
-    .filter(tx => tx.amount > 0 && new Date(tx.created_at).toLocaleDateString('id-ID') === today)
+    .filter(tx => 
+      tx.type === 'income' && 
+      tx.status === 'completed' && 
+      new Date(tx.created_at).toLocaleDateString('id-ID') === today
+    )
     .reduce((sum, tx) => sum + tx.amount, 0)
     
   const todayOut = transactions
-    .filter(tx => tx.amount < 0 && new Date(tx.created_at).toLocaleDateString('id-ID') === today)
+    .filter(tx => 
+      tx.type === 'withdrawal' && 
+      (tx.status === 'approved' || tx.status === 'completed') && 
+      new Date(tx.created_at).toLocaleDateString('id-ID') === today
+    )
     .reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
 
   return (

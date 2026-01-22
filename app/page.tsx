@@ -32,11 +32,11 @@ export default async function Home() {
                     <Link href="/buyer/orders">Pesanan Saya</Link>
                  </Button>
                  <div className="h-4 w-px bg-border hidden sm:block" />
-                 <form action={signOutBuyer}>
-                    <Button variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:text-destructive transition-colors">
-                       <LogOut className="h-5 w-5" />
-                    </Button>
-                 </form>
+                 <Button asChild variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:text-primary transition-colors">
+                    <Link href="/buyer/profile">
+                       <User className="h-5 w-5" />
+                    </Link>
+                 </Button>
               </div>
             ) : (
               <>
@@ -82,7 +82,7 @@ export default async function Home() {
                        className="h-16 pl-12 pr-4 rounded-2xl border-2 shadow-2xl focus-visible:ring-primary/20 transition-all font-bold text-lg"
                     />
                  </div>
-                 <Button className="h-16 px-10 rounded-2xl text-xl font-black shadow-2xl shadow-primary/30 transition-all hover:scale-105" asChild>
+                 <Button className="h-16 px-10 rounded-2xl text-xl font-black shadow-2xl shadow-primary/30 transition-all hover:scale-95" asChild>
                     <Link href="/shops">Cari Sekarang</Link>
                  </Button>
               </div>

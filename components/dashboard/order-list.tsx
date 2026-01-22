@@ -374,9 +374,9 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                                 {/* Right Section: Total & Main Actions */}
                                 <div className="flex items-center justify-between md:justify-end gap-6 shrink-0">
                                     <div className="text-right">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Total</p>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Total Pesanan</p>
                                         <p className="font-black text-lg text-slate-900 tracking-tight">
-                                            {formatCurrency(Number(order.total_amount) + Number(order.gateway_fee || 0))}
+                                            {formatCurrency(Number(order.total_amount))}
                                         </p>
                                     </div>
 

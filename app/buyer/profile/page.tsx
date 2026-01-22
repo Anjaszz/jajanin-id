@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Save } from "lucide-react";
+import { User, Save, LogOut } from "lucide-react";
 import Link from "next/link";
+import { signOutBuyer } from "@/app/actions/auth";
 
 export default async function BuyerProfilePage() {
   const profile = await getBuyerProfile() as any;
@@ -44,7 +45,7 @@ export default async function BuyerProfilePage() {
              <CardDescription>Update data diri untuk kemudahan pengiriman.</CardDescription>
         </CardHeader>
         <CardContent>
-            <form action={updateBuyerProfile as any} className="space-y-4">
+            <form id="profile-form" action={updateBuyerProfile as any} className="space-y-4">
                  <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
                     <Input id="email" value={profile.email} disabled className="bg-muted" />
@@ -64,9 +65,23 @@ export default async function BuyerProfilePage() {
                     <Label htmlFor="address">Alamat Pengiriman Default</Label>
                     <Input id="address" name="address" defaultValue={profile.address} placeholder="Jl. Contoh No. 123" />
                 </div>
+            </form>
+        </CardContent>
+        <CardFooter className="pt-0">
+            <Button type="submit" form="profile-form" className="w-full">
+                <Save className="h-4 w-4 mr-2" /> Simpan Perubahan
+            </Button>
+        </CardFooter>
+      </Card>
 
-                <Button type="submit" className="w-full">
-                    <Save className="h-4 w-4 mr-2" /> Simpan Perubahan
+      <Card className="border-destructive/20 bg-destructive/5 overflow-hidden">
+        <CardHeader>
+             <CardTitle className="text-destructive">Keluar Dari Akun</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <form action={signOutBuyer as any}>
+                <Button variant="destructive" className="w-full font-bold text-white">
+                    <LogOut className="h-4 w-4 mr-2" /> Keluar
                 </Button>
             </form>
         </CardContent>

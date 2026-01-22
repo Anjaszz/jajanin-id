@@ -97,17 +97,23 @@ export default async function OrderDetailPage({
                                 
                                 <div className="p-6 bg-slate-50/30 space-y-3">
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 font-medium">Subtotal Produk</span>
+                                        <span className="text-slate-500 font-medium">Subtotal Pesanan</span>
                                         <span className="font-bold text-slate-900">{formatCurrency(total_amount)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 font-medium">Biaya Layanan {payment_method === 'gateway' && '(Digital)'}</span>
+                                        <span className="text-slate-500 font-medium">Biaya Layanan (Ditanggung Pembeli)</span>
                                         <span className="font-bold text-slate-900">{formatCurrency(order.gateway_fee || 0)}</span>
                                     </div>
                                     <div className="h-px bg-slate-200" />
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-base font-black text-slate-900">Total Pembayaran</span>
-                                        <span className="text-xl font-black text-primary">{formatCurrency(total_amount + (order.gateway_fee || 0))}</span>
+                                    <div className="flex justify-between items-center bg-primary/5 p-3 rounded-xl border border-primary/10">
+                                        <div>
+                                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">Total Dibayar Pembeli</span>
+                                            <span className="text-xl font-black text-primary">{formatCurrency(total_amount + (order.gateway_fee || 0))}</span>
+                                        </div>
+                                        <div className="text-right border-l border-primary/20 pl-4">
+                                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">Pendapatan Bersih</span>
+                                            <span className="text-lg font-black text-green-600">{formatCurrency(total_amount - (order.platform_fee || 0))}</span>
+                                        </div>
                                     </div>
                                     
                                     {/* Info for Seller */}

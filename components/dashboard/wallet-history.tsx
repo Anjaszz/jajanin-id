@@ -28,6 +28,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { AlertCircle, Info } from "lucide-react"
 
 interface WalletHistoryProps {
   initialTransactions: any[]
@@ -39,6 +46,8 @@ export function WalletHistory({ initialTransactions }: WalletHistoryProps) {
   const [typeFilter, setTypeFilter] = useState<'all' | 'deposit' | 'withdrawal'>('all')
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [currentPage, setCurrentPage] = useState(1)
+  const [selectedTx, setSelectedTx] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const itemsPerPage = 10
 
   const dateFilter = date ? format(date, "yyyy-MM-dd") : ""
@@ -61,7 +70,11 @@ export function WalletHistory({ initialTransactions }: WalletHistoryProps) {
     }
 
     if (typeFilter !== 'all') {
-      result = result.filter(tx => tx.type === typeFilter)
+      if (typeFilter === 'deposit') {
+        result = result.filter(tx => Number(tx.amount) > 0)
+      } else {
+        result = result.filter(tx => Number(tx.amount) < 0)
+      }
     }
 
     result.sort((a, b) => {
@@ -76,6 +89,36 @@ export function WalletHistory({ initialTransactions }: WalletHistoryProps) {
   const totalPages = Math.ceil(filteredAndSortedTransactions.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const currentTransactions = filteredAndSortedTransactions.slice(startIndex, startIndex + itemsPerPage)
+
+  const getTransactionLabel = (type: string) => {
+    switch(type) {
+      case 'sales_revenue': return 'Penjualan POS'
+      case 'deposit': return 'Deposit / Masuk'
+      case 'withdrawal': return 'Penarikan Dana'
+      case 'refund': return 'Pengembalian (Refund)'
+      case 'platform_fee': return 'Biaya Platform'
+      case 'payment': return 'Pembayaran'
+      default: return type
+    }
+  }
+
+  const TransactionTypeBadge = ({ type }: { type: string }) => {
+    const config: Record<string, { label: string, className: string }> = {
+      sales_revenue: { label: 'Sales', className: 'bg-green-50 text-green-600 border-green-100' },
+      deposit: { label: 'Deposit', className: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
+      withdrawal: { label: 'Withdraw', className: 'bg-red-50 text-red-600 border-red-100' },
+      refund: { label: 'Refund', className: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
+      platform_fee: { label: 'Fee', className: 'bg-red-50 text-red-600 border-red-100' },
+      payment: { label: 'Payment', className: 'bg-slate-50 text-slate-600 border-slate-100' },
+    }
+    const item = config[type] || { label: type, className: 'bg-slate-50 text-slate-400' }
+    return <span className={cn("text-[8px] font-black uppercase px-1.5 py-0.5 rounded border tracking-tighter", item.className)}>{item.label}</span>
+  }
+
+  const openDetails = (tx: any) => {
+    setSelectedTx(tx)
+    setIsModalOpen(true)
+  }
 
   return (
     <div className="space-y-4">
@@ -158,7 +201,7 @@ export function WalletHistory({ initialTransactions }: WalletHistoryProps) {
               onClick={() => { setTypeFilter('withdrawal'); setCurrentPage(1); }}
               className={cn(
                 "px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap",
-                typeFilter === 'withdrawal' ? "bg-white text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                typeFilter === 'withdrawal' ? "bg-white text-red-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
               )}
             >
               Keluar
@@ -195,36 +238,43 @@ export function WalletHistory({ initialTransactions }: WalletHistoryProps) {
         {currentTransactions.length > 0 ? (
           currentTransactions.map((tx) => (
             <Card key={tx.id} className="overflow-hidden border-none shadow-xs hover:shadow-sm transition-all group">
-              <div className="p-3 flex flex-col md:flex-row md:items-center justify-between bg-card gap-3">
-                <div className="flex items-center gap-3">
+              <div className="p-3 flex flex-col sm:flex-row sm:items-center bg-card gap-4">
+                <div className="flex-1 flex items-center gap-3">
                   <div className={cn(
                     "p-2 rounded-xl group-hover:scale-105 transition-transform shrink-0",
-                    tx.type === 'deposit' ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+                    Number(tx.amount) >= 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                   )}>
-                    {tx.type === 'deposit' ? <ArrowDownLeft className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
+                    {Number(tx.amount) >= 0 ? <ArrowDownLeft className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
                   </div>
                   <div>
-                    <p className="font-bold text-sm leading-tight">{tx.description || (tx.type === 'deposit' ? 'Penjualan' : 'Penarikan')}</p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5 font-medium">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="font-bold text-sm leading-tight text-slate-900">
+                        {tx.type === 'refund' && tx.description?.includes('penarikan dana ditolak') 
+                          ? `Refund Penarikan Ditolak (No Ref : ${tx.reference_id?.slice(0, 8) || '-'})` 
+                          : (tx.description || getTransactionLabel(tx.type))}
+                      </p>
+                      <TransactionTypeBadge type={tx.type} />
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium">
                       <span>{new Date(tx.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</span>
                       {tx.reference_id && (
                         <>
                           <span className="opacity-30">•</span>
-                          <span className="font-mono text-[9px] bg-muted px-1 py-0.5 rounded uppercase">{tx.reference_id.slice(0, 8)}</span>
+                          <span className="font-mono text-[9px] bg-slate-100 text-slate-400 px-1 py-0.2 rounded uppercase">Ref: {tx.reference_id.slice(0, 8)}</span>
                         </>
                       )}
                     </div>
                   </div>
                 </div>
-
-                <div className="md:text-right">
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
                   <p className={cn(
                     "text-xl font-black leading-tight",
-                    tx.type === 'deposit' ? "text-green-600" : "text-blue-600"
+                    Number(tx.amount) >= 0 ? "text-green-600" : "text-red-500"
                   )}>
-                    {tx.type === 'deposit' ? '+' : '-'} {formatCurrency(Math.abs(tx.amount))}
+                    {Number(tx.amount) >= 0 ? '+' : '-'} {formatCurrency(Math.abs(tx.amount))}
                   </p>
-                  <div className="flex items-center md:justify-end gap-1 mt-0.5">
+                  <div className="flex items-center justify-end gap-1 mt-0.5">
                     {tx.status === 'completed' ? (
                       <span className="flex items-center gap-1 text-[9px] font-black text-green-600 uppercase">
                         <CheckCircle2 className="h-2.5 w-2.5" /> Berhasil
@@ -233,15 +283,31 @@ export function WalletHistory({ initialTransactions }: WalletHistoryProps) {
                       <span className="flex items-center gap-1 text-[9px] font-black text-yellow-600 uppercase">
                         <Clock className="h-2.5 w-2.5" /> Diproses
                       </span>
+                    ) : tx.status === 'rejected' ? (
+                      <span className="flex items-center gap-1 text-[9px] font-black text-red-600 uppercase">
+                        <XCircle className="h-2.5 w-2.5" /> Ditolak
+                      </span>
                     ) : (
                       <span className="flex items-center gap-1 text-[9px] font-black text-destructive uppercase">
                         <XCircle className="h-2.5 w-2.5" /> Gagal
                       </span>
                     )}
                   </div>
+                  </div>
+
+                  <div className="pl-4 border-l border-slate-100 flex items-center justify-center">
+                   <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 rounded-full hover:bg-slate-100 text-slate-400 hover:text-blue-600"
+                    onClick={() => openDetails(tx)}
+                   >
+                     <Info className="h-4 w-4" />
+                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
+          </Card>
           ))
         ) : (
           <Card className="border-dashed py-20 flex flex-col items-center justify-center bg-muted/20 rounded-3xl">
@@ -290,6 +356,122 @@ export function WalletHistory({ initialTransactions }: WalletHistoryProps) {
           </div>
         </div>
       )}
+
+      {/* Detail Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="rounded-3xl border-none shadow-2xl max-w-md">
+          <DialogHeader className="pb-4 border-b">
+            <DialogTitle className="text-xl font-black flex items-center gap-3">
+              <div className={cn(
+                "p-2 rounded-xl",
+                Number(selectedTx?.amount) >= 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+              )}>
+                {Number(selectedTx?.amount) >= 0 ? <ArrowDownLeft className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
+              </div>
+              Detail Transaksi
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedTx && (
+            <div className="space-y-6 pt-4">
+              <div className="text-center space-y-1 py-4 bg-slate-50 rounded-3xl">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nominal Transaksi</p>
+                <p className={cn(
+                  "text-3xl font-black",
+                  Number(selectedTx.amount) >= 0 ? "text-green-600" : "text-red-500"
+                )}>
+                  {Number(selectedTx.amount) >= 0 ? '+' : '-'} {formatCurrency(Math.abs(selectedTx.amount))}
+                </p>
+                <div className="flex justify-center mt-2">
+                   <TransactionTypeBadge type={selectedTx.type} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-y-4 text-sm">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Status</p>
+                  <div className="mt-1">
+                    {selectedTx.status === 'completed' ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-green-600 uppercase bg-green-50 px-2 py-0.5 rounded-full">
+                        <CheckCircle2 className="h-3 w-3" /> Berhasil
+                      </span>
+                    ) : selectedTx.status === 'pending' ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-yellow-600 uppercase bg-yellow-50 px-2 py-0.5 rounded-full">
+                        <Clock className="h-3 w-3" /> Diproses
+                      </span>
+                    ) : selectedTx.status === 'rejected' ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-red-600 uppercase bg-red-50 px-2 py-0.5 rounded-full">
+                        <XCircle className="h-3 w-3" /> Ditolak
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-destructive uppercase bg-red-50 px-2 py-0.5 rounded-full">
+                        <XCircle className="h-3 w-3" /> Gagal
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Tanggal</p>
+                  <p className="font-bold text-slate-900 mt-1">{new Date(selectedTx.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                </div>
+
+                <div className="col-span-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Keterangan</p>
+                  <p className="font-bold text-slate-900 mt-0.5">
+                    {selectedTx.type === 'refund' && selectedTx.description?.includes('penarikan dana ditolak') 
+                      ? `Refund Penarikan Ditolak (${selectedTx.reference_id?.slice(0, 8) || '-'})` 
+                      : (selectedTx.description || getTransactionLabel(selectedTx.type))}
+                  </p>
+                </div>
+
+                {selectedTx.withdrawal_details && (
+                  <>
+                    <div className="col-span-2 pt-2 border-t border-slate-100 mt-2">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Detail Penarikan</p>
+                      <div className="mt-2 space-y-2 bg-blue-50/50 p-3 rounded-2xl">
+                         <div className="flex justify-between">
+                            <span className="text-xs text-slate-500">Bank</span>
+                            <span className="text-xs font-bold text-slate-900">{selectedTx.withdrawal_details.bank_name}</span>
+                         </div>
+                         <div className="flex justify-between">
+                            <span className="text-xs text-slate-500">No. Rekening</span>
+                            <span className="text-xs font-bold text-slate-900">{selectedTx.withdrawal_details.account_number}</span>
+                         </div>
+                         <div className="flex justify-between">
+                            <span className="text-xs text-slate-500">Atas Nama</span>
+                            <span className="text-xs font-bold text-slate-900">{selectedTx.withdrawal_details.account_holder}</span>
+                         </div>
+                      </div>
+                    </div>
+                    
+                    {selectedTx.withdrawal_details.admin_note && (
+                      <div className="col-span-2">
+                         <div className="p-3 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-2">
+                            <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                            <div>
+                               <p className="text-[10px] font-black text-red-600 uppercase mb-1">Alasan Penolakan</p>
+                               <p className="text-xs text-red-700 font-medium leading-relaxed">{selectedTx.withdrawal_details.admin_note}</p>
+                            </div>
+                         </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {selectedTx.reference_id && (
+                  <div className="col-span-2 pt-4">
+                    <div className="flex items-center justify-between p-2 bg-slate-100 rounded-xl">
+                       <span className="text-[10px] font-bold text-slate-500 uppercase px-1">Ref ID</span>
+                       <span className="font-mono text-[10px] text-slate-900 font-bold">{selectedTx.reference_id}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

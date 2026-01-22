@@ -43,15 +43,33 @@ export function GlobalTransactionsTable({ initialTransactions }: GlobalTransacti
   const getTypeBadge = (type: string) => {
     switch (type) {
       case 'income':
-        return <Badge className="bg-green-50 text-green-700 border-none px-2 py-0.5 text-[8px] uppercase font-black tracking-widest">Penjualan</Badge>
+        return <Badge className="bg-green-100 text-green-700 border-none px-2 py-0.5 text-[8px] uppercase font-black tracking-widest">Digital</Badge>
       case 'withdrawal':
-        return <Badge className="bg-red-50 text-red-700 border-none px-2 py-0.5 text-[8px] uppercase font-black tracking-widest">Penarikan</Badge>
+        return <Badge className="bg-blue-50 text-blue-700 border-none px-2 py-0.5 text-[8px] uppercase font-black tracking-widest">Tarik Dana</Badge>
       case 'platform_fee':
-        return <Badge className="bg-slate-100 text-slate-600 border-none px-2 py-0.5 text-[8px] uppercase font-black tracking-widest">Fee Platform</Badge>
+        return <Badge className="bg-red-50 text-red-600 border-none px-2 py-0.5 text-[8px] uppercase font-black tracking-widest">Fee</Badge>
       case 'refund':
-        return <Badge className="bg-blue-50 text-blue-700 border-none px-2 py-0.5 text-[8px] uppercase font-black tracking-widest">Refund</Badge>
+        return <Badge className="bg-emerald-50 text-emerald-700 border-none px-2 py-0.5 text-[8px] uppercase font-black tracking-widest">Refund</Badge>
+      case 'sales_revenue':
+        return <Badge className="bg-amber-50 text-amber-700 border-none px-2 py-0.5 text-[8px] uppercase font-black tracking-widest">Tunai</Badge>
       default:
         return <Badge className="bg-slate-50 text-slate-500 border-none px-2 py-0.5 text-[8px] uppercase font-black tracking-widest">{type}</Badge>
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+      case 'approved':
+        return <span className="text-[9px] font-black text-green-600 uppercase bg-green-50 px-1.5 py-0.5 rounded">Berhasil</span>
+      case 'pending':
+        return <span className="text-[9px] font-black text-amber-600 uppercase bg-amber-50 px-1.5 py-0.5 rounded">Pending</span>
+      case 'rejected':
+        return <span className="text-[9px] font-black text-red-600 uppercase bg-red-50 px-1.5 py-0.5 rounded">Ditolak</span>
+      case 'failed':
+        return <span className="text-[9px] font-black text-red-600 uppercase bg-red-50 px-1.5 py-0.5 rounded">Gagal</span>
+      default:
+        return <span className="text-[9px] font-black text-slate-400 uppercase bg-slate-50 px-1.5 py-0.5 rounded">{status}</span>
     }
   }
 
@@ -105,7 +123,10 @@ export function GlobalTransactionsTable({ initialTransactions }: GlobalTransacti
                     </td>
                     <td className="px-5 py-4">
                       <div className="space-y-1">
-                        {getTypeBadge(tx.type)}
+                        <div className="flex items-center gap-2">
+                           {getTypeBadge(tx.type)}
+                           {getStatusBadge(tx.status)}
+                        </div>
                         <p className="text-xs text-slate-500 line-clamp-1">{tx.description}</p>
                       </div>
                     </td>

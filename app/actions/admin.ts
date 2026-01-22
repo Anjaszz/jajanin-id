@@ -97,6 +97,7 @@ export async function processWithdrawal(
           amount: Number(amount),
           type: "refund",
           description: `Refund penarikan dana ditolak: ${note || "-"}`,
+          reference_id: id,
         } as any);
       }
     }
@@ -422,22 +423,78 @@ export async function getAdminGlobalTransactions() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const { data, error } = await adminSupabase
+  // 1. Get Wallet Transactions
+  const { data: walletTxs, error: txError } = await adminSupabase
     .from("wallet_transactions")
     .select(
       `
       *,
       wallet:wallets(
-        shop:shops(name)
+        shop:shops(id, name)
       )
     `,
-    )
-    .order("created_at", { ascending: false });
+    );
 
-  if (error) {
-    console.error("Fetch global transactions error:", error.message);
+  if (txError) {
+    console.error("Fetch global transactions error:", txError.message);
     return [];
   }
 
-  return data as any[];
+  // 2. Get Withdrawals to merge status
+  const { data: withdrawals } = await adminSupabase
+    .from("withdrawals")
+    .select("id, status, admin_note");
+
+  // 3. Get Gateway Orders (Digital Income)
+  const { data: orders } = await adminSupabase
+    .from("orders")
+    .select(
+      "id, total_amount, platform_fee, created_at, status, shop:shops(id, name)",
+    )
+    .eq("payment_method", "gateway")
+    .eq("status", "completed");
+
+  // 4. Transform Transactions
+  const processedWalletTxs = (walletTxs || [])
+    .filter((tx) => tx.type !== "refund")
+    .map((tx) => {
+      let status = "completed";
+      let admin_note = null;
+
+      if (tx.type === "withdrawal") {
+        const wd = withdrawals?.find((w) => w.id === tx.reference_id);
+        status = wd?.status || "completed";
+        admin_note = wd?.admin_note;
+      }
+
+      return {
+        ...tx,
+        status,
+        admin_note,
+        source: "wallet_transaction",
+      };
+    });
+
+  const digitalOrderTxs = (orders || []).map((order) => ({
+    id: `order-${order.id}`,
+    wallet_id: null,
+    amount: Number(order.total_amount) - Number(order.platform_fee || 0),
+    type: "income",
+    description: `Pesanan Digital #${order.id.slice(0, 8)}`,
+    created_at: order.created_at,
+    reference_id: order.id,
+    status: "completed",
+    source: "order",
+    wallet: {
+      shop: order.shop,
+    },
+  }));
+
+  // 5. Combine and Sort
+  const combined = [...processedWalletTxs, ...digitalOrderTxs].sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+
+  return combined;
 }

@@ -175,7 +175,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: any[] }
                   <div className="space-y-1">
                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Total Bayar</p>
                      <p className="font-heading font-black text-2xl text-primary leading-none tracking-tight">
-                        {formatCurrency(order.total_amount)}
+                        {formatCurrency(Number(order.total_amount) + Number(order.gateway_fee || 0))}
                      </p>
                   </div>
                   <div className="text-right">

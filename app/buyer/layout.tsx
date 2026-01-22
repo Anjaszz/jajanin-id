@@ -33,12 +33,11 @@ export default async function BuyerLayout({
           </nav>
           <div className="flex items-center gap-4">
              {user ? (
-               <form action={signOutBuyer as any}>
-                  <Button variant="ghost" size="sm" className="rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/5 font-bold transition-all">
-                     <LogOut className="h-4 w-4 mr-2" />
-                     <span className="hidden sm:inline">Keluar</span>
-                  </Button>
-               </form>
+                <Button asChild variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:text-primary transition-all">
+                   <Link href="/buyer/profile">
+                      <User className="h-5 w-5" />
+                   </Link>
+                </Button>
              ) : (
                 <Button asChild size="sm" className="rounded-xl font-bold px-6 shadow-lg shadow-primary/20">
                     <Link href="/buyer/login">Masuk</Link>

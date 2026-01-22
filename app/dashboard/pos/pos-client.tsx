@@ -61,6 +61,7 @@ export default function PosClient({ products, settings }: { products: Product[],
     const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
     const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isMobileCartOpen, setIsMobileCartOpen] = useState(false)
 
     // Filter products
     const filteredProducts = useMemo(() => {
@@ -262,10 +263,13 @@ export default function PosClient({ products, settings }: { products: Product[],
     }, [selectedProduct, selectedVariantId, selectedAddonIds])
 
     return (
-        <div className="flex h-full gap-4 md:gap-6 overflow-hidden">
+        <div className="flex h-full gap-4 md:gap-6 overflow-hidden relative">
             
             {/* LEFT SIDE: CATALOG */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className={cn(
+                "flex-1 flex flex-col h-full overflow-hidden transition-all duration-300",
+                isMobileCartOpen ? "hidden md:flex" : "flex"
+            )}>
                 <div className="relative mb-4 shrink-0">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                     <input 
@@ -334,13 +338,24 @@ export default function PosClient({ products, settings }: { products: Product[],
             </div>
 
             {/* RIGHT SIDE: CART */}
-            <div className="w-full md:w-[320px] lg:w-[380px] shrink-0 flex flex-col h-full bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-                <div className="p-5 border-b border-slate-50 bg-slate-50/50">
+            <div className={cn(
+                "fixed inset-0 z-50 bg-white md:relative md:inset-auto md:z-0 md:flex w-full md:w-[320px] lg:w-[380px] shrink-0 flex flex-col h-dvh md:h-full rounded-none md:rounded-3xl shadow-xl border-none md:border md:border-slate-100 overflow-hidden transition-all duration-300",
+                isMobileCartOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
+            )}>
+                <div className="p-4 md:p-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
                     <h2 className="font-black text-xl flex items-center gap-2">
                         <ShoppingCart className="h-5 w-5 text-primary" />
                         Keranjang
                         <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full">{cart.reduce((s, i) => s + i.quantity, 0)} items</span>
                     </h2>
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="md:hidden rounded-full h-10 w-10 p-0" 
+                        onClick={() => setIsMobileCartOpen(false)}
+                    >
+                        <X className="h-6 w-6" />
+                    </Button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -405,7 +420,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                     )}
                 </div>
 
-                <div className="p-5 bg-slate-50 border-t border-slate-100 space-y-4">
+                <div className="p-5 pb-32 md:pb-5 bg-slate-50 border-t border-slate-100 space-y-4">
                      {/* Summary */}
                     <div className="space-y-2">
                         <div className="flex justify-between text-sm text-slate-500 font-medium">
@@ -570,6 +585,30 @@ export default function PosClient({ products, settings }: { products: Product[],
                 confirmText="Ya, Proses"
                 variant="default"
             />
+
+            {/* MOBILE FLOATING CART BUTTON */}
+            {!isMobileCartOpen && cart.length > 0 && (
+                <div className="fixed bottom-32 left-0 right-0 px-6 z-40 md:hidden animate-in fade-in slide-in-from-bottom-4">
+                    <Button 
+                        onClick={() => setIsMobileCartOpen(true)}
+                        className="w-full h-16 rounded-2xl shadow-2xl shadow-primary/40 text-lg font-black flex items-center justify-between px-8"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-white/20 p-2 rounded-xl">
+                                <ShoppingCart className="h-6 w-6" />
+                            </div>
+                            <span>Cek Keranjang</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-white/60 font-medium text-sm">
+                                {cart.reduce((s, i) => s + i.quantity, 0)} Items
+                            </span>
+                            <div className="h-8 w-px bg-white/20" />
+                            <span>{formatCurrency(totalAmount)}</span>
+                        </div>
+                    </Button>
+                </div>
+            )}
         </div>
     )
 }

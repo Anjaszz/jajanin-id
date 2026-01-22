@@ -89,7 +89,7 @@ export async function getWalletData() {
   // 2. Get withdrawals status to merge with transactions list
   const { data: withdrawals } = await adminSupabase
     .from("withdrawals")
-    .select("id, status, bank_name, account_number")
+    .select("id, status, bank_name, account_number, account_holder, admin_note")
     .eq("wallet_id", (wallet as any).id);
 
   // Merge status into transactions
@@ -98,14 +98,24 @@ export async function getWalletData() {
       const wd = withdrawals?.find((w) => w.id === tx.reference_id);
       let status = wd?.status || "completed";
       if (status === "approved") status = "completed";
-      if (status === "rejected") status = "failed";
+      if (status === "rejected") status = "rejected";
 
       return {
         ...tx,
         status,
-        amount: Math.abs(tx.amount), // For UI we use absolute amount
+        withdrawal_details: wd,
+        amount: tx.amount,
       };
     }
+
+    // For refund, also try to find the linked withdrawal for context if possible
+    if (
+      tx.type === "refund" &&
+      tx.description?.includes("penarikan dana ditolak")
+    ) {
+      return { ...tx, status: "completed" };
+    }
+
     return { ...tx, status: "completed" };
   });
 
@@ -271,38 +281,35 @@ export async function syncWalletBalance() {
     wallet = newWallet as any;
   }
 
-  // 3. Calculate Income from VALID Gateway Orders ONLY (Cash is physical)
-  const { data: orders, error: ordersError } = await supabase
+  // 3. Calculate Income from VALID Gateway Orders ONLY
+  const { data: orders, error: ordersError } = await adminSupabase
     .from("orders")
     .select("total_amount, platform_fee, status")
     .eq("shop_id", (shop as any).id)
     .eq("payment_method", "gateway")
-    .in("status", ["completed", "paid", "ready", "processing", "accepted"]);
+    .eq("status", "completed");
 
   if (ordersError)
     return { error: "Failed to fetch orders: " + ordersError.message };
 
-  const totalIncome = ((orders as any[]) || []).reduce((sum, o) => {
+  const gatewayIncome = ((orders as any[]) || []).reduce((sum, o) => {
     const amt = Number(o.total_amount || 0);
     const fee = Number(o.platform_fee || 0);
     return sum + (amt - fee);
   }, 0);
 
-  // 4. Calculate Expenses (Negative amounts in wallet_transactions)
-  // We sum up everything in wallet_transactions that is a withdrawal or platform_fee
-  // These should be negative values in the database
-  const { data: txOut, error: wdError } = await adminSupabase
+  // 3b. Sum up ALL internal transactions (POS Cash, Withdrawals, Refunds, Deposits)
+  const { data: internalTxs } = await adminSupabase
     .from("wallet_transactions")
     .select("amount")
-    .eq("wallet_id", (wallet as any).id)
-    .in("type", ["withdrawal", "platform_fee"]);
+    .eq("wallet_id", (wallet as any).id);
 
-  const totalOut = ((txOut as any[]) || []).reduce(
-    (sum, w) => sum + Math.abs(Number(w.amount || 0)),
+  const internalTotal = (internalTxs || []).reduce(
+    (sum, tx) => sum + Number(tx.amount || 0),
     0,
   );
 
-  const finalBalance = Math.max(0, totalIncome - totalOut);
+  const finalBalance = Math.max(0, gatewayIncome + internalTotal);
 
   // 5. Hard Update Balance in DB (Use Service Role to bypass RLS for balance update)
   const { error: updateError } = await (adminSupabase.from("wallets") as any)
@@ -316,7 +323,7 @@ export async function syncWalletBalance() {
     return { error: "Database update failed: " + updateError.message };
 
   console.log(
-    `[SYNC SUCCESS] Shop: ${(shop as any).id} | Income: ${totalIncome} | Out: ${totalOut} | Final: ${finalBalance}`,
+    `[SYNC SUCCESS] Shop: ${(shop as any).id} | Gateway: ${gatewayIncome} | Internal: ${internalTotal} | Final: ${finalBalance}`,
   );
 
   revalidatePath("/dashboard/wallet");
