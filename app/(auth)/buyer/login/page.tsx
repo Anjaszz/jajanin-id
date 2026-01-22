@@ -9,6 +9,7 @@ import { LoginSchema } from '@/types/auth-schema'
 import { login } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, ShoppingCart } from 'lucide-react'
@@ -76,9 +77,8 @@ export default function BuyerLoginPage() {
             </div>
             <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input 
+            <PasswordInput 
                 id="password" 
-                type="password" 
                 {...form.register('password')}
                 disabled={isLoading}
             />

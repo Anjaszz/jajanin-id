@@ -5,6 +5,7 @@ import { useState } from "react";
 import { signup } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ShieldAlert, Loader2, ArrowLeft } from "lucide-react";
@@ -85,10 +86,9 @@ export default function AdminRegisterPage() {
           
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               placeholder="••••••••"
               required
               className="h-11 rounded-xl"
@@ -99,10 +99,9 @@ export default function AdminRegisterPage() {
             <Label htmlFor="secret_key" className="text-red-600 font-bold flex items-center gap-1">
                Secret Admin Key
             </Label>
-            <Input
+            <PasswordInput
               id="secret_key"
               name="secret_key"
-              type="password"
               placeholder="Masukkan kode rahasia admin"
               required
               className="h-11 rounded-xl border-red-200 focus-visible:ring-red-500"

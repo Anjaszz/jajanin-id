@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { LoginSchema, SignupSchema } from "@/types/auth-schema"; // Will create this validation schema next
+import { LoginSchema, SignupSchema } from "@/types/auth-schema";
+import { headers } from "next/headers";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
@@ -20,7 +21,15 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    let errorMessage = error.message;
+    if (error.message.includes("Invalid login credentials")) {
+      errorMessage = "Email atau password salah. Silakan periksa kembali.";
+    } else if (error.message.includes("Email not confirmed")) {
+      errorMessage = "Email belum diverifikasi. Silakan cek inbox Anda.";
+    } else if (error.message.includes("Rate limit")) {
+      errorMessage = "Terlalu banyak mencoba. Silakan tunggu sebentar.";
+    }
+    return { error: errorMessage };
   }
 
   if (user) {
@@ -54,10 +63,13 @@ export async function signup(formData: FormData) {
   const whatsapp = formData.get("whatsapp") as string;
   const role = (formData.get("role") as string) || "buyer"; // Default role for testing
 
+  const origin = (await headers()).get("origin");
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: `${origin}/api/auth/callback?next=/verify_success`,
       data: {
         name,
         phone: whatsapp,
@@ -67,7 +79,15 @@ export async function signup(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    let errorMessage = error.message;
+    if (error.message.includes("User already registered")) {
+      errorMessage = "Email ini sudah terdaftar. Silakan gunakan email lain.";
+    } else if (
+      error.message.includes("Password should be at least 6 characters")
+    ) {
+      errorMessage = "Kata sandi harus minimal 6 karakter.";
+    }
+    return { error: errorMessage };
   }
 
   revalidatePath("/", "layout");

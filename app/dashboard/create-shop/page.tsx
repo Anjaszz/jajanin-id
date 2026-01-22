@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Store } from 'lucide-react'
+import { Loader2, Store, LogOut } from 'lucide-react'
+import { signout } from '@/app/actions/auth'
 
 // Duplicate schema for client validation match
 const CreateShopSchema = z.object({
@@ -93,9 +94,24 @@ export default function CreateShopPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] py-10">
-        <Card className="w-full max-w-lg">
-        <CardHeader>
+    <div className="flex flex-col items-center justify-center min-h-[80vh] py-10 px-4 relative">
+        <div className="absolute top-4 right-4 md:top-8 md:right-8">
+            <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={async () => {
+                    await signout();
+                }}
+                className="text-muted-foreground hover:text-destructive transition-colors"
+                disabled={isLoading}
+            >
+                <LogOut className="w-4 h-4 mr-2" />
+                Keluar
+            </Button>
+        </div>
+
+        <Card className="w-full max-w-lg border-none shadow-xl bg-white/80 backdrop-blur-sm">
+        <CardHeader className="pb-4">
             <div className="flex items-center gap-2 mb-2">
                 <div className="p-2 bg-primary/10 rounded-full">
                     <Store className="w-6 h-6 text-primary" />

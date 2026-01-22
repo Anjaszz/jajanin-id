@@ -5,6 +5,7 @@ import { useState } from "react";
 import { login } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, Loader2 } from "lucide-react";
@@ -64,10 +65,9 @@ export default function AdminLoginPage() {
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
             </div>
-            <Input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               required
               className="h-12 rounded-xl focus-visible:ring-blue-500"
             />
