@@ -49,7 +49,7 @@ interface CartItem {
     addons: Addon[]
 }
 
-export default function PosClient({ products }: { products: Product[] }) {
+export default function PosClient({ products, settings }: { products: Product[], settings: { platform_fee: number; gateway_fee: number } }) {
     const [searchTerm, setSearchTerm] = useState("")
     const [cart, setCart] = useState<CartItem[]>([])
     const [isProcessing, setIsProcessing] = useState(false)
@@ -204,7 +204,9 @@ export default function PosClient({ products }: { products: Product[] }) {
 
     // --- Checkout Logic ---
 
-    const totalAmount = cart.reduce((sum, item) => sum + (item.finalPrice * item.quantity), 0)
+    const subtotal = cart.reduce((sum, item) => sum + (item.finalPrice * item.quantity), 0)
+    const gatewayFee = paymentMethod === 'gateway' ? Math.round(subtotal * (settings.gateway_fee / 100)) : 0
+    const totalAmount = subtotal + gatewayFee
 
     const handleCheckout = async () => {
         if (cart.length === 0) return
@@ -408,9 +410,17 @@ export default function PosClient({ products }: { products: Product[] }) {
                     <div className="space-y-2">
                         <div className="flex justify-between text-sm text-slate-500 font-medium">
                             <span>Subtotal</span>
-                            <span>{formatCurrency(totalAmount)}</span>
+                            <span>{formatCurrency(subtotal)}</span>
                         </div>
-                        <div className="flex justify-between text-xl font-black text-slate-900">
+                        {paymentMethod === 'gateway' && (
+                            <div className="flex justify-between text-sm text-blue-600 font-medium animate-in fade-in slide-in-from-top-1">
+                                <span className="flex items-center gap-1.5">
+                                    Biaya Layanan ({settings.gateway_fee}%)
+                                </span>
+                                <span>{formatCurrency(gatewayFee)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between text-xl font-black text-slate-900 border-t border-slate-100 pt-2">
                             <span>Total</span>
                             <span className="text-primary">{formatCurrency(totalAmount)}</span>
                         </div>
@@ -556,7 +566,7 @@ export default function PosClient({ products }: { products: Product[] }) {
                 }}
                 onConfirm={confirmPayment}
                 title="Konfirmasi Pembayaran"
-                description={`Total transaksi sebesar ${formatCurrency(totalAmount)} via ${paymentMethod === 'cash' ? 'Tunai' : 'Digital'}. Lanjutkan proses?`}
+                description={`Total transaksi sebesar ${formatCurrency(totalAmount)} via ${paymentMethod === 'cash' ? 'Tunai' : 'Digital'}${paymentMethod === 'gateway' ? ` (Termasuk biaya layanan ${formatCurrency(gatewayFee)})` : ''}. Lanjutkan proses?`}
                 confirmText="Ya, Proses"
                 variant="default"
             />

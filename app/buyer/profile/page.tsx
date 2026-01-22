@@ -11,7 +11,7 @@ export default async function BuyerProfilePage() {
 
   if (!profile) {
     return (
-      <div className="max-w-xl mx-auto py-20 text-center space-y-6">
+      <div className="max-w-xl mx-auto py-20 text-center space-y-6 px-4">
         <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
           <User className="h-10 w-10 text-primary" />
         </div>
@@ -32,7 +32,7 @@ export default async function BuyerProfilePage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto space-y-6">
+    <div className="max-w-xl mx-auto space-y-6 px-4">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Profil Saya</h1>
         <p className="text-muted-foreground">Kelola informasi akun Anda.</p>

@@ -5,7 +5,7 @@ export default async function BuyerOrdersPage() {
   const initialOrders = await getBuyerOrders();
 
   return (
-    <div className="max-w-4xl mx-auto pb-20 md:pb-8">
+    <div className="max-w-4xl mx-auto px-4 pb-20 md:pb-8">
       <OrdersClient initialOrders={initialOrders} />
     </div>
   );

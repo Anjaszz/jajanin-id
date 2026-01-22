@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { getSystemSettings } from "./system-settings";
 
 export async function getPosProducts(page = 1, limit = 1000) {
   const supabase = await createClient();
@@ -170,7 +171,17 @@ export async function processPosOrder(
     });
   }
 
-  const platformFee = 0;
+  const settings = await getSystemSettings();
+
+  const platformFee =
+    paymentMethod === "gateway"
+      ? totalAmount * (settings.platform_fee / 100)
+      : 0;
+
+  const gatewayFee =
+    paymentMethod === "gateway"
+      ? Math.round(totalAmount * (settings.gateway_fee / 100))
+      : 0;
 
   // 2. Create Order
   const { data: order, error: orderError } = await (
@@ -184,10 +195,12 @@ export async function processPosOrder(
       payment_method: paymentMethod,
       total_amount: totalAmount,
       platform_fee: platformFee,
-      gateway_fee: 0,
+      gateway_fee: gatewayFee,
       payment_details: {
-        received_amount: receivedAmount || totalAmount,
-        change: receivedAmount ? receivedAmount - totalAmount : 0,
+        received_amount: receivedAmount || totalAmount + gatewayFee,
+        change: receivedAmount
+          ? receivedAmount - (totalAmount + gatewayFee)
+          : 0,
         type: "pos_transaction",
       },
     })
@@ -220,8 +233,8 @@ export async function processPosOrder(
 
       const transaction = await snap.createTransaction({
         transaction_details: {
-          order_id: orderIdStr, // Use actual order ID
-          gross_amount: totalAmount, // For POS we might want to pass fees if any
+          order_id: orderIdStr,
+          gross_amount: totalAmount + gatewayFee,
         },
         customer_details: {
           first_name: "Pelanggan",

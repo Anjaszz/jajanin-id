@@ -14,7 +14,10 @@ import {
   Loader2, 
   Calendar as CalendarIcon, 
   ArrowUpDown,
-  Filter
+  Filter,
+  CreditCard,
+  Banknote,
+  Eye
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
@@ -29,6 +32,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogTrigger,
+  } from "@/components/ui/dialog"
+import { formatCurrency } from "@/lib/utils"
 
 interface OrderListProps {
     initialOrders: any[]
@@ -326,115 +338,93 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                         <Card 
                             key={order.id} 
                             ref={index === filteredAndSortedOrders.length - 1 ? lastOrderElementRef : null}
-                            className="overflow-hidden border-none shadow-xs hover:shadow-md transition-all group bg-white rounded-2xl"
+                            className="overflow-hidden border border-slate-100 shadow-xs hover:shadow-md transition-all group bg-white rounded-2xl"
                         >
-                            <div className="flex flex-col md:flex-row">
-                                {/* Compact Info Section */}
-                                <div className="p-4 flex-1 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border-b md:border-b-0 md:border-r border-slate-50">
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-slate-50 p-2 rounded-xl group-hover:bg-primary/5 transition-colors shrink-0">
-                                            <Package className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-mono text-[10px] font-bold text-slate-400">#{(order.id as string).slice(0, 8)}</span>
-                                                {getStatusBadge(order)}
-                                            </div>
-                                            <h3 className="font-black text-sm text-slate-900 leading-none">
-                                                {order.guest_info?.name || 'Pelanggan Terdaftar'}
-                                            </h3>
-                                            <div className="flex items-center gap-2 mt-1.5">
-                                                <Clock className="h-3 w-3 text-slate-300" />
-                                                <span className="text-[10px] font-bold text-slate-400">
-                                                    {new Date(order.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
-                                                </span>
-                                            </div>
-                                        </div>
+                            <div className="p-4 flex flex-col md:flex-row md:items-center gap-4">
+                                {/* Left Section: ID, Name, Time */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-mono text-[9px] font-black text-slate-400">#{(order.id as string).slice(0, 8)}</span>
+                                        {getStatusBadge(order)}
                                     </div>
-
-                                    <div className="flex items-center gap-6 sm:gap-8 w-full sm:w-auto justify-between sm:justify-end">
-                                        <div className="text-right sm:text-left">
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Item ({order.order_items.length})</p>
-                                            <p className="text-[10px] font-bold text-slate-600 line-clamp-1 max-w-[120px]">
-                                                {order.order_items.map((it: any) => `${it.quantity}x ${it.products?.name}`).join(', ')}
-                                            </p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-[9px] font-black text-primary uppercase tracking-tighter mb-0.5">Total</p>
-                                            <p className="text-base font-black text-slate-900 tracking-tight">Rp {order.total_amount.toLocaleString('id-ID')}</p>
-                                        </div>
+                                    <h3 className="font-black text-base text-slate-900 truncate">
+                                        {order.guest_info?.name || 'Pelanggan'}
+                                    </h3>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <Clock className="h-3 w-3 text-slate-300" />
+                                        <span className="text-[10px] font-bold text-slate-400">
+                                            {format(new Date(order.created_at), 'HH:mm', { locale: id })}
+                                        </span>
                                     </div>
                                 </div>
 
-                                {/* Actions Section */}
-                                <div className="bg-slate-50/30 p-3 w-full md:w-48 flex items-center justify-center">
-                                    {['pending_confirmation', 'paid'].includes(order.status) && (
-                                        <div className="flex gap-2 w-full">
+                                {/* Middle Section: List Pesanan (Simple) */}
+                                <div className="flex-[2] py-2 md:py-0 border-y md:border-y-0 md:border-x border-slate-50 px-0 md:px-6">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Daftar Pesanan</p>
+                                    <div className="flex flex-wrap gap-x-3 gap-y-1">
+                                        {order.order_items?.map((item: any) => (
+                                            <div key={item.id} className="flex items-center gap-1.5 py-0.5 px-2 bg-slate-50 rounded-lg border border-slate-100/50">
+                                                <span className="font-black text-[11px] text-primary">{item.quantity}x</span>
+                                                <span className="font-bold text-[11px] text-slate-700">{item.products?.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Right Section: Total & Main Actions */}
+                                <div className="flex items-center justify-between md:justify-end gap-6 shrink-0">
+                                    <div className="text-right">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Total</p>
+                                        <p className="font-black text-lg text-slate-900 tracking-tight">
+                                            {formatCurrency(Number(order.total_amount) + Number(order.gateway_fee || 0))}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        {['pending_confirmation', 'paid'].includes(order.status) && (
+                                            <div className="flex gap-1.5">
+                                                <Button 
+                                                    onClick={() => handleStatusUpdate(order.id, 'accepted')}
+                                                    size="sm"
+                                                    className="h-9 px-4 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
+                                                >
+                                                    Terima
+                                                </Button>
+                                                <Button 
+                                                    onClick={() => handleStatusUpdate(order.id, 'rejected')}
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    className="h-9 px-4 text-destructive border-red-100 hover:bg-red-50 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                                                >
+                                                    Tolak
+                                                </Button>
+                                            </div>
+                                        )}
+                                        {order.status === 'accepted' && (
                                             <Button 
-                                                onClick={() => handleStatusUpdate(order.id, 'accepted')}
+                                                onClick={() => handleStatusUpdate(order.id, 'ready')}
                                                 size="sm"
-                                                className="h-9 flex-1 bg-green-600 hover:bg-green-700 shadow-sm rounded-xl text-xs font-bold"
+                                                className="h-9 px-4 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
                                             >
-                                                Terima
+                                                Siap
                                             </Button>
-                                            <Button 
-                                                onClick={() => handleStatusUpdate(order.id, 'rejected')}
-                                                variant="outline" 
-                                                size="sm"
-                                                className="h-9 flex-1 text-destructive border-red-100 hover:bg-red-50 rounded-xl text-xs font-bold"
-                                            >
-                                                Tolak
-                                            </Button>
-                                        </div>
-                                    )}
-                                    {order.status === 'pending_payment' && (
-                                        <Button 
-                                            asChild
-                                            size="sm"
-                                            className="h-9 w-full bg-blue-600 hover:bg-blue-700 shadow-sm rounded-xl text-xs font-bold"
-                                        >
+                                        )}
+                                        {order.status === 'ready' && (
+                                            <CompleteOrderButton 
+                                                orderId={order.id} 
+                                                className="h-9 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl" 
+                                                onSuccess={async () => {
+                                                    const updated = await getSellerOrders(1, page * 10, tab)
+                                                    setOrders(updated)
+                                                }}
+                                            />
+                                        )}
+                                        <Button asChild variant="ghost" size="icon" className="h-9 w-9 rounded-md border text-slate-400 hover:text-primary hover:bg-primary/5">
                                             <Link href={`/dashboard/orders/${order.id}`}>
-                                                Bayar / Detail
+                                                <Eye className="h-4 w-4" />
                                             </Link>
                                         </Button>
-                                    )}
-                                    {order.status === 'accepted' && (
-                                        <Button 
-                                            onClick={() => handleStatusUpdate(order.id, 'ready')}
-                                            size="sm"
-                                            className="h-9 w-full bg-primary shadow-sm rounded-xl text-xs font-bold"
-                                        >
-                                            Siap Diambil
-                                        </Button>
-                                    )}
-                                    {order.status === 'ready' && (
-                                        <CompleteOrderButton 
-                                            orderId={order.id} 
-                                            className="h-9 w-full text-xs font-bold rounded-xl" 
-                                            onSuccess={async () => {
-                                                const updated = await getSellerOrders(1, page * 10, tab)
-                                                setOrders(updated)
-                                            }}
-                                        />
-                                    )}
-                                    {order.status === 'completed' && (
-                                        <div className="flex items-center gap-1.5 text-green-600 font-bold text-[10px] uppercase">
-                                            <CheckCircle2 className="h-3.5 w-3.5" />
-                                            <span>Selesai</span>
-                                        </div>
-                                    )}
-                                    {order.status === 'rejected' && (
-                                        <div className="flex items-center gap-1.5 text-destructive font-bold text-[10px] uppercase">
-                                            <XCircle className="h-3.5 w-3.5" />
-                                            <span>Ditolak</span>
-                                        </div>
-                                    )}
-                                    {['cancelled_by_seller', 'cancelled_by_buyer'].includes(order.status) && (
-                                        <div className="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase">
-                                            <XCircle className="h-3.5 w-3.5" />
-                                            <span>Dibatalkan</span>
-                                        </div>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
                         </Card>

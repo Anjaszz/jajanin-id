@@ -1,9 +1,11 @@
 import { getPosProducts } from "@/app/actions/pos"
 import PosClient from "./pos-client"
+import { getSystemSettings } from "@/app/actions/system-settings"
 
 export default async function PosPage() {
     // Fetch all active products variants and addons
     const { data: products } = await getPosProducts(1, 1000)
+    const settings = await getSystemSettings()
     
     // Filter only active products
     const activeProducts = products.filter((p: any) => p.is_active)
@@ -16,7 +18,7 @@ export default async function PosPage() {
              </div>
              
              <div className="flex-1 min-h-0 pb-4">
-                <PosClient products={activeProducts as any[]} />
+                <PosClient products={activeProducts as any[]} settings={settings} />
              </div>
         </div>
     )

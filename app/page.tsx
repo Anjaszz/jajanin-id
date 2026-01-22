@@ -67,7 +67,7 @@ export default async function Home() {
                  Lagi Pengen Jajan Apa Hari Ini?
               </div>
               <h1 className="text-5xl md:text-8xl font-heading font-black tracking-tighter leading-[0.9] md:leading-[0.85] animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-                Jajan <span className="bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent italic">Makin Asik</span><br /> Cuma Di YukJajan.
+                Jajan <span className="bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent italic pr-4">Makin Asik</span><br /> Cuma Di YukJajan.
               </h1>
               <p className="text-muted-foreground max-w-2xl mx-auto text-lg md:text-xl font-medium animate-in fade-in zoom-in-95 duration-700 delay-200">
                 Temukan ribuan jajanan favorit dari pedagang UMKM terbaik di sekitarmu. 
@@ -209,7 +209,7 @@ export default async function Home() {
            <div className="bg-slate-900 rounded-[48px] p-12 md:p-24 overflow-hidden relative group">
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] z-0 transition-transform group-hover:scale-110" />
               <div className="relative z-10 space-y-8 max-w-2xl">
-                 <h2 className="text-4xl md:text-7xl font-heading font-black tracking-tight text-white leading-none">Punya Jualan?<br /><span className="text-primary italic">Yuk Gabung!</span></h2>
+                 <h2 className="text-4xl md:text-7xl font-heading font-black tracking-tight text-white leading-none">Punya Jualan?<br /><span className="text-blue-500 italic">Yuk Gabung!</span></h2>
                  <p className="text-slate-400 text-lg md:text-xl font-medium">
                     Buka toko online gratis hanya dalam 5 menit. Kelola pesanan, stok, dan pembayaran dalam satu genggaman. Jualan makin simpel, untung makin nempel!
                  </p>

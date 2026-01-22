@@ -36,6 +36,7 @@ export default function SettingsForm({ shop, isAdmin }: SettingsFormProps) {
   const [isPending, setIsPending] = React.useState(false)
   const [formData, setFormData] = React.useState({
     name: shop.name,
+    slug: shop.slug,
     description: shop.description || "",
     whatsapp: (shop as any).whatsapp || "",
     address: shop.address || "",
@@ -52,6 +53,7 @@ export default function SettingsForm({ shop, isAdmin }: SettingsFormProps) {
   const hasChanges = React.useMemo(() => {
     const fieldChanges = 
       formData.name !== shop.name ||
+      formData.slug !== shop.slug ||
       formData.description !== (shop.description || "") ||
       formData.whatsapp !== ((shop as any).whatsapp || "") ||
       formData.address !== (shop.address || "") ||
@@ -116,8 +118,43 @@ export default function SettingsForm({ shop, isAdmin }: SettingsFormProps) {
                     value={formData.name} 
                     onChange={handleInputChange}
                     required 
-                    className="rounded-xl h-11 border-muted-foreground/10 focus:ring-primary/20 transition-all" 
+                    className="rounded-xl h-11 border-muted-foreground/10 focus:ring-primary/20 transition-all font-bold" 
                   />
+               </div>
+               <div className="grid gap-2">
+                  <div className="flex items-center justify-between">
+                     <Label htmlFor="slug" className="text-sm font-bold uppercase tracking-wider text-muted-foreground/70">Link Toko (URL)</Label>
+                     {formData.slug !== shop.slug && (
+                        <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 uppercase">Perubahan Link!</span>
+                     )}
+                  </div>
+                  <div className="relative group">
+                     <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm pointer-events-none">
+                        yukjajan.id/
+                     </div>
+                     <Input 
+                        id="slug" 
+                        name="slug" 
+                        value={formData.slug} 
+                        onChange={(e) => {
+                           const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')
+                           setFormData(prev => ({ ...prev, slug: value }))
+                        }}
+                        required 
+                        placeholder="nama-toko-anda"
+                        className="rounded-xl h-11 pl-[88px] border-muted-foreground/10 focus:ring-primary/20 transition-all font-bold lowercase" 
+                     />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1.5 px-1">
+                     <Globe className="h-3 w-3" />
+                     Link Anda: <span className="text-primary font-bold">yukjajan.id/{formData.slug || '...'}</span>
+                  </p>
+                  {formData.slug !== shop.slug && (
+                     <div className="mt-1 bg-amber-50 p-2 rounded-lg border border-amber-100 flex items-start gap-2">
+                        <Shield className="h-3 w-3 text-amber-600 shrink-0 mt-0.5" />
+                        <p className="text-[9px] text-amber-700 font-bold leading-tight">PERHATIAN: Mengubah link akan membuat link lama Anda tidak bisa diakses pelanggan.</p>
+                     </div>
+                  )}
                </div>
                <div className="grid gap-2">
                   <Label htmlFor="description" className="text-sm font-bold uppercase tracking-wider text-muted-foreground/70">Deskripsi Singkat</Label>

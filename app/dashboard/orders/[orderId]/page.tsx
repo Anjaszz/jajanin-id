@@ -101,13 +101,21 @@ export default async function OrderDetailPage({
                                         <span className="font-bold text-slate-900">{formatCurrency(total_amount)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 font-medium">Biaya Layanan</span>
-                                        <span className="font-bold text-slate-900">{formatCurrency(order.platform_fee || 0)}</span>
+                                        <span className="text-slate-500 font-medium">Biaya Layanan {payment_method === 'gateway' && '(Digital)'}</span>
+                                        <span className="font-bold text-slate-900">{formatCurrency(order.gateway_fee || 0)}</span>
                                     </div>
                                     <div className="h-px bg-slate-200" />
                                     <div className="flex justify-between items-center">
                                         <span className="text-base font-black text-slate-900">Total Pembayaran</span>
-                                        <span className="text-xl font-black text-primary">{formatCurrency(total_amount + (order.platform_fee || 0))}</span>
+                                        <span className="text-xl font-black text-primary">{formatCurrency(total_amount + (order.gateway_fee || 0))}</span>
+                                    </div>
+                                    
+                                    {/* Info for Seller */}
+                                    <div className="mt-4 pt-4 border-t border-dashed border-slate-200">
+                                        <div className="flex justify-between text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                            <span>Potongan Platform (App Fee)</span>
+                                            <span className="text-red-500">-{formatCurrency(order.platform_fee || 0)}</span>
+                                        </div>
                                     </div>
                                 </div>
                            </CardContent>

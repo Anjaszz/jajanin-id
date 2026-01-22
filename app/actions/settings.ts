@@ -12,6 +12,7 @@ export async function updateShopSettings(formData: FormData) {
   if (!user) return { error: "Unauthorized" };
 
   const name = formData.get("name") as string;
+  const slug = formData.get("slug") as string;
   const description = formData.get("description") as string;
   const address = formData.get("address") as string;
   const whatsapp = formData.get("whatsapp") as string;
@@ -24,7 +25,7 @@ export async function updateShopSettings(formData: FormData) {
 
   const { data: shop } = (await supabase
     .from("shops")
-    .select("id, logo_url, cover_url")
+    .select("id, logo_url, cover_url, slug")
     .eq("owner_id", user.id)
     .single()) as { data: any };
 
@@ -62,6 +63,7 @@ export async function updateShopSettings(formData: FormData) {
   const { error } = await (supabase.from("shops") as any)
     .update({
       name,
+      slug: slug?.toLowerCase().replace(/\s+/g, "-"),
       description,
       address,
       whatsapp,
@@ -75,10 +77,18 @@ export async function updateShopSettings(formData: FormData) {
     } as any)
     .eq("owner_id", user.id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.code === "23505")
+      return { error: "Link toko sudah digunakan oleh toko lain" };
+    return { error: error.message };
+  }
 
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard");
+  if (slug !== shop.slug) {
+    revalidatePath(`/${shop.slug}`);
+    revalidatePath(`/${slug}`);
+  }
   return { success: true };
 }
 

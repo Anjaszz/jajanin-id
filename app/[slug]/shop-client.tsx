@@ -756,7 +756,7 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
 
             {/* Info Section */}
             <div className="md:w-1/2 flex flex-col h-full overflow-hidden">
-              <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+              <div className="flex-1 p-3 md:p-6 space-y-4 overflow-y-auto custom-scrollbar">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight">{selectedProduct.name}</h2>
                   <div className="flex items-center gap-2 mt-2">
