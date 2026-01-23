@@ -10,7 +10,8 @@ import {
   Settings,
   LogOut,
   ChevronRight,
-  Activity
+  Activity,
+  Tag
 } from 'lucide-react'
 
 import { signOutSeller } from '@/app/actions/auth'
@@ -49,6 +50,9 @@ export default async function AdminLayout({
           </AdminNavItem>
           <AdminNavItem href="/admin/users" icon={<Users className="h-5 w-5" />}>
             Kelola Pengguna
+          </AdminNavItem>
+          <AdminNavItem href="/admin/categories" icon={<Tag className="h-5 w-5" />}>
+            Master Kategori
           </AdminNavItem>
           <AdminNavItem href="/admin/settings" icon={<Settings className="h-5 w-5" />}>
             Pengaturan

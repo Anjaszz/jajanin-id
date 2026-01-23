@@ -33,7 +33,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: any[] }
       case 'paid': 
         return { label: 'Sudah Dibayar', color: 'bg-emerald-500', icon: CheckCircle2 }
       case 'accepted': 
-        return { label: 'Diterima Penjual', color: 'bg-sky-500', icon: CheckCircle2 }
+        return { label: 'Sedang Diproses', color: 'bg-sky-500', icon: Timer }
       case 'processing': 
         return { label: 'Sedang Diproses', color: 'bg-indigo-500', icon: Timer }
       case 'ready': 

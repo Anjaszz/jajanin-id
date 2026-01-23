@@ -11,7 +11,8 @@ import {
   Settings,
   ShoppingBag,
   LogOut,
-  Store
+  Store,
+  Grid2X2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signOutSeller } from '@/app/actions/auth'
@@ -70,11 +71,8 @@ export function MobileNav() {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-lg flex justify-around items-center p-2 pb-6 z-50">
       <MobileNavItem href="/dashboard" icon={<LayoutDashboard className="h-6 w-6" />} label="Beranda" active={pathname === '/dashboard'} />
-      <MobileNavItem href="/dashboard/products" icon={<Package className="h-6 w-6" />} label="Produk" active={pathname.startsWith('/dashboard/products')} />
-      <MobileNavItem href="/dashboard/pos" icon={<Store className="h-6 w-6" />} label="Kasir" active={pathname.startsWith('/dashboard/pos')} />
       <MobileNavItem href="/dashboard/orders" icon={<FileText className="h-6 w-6" />} label="Pesanan" active={pathname.startsWith('/dashboard/orders')} />
-      <MobileNavItem href="/dashboard/income" icon={<TrendingUp className="h-6 w-6" />} label="Masuk" active={pathname.startsWith('/dashboard/income')} />
-      <MobileNavItem href="/dashboard/settings" icon={<Settings className="h-6 w-6" />} label="Profil" active={pathname.startsWith('/dashboard/settings')} />
+      <MobileNavItem href="/dashboard/menu" icon={<Grid2X2 className="h-6 w-6" />} label="Menu" active={pathname === '/dashboard/menu'} />
     </nav>
   )
 }

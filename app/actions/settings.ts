@@ -22,6 +22,13 @@ export async function updateShopSettings(formData: FormData) {
   const bank_holder_name = formData.get("bank_holder_name") as string;
   const logoFile = formData.get("logo") as File;
   const coverFile = formData.get("cover") as File;
+  const autoAcceptRaw = formData.get("auto_accept_order");
+  const auto_accept_order = autoAcceptRaw === "true";
+
+  console.log("Saving Auto Accept Status:", {
+    raw: autoAcceptRaw,
+    parsed: auto_accept_order,
+  });
 
   const { data: shop } = (await supabase
     .from("shops")
@@ -60,6 +67,16 @@ export async function updateShopSettings(formData: FormData) {
     }
   }
 
+  const sellerName = formData.get("seller_name") as string;
+
+  // Update Profile Name if changed
+  if (sellerName) {
+    await (supabase.from("profiles") as any)
+      .update({ name: sellerName })
+      .eq("id", user.id);
+    revalidatePath("/dashboard/settings");
+  }
+
   const { error } = await (supabase.from("shops") as any)
     .update({
       name,
@@ -73,6 +90,7 @@ export async function updateShopSettings(formData: FormData) {
       bank_holder_name,
       logo_url: logoUrl,
       cover_url: coverUrl,
+      auto_accept_order,
       updated_at: new Date().toISOString(),
     } as any)
     .eq("owner_id", user.id);

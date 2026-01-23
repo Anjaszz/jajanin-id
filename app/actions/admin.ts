@@ -19,6 +19,23 @@ export async function isAdmin() {
   return (profile as any)?.role === "admin";
 }
 
+export async function getAllShopsAdmin() {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return [];
+
+  const { data, error } = await supabase
+    .from("shops")
+    .select("id, name")
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  return data;
+}
+
 export async function getPendingWithdrawals() {
   const supabase = await createClient();
   if (!(await isAdmin())) return [];

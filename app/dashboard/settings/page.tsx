@@ -5,12 +5,20 @@ import { ShoppingBag, MapPin, Globe, Image as ImageIcon, CheckCircle2, CreditCar
 import { signOutSeller } from "@/app/actions/auth"
 import SettingsForm from "./settings-form"
 import { cn } from "@/lib/utils"
+import { createClient } from "@/utils/supabase/server"
 
 export default async function SettingsPage() {
   const shop = await getShop()
   const isUserAdmin = await isAdmin()
-
+  
   if (!shop) return null
+
+  const supabase = await createClient()
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("name")
+    .eq("id", shop.owner_id)
+    .single()
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 sm:space-y-10 px-4 py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -24,7 +32,7 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      <SettingsForm shop={shop} isAdmin={isUserAdmin} />
+      <SettingsForm shop={shop} isAdmin={isUserAdmin} sellerName={(profile as any)?.name || ''} />
 
       {/* Quick Links Section */}
       <div className="pt-6 sm:pt-10 border-t border-muted/30">

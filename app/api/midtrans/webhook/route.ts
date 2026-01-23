@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     if (computedSignature !== body.signature_key) {
       return NextResponse.json(
         { message: "Invalid signature" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -32,11 +32,23 @@ export async function POST(req: Request) {
 
       // First get order info
       const { data: order } = await (supabase.from("orders") as any)
-        .select("shop_id, total_amount, platform_fee")
+        .select(
+          `
+          shop_id, 
+          total_amount, 
+          platform_fee,
+          shop:shops(auto_accept_order)
+        `,
+        )
         .eq("id", orderId)
         .single();
 
       if (order) {
+        const isAutoAccept = (order as any).shop?.auto_accept_order || false;
+        if (isAutoAccept) {
+          orderStatus = "accepted";
+        }
+
         const netAmount =
           Number(order.total_amount) - Number(order.platform_fee);
 

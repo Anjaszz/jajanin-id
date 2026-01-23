@@ -34,7 +34,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
       case 'pending_payment': return { label: 'Menunggu Pembayaran', color: 'bg-yellow-100 text-yellow-700', icon: <Clock className="h-4 w-4" /> }
       case 'paid': return { label: 'Sudah Dibayar', color: 'bg-blue-100 text-blue-700', icon: <CheckCircle2 className="h-4 w-4" /> }
       case 'pending_confirmation': return { label: 'Menunggu Konfirmasi', color: 'bg-orange-100 text-orange-700', icon: <Clock className="h-4 w-4" /> }
-      case 'accepted': return { label: 'Diterima', color: 'bg-green-100 text-green-700', icon: <CheckCircle2 className="h-4 w-4" /> }
+      case 'accepted': return { label: 'Sedang Diproses', color: 'bg-green-100 text-green-700', icon: <RefreshCw className="h-4 w-4 animate-spin" /> }
       case 'processing': return { label: 'Sedang Diproses', color: 'bg-indigo-100 text-indigo-700', icon: <RefreshCw className="h-4 w-4 animate-spin" /> }
       case 'ready': return { label: 'Siap Diambil/Dikirim', color: 'bg-teal-100 text-teal-700', icon: <ShoppingBag className="h-4 w-4" /> }
       case 'completed': return { label: 'Selesai', color: 'bg-green-600 text-white', icon: <CheckCircle2 className="h-4 w-4" /> }

@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, CreditCard, Wallet, Banknote, Loader2, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, CreditCard, Wallet, Banknote, Loader2, CheckCircle2, Calendar as CalendarIcon, Clock } from 'lucide-react'
+import { format } from 'date-fns'
+import { id } from 'date-fns/locale'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,6 +14,9 @@ import { placeOrder } from '@/app/actions/orders'
 import { getProductsByIds } from '@/app/actions/public-shop'
 import { cn } from '@/lib/utils'
 import { isShopOpen } from '@/lib/shop-status'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface Product {
   id: string
@@ -165,7 +170,8 @@ export default function CheckoutClient({ shop, userProfile }: { shop: any, userP
       shop_id: shop.id,
       payment_method: paymentMethod,
       items: items,
-      guest_info: guestInfo
+      guest_info: guestInfo,
+      scheduled_for: orderType === 'scheduled' ? `${schedule.date}T${schedule.time}:00` : undefined
     })
     
     if (result.success) {
@@ -271,14 +277,78 @@ export default function CheckoutClient({ shop, userProfile }: { shop: any, userP
              </div>
 
              {orderType === 'scheduled' && (
-               <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2">
-                 <div className="space-y-1">
-                   <Label className="text-[10px] uppercase font-bold text-muted-foreground">Pilih Tanggal</Label>
-                   <Input type="date" value={schedule.date} onChange={e => setSchedule(prev => ({ ...prev, date: e.target.value }))} />
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                 <div className="space-y-2">
+                   <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest px-1">Pilih Tanggal</Label>
+                   <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full h-12 justify-start text-left font-bold rounded-xl border-slate-200 bg-white hover:border-primary/50 transition-all",
+                            !schedule.date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                          {schedule.date ? format(new Date(schedule.date), "PPP", { locale: id }) : <span>Pilih tanggal...</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 rounded-2xl border-none shadow-2xl bg-white" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={schedule.date ? new Date(schedule.date) : undefined}
+                          onSelect={(date) => setSchedule(prev => ({ ...prev, date: date ? format(date, "yyyy-MM-dd") : '' }))}
+                          initialFocus
+                          disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                        />
+                      </PopoverContent>
+                    </Popover>
                  </div>
-                 <div className="space-y-1">
-                   <Label className="text-[10px] uppercase font-bold text-muted-foreground">Pilih Jam</Label>
-                   <Input type="time" value={schedule.time} onChange={e => setSchedule(prev => ({ ...prev, time: e.target.value }))} />
+                 <div className="space-y-2">
+                   <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest px-1">Pilih Jam</Label>
+                   <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full h-12 justify-start text-left font-bold rounded-xl border-slate-200 bg-white hover:border-primary/50 transition-all",
+                            !schedule.time && "text-muted-foreground"
+                          )}
+                        >
+                          <Clock className="mr-2 h-4 w-4 text-primary" />
+                          {schedule.time ? schedule.time : <span>Pilih jam...</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[200px] p-2 rounded-2xl border-none shadow-2xl bg-white" align="start">
+                        <ScrollArea className="h-[250px] pr-2">
+                           <div className="grid grid-cols-1 gap-1">
+                              {Array.from({ length: 48 }).map((_, i) => {
+                                 const hour = Math.floor(i / 2)
+                                 const minute = i % 2 === 0 ? '00' : '30'
+                                 const time = `${hour.toString().padStart(2, '0')}:${minute}`
+                                 return (
+                                    <button
+                                       key={time}
+                                       type="button"
+                                       onClick={() => {
+                                          setSchedule(prev => ({ ...prev, time }))
+                                       }}
+                                       className={cn(
+                                          "flex items-center justify-between px-3 py-2.5 text-sm font-bold rounded-xl text-left transition-all",
+                                          schedule.time === time 
+                                            ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                                            : "hover:bg-slate-100 text-slate-600"
+                                       )}
+                                    >
+                                       {time}
+                                       {schedule.time === time && <CheckCircle2 className="h-4 w-4" />}
+                                    </button>
+                                 )
+                              })}
+                           </div>
+                        </ScrollArea>
+                      </PopoverContent>
+                    </Popover>
                  </div>
                </div>
              )}
@@ -443,7 +513,7 @@ export default function CheckoutClient({ shop, userProfile }: { shop: any, userP
 
         <Button 
           className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20" 
-          disabled={isOrdering}
+          disabled={isOrdering || !guestInfo.name || !guestInfo.phone || (orderType === 'scheduled' && (!schedule.date || !schedule.time))}
           onClick={handlePlaceOrder}
         >
           {isOrdering && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}

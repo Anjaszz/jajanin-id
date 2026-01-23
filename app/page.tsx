@@ -82,7 +82,7 @@ export default async function Home() {
                        className="h-16 pl-12 pr-4 rounded-2xl border-2 shadow-2xl focus-visible:ring-primary/20 transition-all font-bold text-lg"
                     />
                  </div>
-                 <Button className="h-16 px-10 rounded-2xl text-xl font-black shadow-2xl shadow-primary/30 transition-all hover:scale-95" asChild>
+                 <Button className="h-16 px-10 rounded-2xl text-xl font-black shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-95" asChild>
                     <Link href="/shops">Cari Sekarang</Link>
                  </Button>
               </div>
@@ -116,7 +116,7 @@ export default async function Home() {
                  <h2 className="text-3xl md:text-4xl font-heading font-black tracking-tight">Toko Terpopuler</h2>
                  <p className="text-muted-foreground mt-2">Daftar toko paling banyak dikunjungi pembeli minggu ini.</p>
               </div>
-              <Button variant="outline" className="rounded-xl font-bold h-12" asChild>
+              <Button variant="outline" className="rounded-xl font-bold h-12 active:scale-95 transition-all" asChild>
                  <Link href="/shops">Lihat Semua <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
            </div>
@@ -124,8 +124,8 @@ export default async function Home() {
            {shops.length > 0 ? (
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                {shops.map((shop) => (
-                 <Link key={shop.id} href={`/${shop.slug}`} className="group block">
-                   <Card className="h-full overflow-hidden border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-card group-hover:-translate-y-2 relative">
+                 <Link key={shop.id} href={`/${shop.slug}`} className="group block active:scale-[0.98] transition-transform duration-200">
+                   <Card className="h-full overflow-hidden border-none shadow-sm hover:shadow-2xl transition-all duration-500 bg-card group-hover:-translate-y-2 active:translate-y-0 relative">
                      <div className="aspect-4/3 w-full relative bg-muted overflow-hidden">
                        {shop.cover_url ? (
                          <img 
@@ -214,7 +214,7 @@ export default async function Home() {
                     Buka toko online gratis hanya dalam 5 menit. Kelola pesanan, stok, dan pembayaran dalam satu genggaman. Jualan makin simpel, untung makin nempel!
                  </p>
                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <Button className="h-16 px-10 rounded-2xl text-xl font-black shadow-2xl shadow-primary/30" asChild>
+                    <Button className="h-16 px-10 rounded-2xl text-xl font-black shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-95" asChild>
                        <Link href="/business">Daftar Jadi Seller</Link>
                     </Button>
                   

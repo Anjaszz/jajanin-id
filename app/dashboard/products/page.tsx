@@ -7,6 +7,7 @@ import { getShop } from '@/app/actions/shop'
 import { cn } from '@/lib/utils'
 import { ToggleProductStatusButton } from '@/components/dashboard/toggle-product-status-button'
 import { DeleteProductButton } from '@/components/dashboard/delete-product-button'
+import { ShareProductButton } from '@/components/dashboard/share-product-button'
 
 export default async function ProductsPage({
   searchParams,
@@ -106,6 +107,12 @@ export default async function ProductsPage({
                                   {/* Actions Section */}
                                   <div className="bg-slate-50/50 md:bg-transparent p-4 flex items-center justify-between md:justify-end gap-2 w-full md:w-auto border-t md:border-t-0 border-slate-100">
                                       <div className="flex items-center gap-2">
+                                          <ShareProductButton 
+                                            shopSlug={shop?.slug || ''}
+                                            productId={product.id}
+                                            productName={product.name}
+                                          />
+
                                           <Button variant="outline" size="sm" asChild className="rounded-xl h-10 px-4 font-bold text-xs border-slate-200 bg-white hover:bg-slate-50">
                                               <Link href={`/dashboard/products/${product.id}`}>
                                                   <Eye className="h-4 w-4 mr-2" /> Detail

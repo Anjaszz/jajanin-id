@@ -66,71 +66,79 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="relative overflow-hidden group border-none shadow-lg bg-linear-to-br from-primary/10 to-transparent">
-          <CardHeader className="flex flex-row items-center justify-between pb-1 space-y-0 text-primary">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-70">Penjualan Hari Ini</CardTitle>
-            <TrendingUp className="h-4 w-4 opacity-50" />
-          </CardHeader>
-          <CardContent className="pb-4">
-            <div className="text-2xl font-black text-slate-900">{formatCurrency((stats as any).todaySales)}</div>
-            
-            <div className="mt-2 flex items-center gap-3">
-               <div className="flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-                  <p className="text-[10px] font-bold text-slate-500">Tunai: <span className="text-slate-700">{formatCurrency((stats as any).todayCashSales)}</span></p>
-               </div>
-               <div className="flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                  <p className="text-[10px] font-bold text-blue-500">Digital: <span className="text-blue-700">{formatCurrency((stats as any).todayDigitalSales)}</span></p>
-               </div>
+        <Link href="/dashboard/income" className="block transition-transform hover:scale-[1.02] active:scale-95">
+          <Card className="relative overflow-hidden group border-none shadow-lg bg-linear-to-br from-primary/10 to-transparent h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-1 space-y-0 text-primary">
+              <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-70">Penjualan Hari Ini</CardTitle>
+              <TrendingUp className="h-4 w-4 opacity-50" />
+            </CardHeader>
+            <CardContent className="pb-4">
+              <div className="text-2xl font-black ">{formatCurrency((stats as any).todaySales)}</div>
+              
+              <div className="mt-2 flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                    <p className="text-[10px] font-bold text-slate-500">Tunai: <span className="text-slate-700">{formatCurrency((stats as any).todayCashSales)}</span></p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                    <p className="text-[10px] font-bold text-blue-500">Digital: <span className="text-blue-700">{formatCurrency((stats as any).todayDigitalSales)}</span></p>
+                </div>
+              </div>
+            </CardContent>
+            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500 pointer-events-none">
+              <TrendingUp className="h-24 w-24" />
             </div>
-          </CardContent>
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500 pointer-events-none">
-             <TrendingUp className="h-24 w-24" />
-          </div>
-        </Card>
+          </Card>
+        </Link>
 
-        <Card className="relative overflow-hidden group border-none shadow-lg bg-linear-to-br from-blue-500/10 to-transparent">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Pesanan Berhasil Hari Ini</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{(stats as any).todayOrdersCount} Pesanan</div>
-            <p className="text-xs text-muted-foreground mt-1">Total pesanan selesai hari ini</p>
-          </CardContent>
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
-             <ShoppingCart className="h-24 w-24 text-blue-600" />
-          </div>
-        </Card>
+        <Link href="/dashboard/orders" className="block transition-transform hover:scale-[1.02] active:scale-95">
+          <Card className="relative overflow-hidden group border-none shadow-lg bg-linear-to-br from-blue-500/10 to-transparent h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">Pesanan Berhasil Hari Ini</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{(stats as any).todayOrdersCount} Pesanan</div>
+              <p className="text-xs text-muted-foreground mt-1">Total pesanan selesai hari ini</p>
+            </CardContent>
+            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+              <ShoppingCart className="h-24 w-24 text-blue-600" />
+            </div>
+          </Card>
+        </Link>
 
-        <Card className="relative overflow-hidden group border-none shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Produk Aktif</CardTitle>
-            <Package className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.productCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Varian produk di katalog</p>
-          </CardContent>
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
-             <Package className="h-24 w-24" />
-          </div>
-        </Card>
+        <Link href="/dashboard/products" className="block transition-transform hover:scale-[1.02] active:scale-95">
+          <Card className="relative overflow-hidden group border-none shadow-lg h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">Produk Aktif</CardTitle>
+              <Package className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.productCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">Varian produk di katalog</p>
+            </CardContent>
+            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+              <Package className="h-24 w-24" />
+            </div>
+          </Card>
+        </Link>
 
-        <Card className="relative overflow-hidden group border-none shadow-lg bg-linear-to-br from-green-500/10 to-transparent">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Saldo Dompet</CardTitle>
-            <Wallet className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.balance)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Dana tersedia untuk ditarik</p>
-          </CardContent>
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
-             <Wallet className="h-24 w-24 text-green-600" />
-          </div>
-        </Card>
+        <Link href="/dashboard/wallet" className="block transition-transform hover:scale-[1.02] active:scale-95">
+          <Card className="relative overflow-hidden group border-none shadow-lg bg-linear-to-br from-green-500/10 to-transparent h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">Saldo Dompet</CardTitle>
+              <Wallet className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.balance)}</div>
+              <p className="text-xs text-muted-foreground mt-1">Dana tersedia untuk ditarik</p>
+            </CardContent>
+            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+              <Wallet className="h-24 w-24 text-green-600" />
+            </div>
+          </Card>
+        </Link>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">

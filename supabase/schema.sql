@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS shops (
   bank_account TEXT,
   bank_holder_name TEXT,
   is_manual_closed BOOLEAN DEFAULT FALSE,
+  auto_accept_order BOOLEAN DEFAULT FALSE,
   operating_hours JSONB DEFAULT '{}'::JSONB,
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

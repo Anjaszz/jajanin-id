@@ -18,7 +18,8 @@ import {
   LogOut, 
   Shield, 
   Clock, 
-  ShieldOff 
+  ShieldOff,
+  Zap
 } from "lucide-react"
 import { signOutSeller } from "@/app/actions/auth"
 import { updateShopSettings } from "@/app/actions/settings"
@@ -29,13 +30,15 @@ import { toast } from "sonner"
 interface SettingsFormProps {
   shop: any
   isAdmin: boolean
+  sellerName: string
 }
 
-export default function SettingsForm({ shop, isAdmin }: SettingsFormProps) {
+export default function SettingsForm({ shop, isAdmin, sellerName }: SettingsFormProps) {
   const router = useRouter()
   const [isPending, setIsPending] = React.useState(false)
   const [formData, setFormData] = React.useState({
     name: shop.name,
+    seller_name: sellerName,
     slug: shop.slug,
     description: shop.description || "",
     whatsapp: (shop as any).whatsapp || "",
@@ -44,6 +47,7 @@ export default function SettingsForm({ shop, isAdmin }: SettingsFormProps) {
     bank_name: (shop as any).bank_name || "",
     bank_account: (shop as any).bank_account || "",
     bank_holder_name: (shop as any).bank_holder_name || "",
+    auto_accept_order: (shop as any).auto_accept_order || false,
   })
 
   // Track if files are selected
@@ -53,6 +57,7 @@ export default function SettingsForm({ shop, isAdmin }: SettingsFormProps) {
   const hasChanges = React.useMemo(() => {
     const fieldChanges = 
       formData.name !== shop.name ||
+      formData.seller_name !== sellerName ||
       formData.slug !== shop.slug ||
       formData.description !== (shop.description || "") ||
       formData.whatsapp !== ((shop as any).whatsapp || "") ||
@@ -60,7 +65,8 @@ export default function SettingsForm({ shop, isAdmin }: SettingsFormProps) {
       formData.google_maps_link !== (shop.google_maps_link || "") ||
       formData.bank_name !== ((shop as any).bank_name || "") ||
       formData.bank_account !== ((shop as any).bank_account || "") ||
-      formData.bank_holder_name !== ((shop as any).bank_holder_name || "")
+      formData.bank_holder_name !== ((shop as any).bank_holder_name || "") ||
+      Boolean(formData.auto_accept_order) !== Boolean((shop as any).auto_accept_order)
     
     return fieldChanges || !!logoFile || !!coverFile
   }, [formData, shop, logoFile, coverFile])
@@ -110,6 +116,17 @@ export default function SettingsForm({ shop, isAdmin }: SettingsFormProps) {
                <CardDescription className="text-sm">Nama dan deskripsi toko yang dilihat pelanggan.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5 p-5 sm:p-6 pt-0 sm:pt-0">
+               <div className="grid gap-2">
+                  <Label htmlFor="seller_name" className="text-sm font-bold uppercase tracking-wider text-muted-foreground/70">Nama Seller (Akun)</Label>
+                  <Input 
+                    id="seller_name" 
+                    name="seller_name" 
+                    value={formData.seller_name} 
+                    onChange={handleInputChange}
+                    required 
+                    className="rounded-xl h-11 border-muted-foreground/10 focus:ring-primary/20 transition-all font-bold" 
+                  />
+               </div>
                <div className="grid gap-2">
                   <Label htmlFor="name" className="text-sm font-bold uppercase tracking-wider text-muted-foreground/70">Nama Toko</Label>
                   <Input 
@@ -295,6 +312,53 @@ export default function SettingsForm({ shop, isAdmin }: SettingsFormProps) {
                    Data ini digunakan untuk verifikasi pencairan dana. Pastikan nama dan nomor rekening sudah benar.
                  </p>
                </div>
+            </CardContent>
+         </Card>
+
+         <Card className="border-none shadow-xl bg-linear-to-br from-blue-500/5 to-transparent border-t-2 border-blue-500/10">
+            <CardHeader className="space-y-2 p-5 sm:p-6">
+                <CardTitle className="flex items-center gap-2.5 text-xl font-bold">
+                  <div className="p-2 bg-blue-500/10 rounded-xl">
+                      <Zap className="h-5 w-5 text-blue-600" />
+                  </div>
+                  Fitur & Automasi
+                </CardTitle>
+                <CardDescription className="text-sm">Aktifkan fitur otomatisasi toko Anda.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-5 sm:p-6 pt-0 sm:pt-0">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/50 border border-blue-100/50 shadow-sm">
+                  <div className="space-y-1">
+                      <Label htmlFor="auto_accept_toggle" className="text-base font-bold text-slate-900 cursor-pointer">Otomatis Terima Pesanan</Label>
+                      <p className="text-[11px] text-muted-foreground font-medium leading-tight max-w-[280px]">
+                        Jika aktif, pesanan baru akan langsung masuk ke status <span className="text-blue-600 font-bold">PROSES</span> tanpa perlu konfirmasi manual.
+                      </p>
+                  </div>
+                  <button 
+                    id="auto_accept_toggle"
+                    type="button"
+                    onClick={() => {
+                        const newVal = !formData.auto_accept_order;
+                        setFormData(prev => ({ ...prev, auto_accept_order: newVal }));
+                    }}
+                    className={cn(
+                        "w-12 h-6 rounded-full cursor-pointer transition-all duration-300 relative focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+                        formData.auto_accept_order ? "bg-blue-600 shadow-lg shadow-blue-500/30" : "bg-slate-200"
+                    )}
+                  >
+                        <div className={cn(
+                            "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-300 shadow-sm",
+                            formData.auto_accept_order ? "left-7" : "left-1"
+                        )} />
+                  </button>
+                  <input type="hidden" name="auto_accept_order" value={formData.auto_accept_order ? "true" : "false"} />
+                </div>
+
+                <div className="flex items-start gap-3 bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20">
+                  <Shield className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <p className="text-[11px] sm:text-xs text-blue-700/80 font-semibold leading-relaxed">
+                    Fitur ini membantu mempercepat proses pemesanan jika Anda selalu siap memproses pesanan yang masuk.
+                  </p>
+                </div>
             </CardContent>
          </Card>
 

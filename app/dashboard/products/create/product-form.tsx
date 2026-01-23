@@ -8,7 +8,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, ArrowLeft } from 'lucide-react'
+import { Loader2, ArrowLeft, ChevronDown, Check, Tag, Search } from 'lucide-react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Database } from '@/types/database.types'
 import { cn } from '@/lib/utils'
 
@@ -36,6 +41,13 @@ export default function ProductForm({
   const [error, setError] = useState<any>(null)
   const [previews, setPreviews] = useState<string[]>(initialData?.images || [])
   const [displayPrice, setDisplayPrice] = useState(formatRupiah(initialData?.price || ''))
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(initialData?.category_id || '')
+  const [openCategory, setOpenCategory] = useState(false)
+  const [categorySearch, setCategorySearch] = useState('')
+
+  const filteredCategories = categories.filter(cat => 
+    cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+  )
   
   // Variant States
   const [hasVariants, setHasVariants] = useState(initialData?.product_variants?.length > 0 || false)
@@ -111,6 +123,13 @@ export default function ProductForm({
     setError(null)
 
     const formData = new FormData(event.currentTarget)
+    
+    if (!selectedCategoryId) {
+        setError("Silakan pilih kategori produk terlebih dahulu.")
+        setIsLoading(false)
+        return
+    }
+    formData.set('category_id', selectedCategoryId)
     
     if (initialData) {
         formData.append('existing_images', JSON.stringify(previews.filter(p => p.startsWith('http'))))
@@ -212,19 +231,73 @@ export default function ProductForm({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="category_id" className="text-sm font-bold uppercase tracking-wider text-muted-foreground/80">Kategori (Opsional)</Label>
-            <select 
-              id="category_id" 
-              name="category_id" 
-              defaultValue={initialData?.category_id || 'none'}
-              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={isLoading}
-            >
-              <option value="none">Tanpa Kategori</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
+            <Label htmlFor="category_id" className="text-sm font-bold uppercase tracking-wider text-muted-foreground/80">Kategori*</Label>
+            <Popover open={openCategory} onOpenChange={setOpenCategory}>
+                <PopoverTrigger asChild>
+                    <button
+                        type="button"
+                        role="combobox"
+                        aria-expanded={openCategory}
+                        className="flex h-12 w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold shadow-sm transition-all focus:ring-4 focus:ring-primary/10 hover:border-primary/30"
+                        disabled={isLoading}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Tag className="h-4 w-4 text-primary/60" />
+                            {selectedCategoryId 
+                                ? categories.find((cat) => cat.id === selectedCategoryId)?.name 
+                                : <span className="text-muted-foreground font-medium">Pilih Kategori...</span>
+                            }
+                        </div>
+                        <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                    </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-(--radix-popover-trigger-width) p-2 rounded-2xl shadow-2xl border-none bg-white/95 backdrop-blur-md">
+                    <div className="relative mb-2">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            value={categorySearch}
+                            onChange={(e) => setCategorySearch(e.target.value)}
+                            placeholder="Cari kategori..."
+                            className="h-10 pl-9 border-none bg-slate-100 rounded-xl text-xs font-bold focus:ring-4 focus:ring-primary/10 transition-all"
+                        />
+                    </div>
+                    <div className="space-y-1 max-h-[300px] overflow-y-auto pr-1">
+                        {filteredCategories.length > 0 ? (
+                            filteredCategories.map((cat) => (
+                                <button
+                                    key={cat.id}
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedCategoryId(cat.id)
+                                        setOpenCategory(false)
+                                    }}
+                                    className={cn(
+                                        "flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-bold transition-all",
+                                        selectedCategoryId === cat.id 
+                                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                                            : "text-slate-600 hover:bg-slate-100"
+                                    )}
+                                >
+                                    {cat.name}
+                                    {selectedCategoryId === cat.id && <Check className="h-4 w-4" />}
+                                </button>
+                            ))
+                        ) : (
+                            <div className="p-4 text-center">
+                                <p className="text-xs text-muted-foreground font-medium">
+                                    {categorySearch ? "Kategori tidak ditemukan." : "Belum ada kategori."}
+                                </p>
+                                {!categorySearch && (
+                                    <Button variant="link" size="sm" asChild className="h-auto p-0 text-[10px] font-black uppercase tracking-widest mt-2">
+                                        <Link href="/admin/categories">Kelola Kategori Admin</Link>
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </PopoverContent>
+            </Popover>
+            <input type="hidden" name="category_id" value={selectedCategoryId} />
           </div>
 
           {!hasVariants ? (

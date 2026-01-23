@@ -2,11 +2,13 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { 
-  ShieldOff
+  ShieldOff,
+  Headset
 } from 'lucide-react'
 import { getShop } from '@/app/actions/shop'
 import { ModeToggle } from '@/components/mode-toggle'
 import { Sidebar, MobileNav } from '@/components/dashboard/sidebar'
+import { Button } from '@/components/ui/button'
 
 export default async function DashboardLayout({
   children,
@@ -25,15 +27,24 @@ export default async function DashboardLayout({
   const showSidebar = !!shop;
   const isDeactivated = shop?.is_active === false;
 
+  const waMessage = encodeURIComponent(`Halo Admin YukJajan, saya pemilik toko *${shop?.name || 'Baru'}* ingin bertanya mengenai layanan pelapak...`)
+
   return (
     <div className="flex min-h-screen bg-slate-50/50">
       {/* Sidebar - Client Component for Active Links */}
-      {showSidebar && <Sidebar shopName={shop.name} />}
+      {showSidebar && <Sidebar shopName={shop?.name || ''} />}
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-0 overflow-y-auto relative">
         {/* Desktop Header for Theme Toggle */}
-        <header className="hidden md:flex h-14 items-center justify-end px-8 border-b bg-white/80 backdrop-blur-md shrink-0 sticky top-0 z-40">
+        <header className="hidden md:flex h-14 items-center justify-end px-8 border-b bg-white/80 backdrop-blur-md shrink-0 sticky top-0 z-40 gap-4">
+          <Button variant="ghost" size="sm" asChild className="text-slate-500 hover:text-green-600 font-bold gap-2">
+            <a href={`https://wa.me/628123456789?text=${waMessage}`} target="_blank" rel="noopener noreferrer">
+              <Headset className="h-4 w-4" />
+              Bantuan CS
+            </a>
+          </Button>
+          <div className="h-4 w-px bg-slate-200" />
           <ModeToggle />
         </header>
 

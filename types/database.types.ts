@@ -59,7 +59,9 @@ export type Database = {
           whatsapp: string | null;
           bank_name: string | null;
           bank_account: string | null;
+          bank_holder_name: string | null;
           is_manual_closed: boolean;
+          auto_accept_order: boolean;
           operating_hours: Json | null;
           is_active: boolean;
           created_at: string;
@@ -79,7 +81,9 @@ export type Database = {
           whatsapp?: string | null;
           bank_name?: string | null;
           bank_account?: string | null;
+          bank_holder_name?: string | null;
           is_manual_closed?: boolean;
+          auto_accept_order?: boolean;
           operating_hours?: Json | null;
           is_active?: boolean;
           created_at?: string;
@@ -99,7 +103,9 @@ export type Database = {
           whatsapp?: string | null;
           bank_name?: string | null;
           bank_account?: string | null;
+          bank_holder_name?: string | null;
           is_manual_closed?: boolean;
+          auto_accept_order?: boolean;
           operating_hours?: Json | null;
           is_active?: boolean;
           created_at?: string;
@@ -109,19 +115,16 @@ export type Database = {
       categories: {
         Row: {
           id: string;
-          shop_id: string;
           name: string;
           created_at: string;
         };
         Insert: {
           id?: string;
-          shop_id: string;
           name: string;
           created_at?: string;
         };
         Update: {
           id?: string;
-          shop_id?: string;
           name?: string;
           created_at?: string;
         };

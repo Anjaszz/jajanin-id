@@ -24,6 +24,7 @@ interface PlaceOrderParams {
     email: string;
     phone: string;
   };
+  scheduled_for?: string;
 }
 
 export async function placeOrder(params: PlaceOrderParams) {
@@ -38,6 +39,15 @@ export async function placeOrder(params: PlaceOrderParams) {
     }),
     { total_amount: 0 },
   );
+
+  // Get shop settings for auto-accept
+  const { data: shop } = await supabase
+    .from("shops")
+    .select("auto_accept_order")
+    .eq("id", params.shop_id)
+    .single();
+
+  const isAutoAccept = (shop as any)?.auto_accept_order || false;
 
   // Fetch dynamic system settings
   const { getSystemSettings } = await import("./system-settings");
@@ -63,12 +73,15 @@ export async function placeOrder(params: PlaceOrderParams) {
       guest_info: params.guest_info || null,
       status:
         params.payment_method === "cash"
-          ? "pending_confirmation"
+          ? isAutoAccept
+            ? "accepted"
+            : "pending_confirmation"
           : "pending_payment",
       payment_method: params.payment_method,
       total_amount: total_amount,
       platform_fee: platform_fee,
       gateway_fee: gateway_fee,
+      scheduled_for: params.scheduled_for,
     } as any)
     .select()
     .single();
