@@ -41,7 +41,7 @@ declare global {
   }
 }
 
-export default function CheckoutClient({ shop, userProfile }: { shop: any, userProfile?: any }) {
+export default function CheckoutClient({ shop, userProfile, walletBalance = 0 }: { shop: any, userProfile?: any, walletBalance?: number }) {
   const [cart, setCart] = useState<Record<string, number>>({})
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -498,14 +498,24 @@ export default function CheckoutClient({ shop, userProfile }: { shop: any, userP
              </button>
 
              <button 
-                disabled
-                className="flex items-center gap-4 p-4 rounded-xl border-2 border-dashed opacity-50 cursor-not-allowed bg-muted/50"
+                disabled={!userProfile || walletBalance < total}
+                onClick={() => setPaymentMethod('balance')}
+                className={cn(
+                  "flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left",
+                  paymentMethod === 'balance' ? "border-primary bg-primary/5" : "border-border hover:bg-muted",
+                  (!userProfile || walletBalance < total) && "opacity-50 cursor-not-allowed border-dashed bg-muted/50"
+                )}
              >
-                <div className="p-2 rounded-lg bg-muted">
+                <div className={cn("p-2 rounded-lg", paymentMethod === 'balance' ? "bg-primary text-primary-foreground" : "bg-muted")}>
                   <Wallet className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-muted-foreground">Saldo Dompet (Coming Soon)</p>
+                  <p className="font-bold">Saldo Dompet</p>
+                  <p className="text-xs text-muted-foreground">
+                    {userProfile 
+                      ? `Saldo: Rp ${walletBalance.toLocaleString('id-ID')} ${walletBalance < total ? '(Kurang)' : ''}`
+                      : 'Login untuk menggunakan saldo'}
+                  </p>
                 </div>
              </button>
           </CardContent>

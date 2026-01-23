@@ -395,7 +395,7 @@ export async function toggleProductStatus(id: string, currentStatus: boolean) {
   if (!user) return { error: "Unauthorized" };
 
   const { error } = await (supabase.from("products") as any)
-    .update({ is_active: !currentStatus })
+    .update({ is_active: !currentStatus, admin_note: null })
     .eq("id", id);
 
   if (error) {

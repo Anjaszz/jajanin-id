@@ -148,6 +148,55 @@ export async function placeOrder(params: PlaceOrderParams) {
       console.error("Midtrans Error:", err);
       // We still return success for the order creation, but without snap token
     }
+  } else if (params.payment_method === "balance") {
+    if (!user?.id) {
+      // Should not happen if UI guards it, but safety check
+      return { error: "Anda harus login untuk menggunakan saldo." };
+    }
+
+    const { processPaymentFromBuyer } = await import("./wallet");
+    const payResult = await processPaymentFromBuyer(
+      user.id,
+      total_amount,
+      (order as any).id,
+    );
+
+    // Initialize Admin Client for status updates (Bypass RLS)
+    const { createClient: createAdminClient } =
+      await import("@supabase/supabase-js");
+    const adminSupabase = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+
+    if (!payResult.success) {
+      // Auto-cancel the order if payment fails
+      await (adminSupabase.from("orders") as any)
+        .update({ status: "cancelled_by_buyer" })
+        .eq("id", (order as any).id);
+      return { error: payResult.error || "Pembayaran Gagal" };
+    }
+
+    // Update Status to Paid (or Accepted if auto-accept)
+    // If scheduled -> Paid (waiting for acceptance/schedule time)
+    // If not scheduled and auto-accept -> Accepted
+    // Else -> Paid (Pending Confirmation)
+    let nextStatus = "paid";
+    if (isAutoAccept && !params.scheduled_for) {
+      nextStatus = "accepted";
+    } else {
+      nextStatus = "pending_confirmation"; // Paid but needs confirmation
+    }
+
+    const { error: updateError } = await (adminSupabase.from("orders") as any)
+      .update({ status: nextStatus })
+      .eq("id", (order as any).id);
+
+    if (updateError) {
+      console.error("Failed to update order status:", updateError);
+    }
+
+    revalidatePath(`/orders/${(order as any).id}`);
   }
 
   revalidatePath("/dashboard/orders");

@@ -463,13 +463,24 @@ export async function getAdminGlobalTransactions() {
     .select("id, status, admin_note");
 
   // 3. Get Gateway Orders (Digital Income)
-  const { data: orders } = await adminSupabase
+  const { data: orders, error: ordersError } = await adminSupabase
     .from("orders")
     .select(
       "id, total_amount, platform_fee, created_at, status, shop:shops(id, name)",
     )
     .eq("payment_method", "gateway")
-    .eq("status", "completed");
+    .in("status", [
+      "paid",
+      "accepted",
+      "processing",
+      "ready",
+      "completed",
+      "rejected",
+      "cancelled_by_seller",
+      "cancelled_by_buyer",
+    ]);
+
+  if (ordersError) console.error("ordersError:", ordersError);
 
   // 4. Transform Transactions
   const processedWalletTxs = (walletTxs || [])
@@ -495,12 +506,12 @@ export async function getAdminGlobalTransactions() {
   const digitalOrderTxs = (orders || []).map((order) => ({
     id: `order-${order.id}`,
     wallet_id: null,
-    amount: Number(order.total_amount) - Number(order.platform_fee || 0),
+    amount: Number(order.total_amount),
     type: "income",
     description: `Pesanan Digital #${order.id.slice(0, 8)}`,
     created_at: order.created_at,
     reference_id: order.id,
-    status: "completed",
+    status: order.status,
     source: "order",
     wallet: {
       shop: order.shop,
@@ -514,4 +525,214 @@ export async function getAdminGlobalTransactions() {
   );
 
   return combined;
+}
+
+export async function getAllOrdersAdmin(
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+) {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return { data: [], total: 0 };
+
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  let query = adminSupabase
+    .from("orders")
+    .select(
+      `
+      *,
+      shop:shops!inner(name),
+      buyer:profiles!buyer_id(name, email)
+    `,
+      { count: "exact" },
+    )
+    .order("created_at", { ascending: false });
+
+  if (search) {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        search,
+      );
+
+    if (isUuid) {
+      query = query.eq("id", search);
+    } else {
+      // Search by shop name or buyer name only if not a UUID
+      // Note: searching across joined tables with OR in Supabase can be tricky.
+      // We'll stick to shop name for now as it's the most common use case alongside ID.
+      // To search multiple columns including joined ones often requires a more complex RPC or explicit filter strategy.
+      // query = query.textSearch('shop.name', search) // textSearch is for FTS
+
+      // Using filter strictly on the joined resource alias if possible, but OR across main and joined is hard.
+      // Let's try to filter just by shop name for text searches for now to be safe and simple.
+      // If we need more, we might need to filter on the JS side or write a postgres function.
+
+      // Attempting to filter on the foreign table column:
+      // This syntax `shop.name.ilike.%...%` generally works if the resource is embedded.
+      query = query.ilike("shop.name", `%${search}%`);
+    }
+  }
+
+  const { data, count, error } = await query.range(from, to);
+
+  if (error) {
+    console.error("Fetch all orders error:", error.message);
+    return { data: [], total: 0 };
+  }
+
+  return { data: data as any[], total: count || 0 };
+}
+
+export async function getAdminOrderById(orderId: string) {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return null;
+
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data, error } = await adminSupabase
+    .from("orders")
+    .select(
+      `
+      *,
+      shop:shops(*),
+      buyer:profiles!buyer_id(*),
+      order_items(
+        *,
+        products(*)
+      )
+    `,
+    )
+    .eq("id", orderId)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data as any;
+}
+
+export async function getAllProductsAdmin(
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+) {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return { data: [], total: 0 };
+
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  let query = adminSupabase
+    .from("products")
+    .select(
+      `
+      *,
+      shop:shops!inner(name)
+    `,
+      { count: "exact" },
+    )
+    .order("created_at", { ascending: false });
+
+  if (search) {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        search,
+      );
+
+    if (isUuid) {
+      query = query.eq("id", search);
+    } else {
+      // Search by product name or shop name
+      query = query.or(`name.ilike.%${search}%, shop.name.ilike.%${search}%`);
+    }
+  }
+
+  const { data, count, error } = await query.range(from, to);
+
+  if (error) {
+    console.error("Fetch all products error:", error.message);
+    return { data: [], total: 0 };
+  }
+
+  return { data: data as any[], total: count || 0 };
+}
+
+export async function getAdminProductById(productId: string) {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return null;
+
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data, error } = await adminSupabase
+    .from("products")
+    .select(
+      `
+      *,
+      shop:shops(*),
+      category:categories(name)
+    `,
+    )
+    .eq("id", productId)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data as any;
+}
+
+export async function toggleProductStatusAdmin(
+  productId: string,
+  isActive: boolean,
+  note?: string,
+) {
+  const supabase = await createClient();
+  if (!(await isAdmin())) return { error: "Unauthorized" };
+
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { error } = await (adminSupabase.from("products") as any)
+    .update({ is_active: isActive, admin_note: isActive ? null : note })
+    .eq("id", productId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/products");
+  revalidatePath(`/admin/products/${productId}`);
+  revalidatePath("/dashboard/products");
+
+  return { success: true };
 }

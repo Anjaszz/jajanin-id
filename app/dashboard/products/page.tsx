@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { ToggleProductStatusButton } from '@/components/dashboard/toggle-product-status-button'
 import { DeleteProductButton } from '@/components/dashboard/delete-product-button'
 import { ShareProductButton } from '@/components/dashboard/share-product-button'
+import { AdminNoteModal } from "@/components/dashboard/admin-note-modal";
 
 export default async function ProductsPage({
   searchParams,
@@ -72,13 +73,13 @@ export default async function ProductsPage({
                   {products.map((product) => (
                       <Card key={product.id} className={cn(
                         "overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-300 group rounded-3xl bg-white",
-                        !product.is_active && "bg-slate-50 opacity-80"
+                        !product.is_active && "bg-slate-100 border-2 border-slate-200 opacity-90 grayscale-[0.3]"
                       )}>
                           <CardContent className="p-0">
                               <div className="flex flex-col md:flex-row items-center">
                                   {/* Product Image & Basic Info */}
                                   <div className="p-4 flex-1 flex items-center gap-4 w-full">
-                                      <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-slate-100 border border-slate-100 overflow-hidden shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-500">
+                                      <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white border border-slate-200 overflow-hidden shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-500">
                                           {product.image_url ? (
                                               <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                                           ) : (
@@ -88,12 +89,17 @@ export default async function ProductsPage({
                                           )}
                                       </div>
                                       <div className="flex-1 min-w-0">
-                                          <div className="flex items-center gap-2 mb-1">
+                                          <div className="flex flex-wrap items-center gap-2 mb-1">
                                               <h3 className="font-black text-base sm:text-lg text-slate-900 truncate tracking-tight">{product.name}</h3>
                                               {product.is_active ? (
                                                   <span className="bg-green-100 text-green-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-tighter">Aktif</span>
                                               ) : (
-                                                  <span className="bg-slate-200 text-slate-500 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-tighter">Draft</span>
+                                                  <div className="flex items-center gap-1">
+                                                    <span className="bg-slate-200 text-slate-500 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-tighter">Non-Aktif</span>
+                                                    {!product.is_active && product.admin_note && (
+                                                       <AdminNoteModal note={product.admin_note} />
+                                                    )}
+                                                  </div>
                                               )}
                                           </div>
                                           <div className="flex items-center gap-4">

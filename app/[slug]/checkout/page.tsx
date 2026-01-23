@@ -21,6 +21,9 @@ export default async function CheckoutPage({ params }: PageProps) {
   const user = await getCurrentUser()
   const profile = user ? await getUserProfile(user.id) : null
 
+  const { getBuyerWallet } = await import("@/app/actions/wallet");
+  const wallet = user ? await getBuyerWallet(user.id) : null;
+
   const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
 
   return (
@@ -30,7 +33,11 @@ export default async function CheckoutPage({ params }: PageProps) {
         data-client-key={clientKey}
         strategy="afterInteractive"
       />
-      <CheckoutClient shop={shop as any} userProfile={profile} />
+      <CheckoutClient 
+        shop={shop as any} 
+        userProfile={profile} 
+        walletBalance={(wallet as any)?.balance || 0}
+      />
     </>
   )
 }

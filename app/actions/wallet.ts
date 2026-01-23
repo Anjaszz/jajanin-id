@@ -330,3 +330,230 @@ export async function syncWalletBalance() {
   revalidatePath("/dashboard");
   return { success: true, balance: finalBalance };
 }
+
+export async function getBuyerWallet(userId: string) {
+  const supabase = await createClient();
+  let { data: wallet } = await (supabase.from("wallets") as any)
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!wallet) {
+    // Check if we need to create one using ADMIN privileges to bypass potentially missing RLS for "insert own wallet"
+    const { createClient: createAdminClient } =
+      await import("@supabase/supabase-js");
+    const adminSupabase = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+
+    const { data: newWallet, error } = await (
+      adminSupabase.from("wallets") as any
+    )
+      .insert({ user_id: userId, balance: 0 })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Failed to create buyer wallet", error);
+      // Return a dummy empty wallet to prevent UI crash, but with 0 balance
+      return { balance: 0, id: null };
+    }
+    wallet = newWallet;
+  }
+  return wallet;
+}
+
+export async function processRefundToBuyer(
+  userId: string,
+  amount: number,
+  orderId: string,
+) {
+  // Use Admin Client
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  let { data: wallet } = await (adminSupabase.from("wallets") as any)
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!wallet) {
+    const { data: newWallet, error } = await (
+      adminSupabase.from("wallets") as any
+    )
+      .insert({ user_id: userId, balance: 0 })
+      .select()
+      .single();
+    if (error || !newWallet) return { error: "Failed to init wallet" };
+    wallet = newWallet;
+  }
+
+  // Update Balance
+  const { error: updateError } = await (adminSupabase.from("wallets") as any)
+    .update({ balance: (wallet.balance || 0) + amount })
+    .eq("id", wallet.id);
+
+  if (updateError) return { error: updateError.message };
+
+  // Log Transaction
+  await (adminSupabase.from("wallet_transactions") as any).insert({
+    wallet_id: wallet.id,
+    amount: amount,
+    type: "refund", // Ensure this type exists in DB enum or text
+    description: `Pengembalian dana (Refund) pesanan #${orderId.slice(0, 8)}`,
+    reference_id: orderId,
+  });
+
+  return { success: true };
+}
+
+export async function processPaymentFromBuyer(
+  userId: string,
+  amount: number,
+  orderId: string,
+) {
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  let { data: wallet } = await (adminSupabase.from("wallets") as any)
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+
+  if (!wallet || (wallet.balance || 0) < amount) {
+    return { success: false, error: "Saldo tidak mencukupi" };
+  }
+
+  // Deduct
+  const { error: updateError } = await (adminSupabase.from("wallets") as any)
+    .update({ balance: wallet.balance - amount })
+    .eq("id", wallet.id);
+
+  if (updateError) return { success: false, error: updateError.message };
+
+  // Log
+  await (adminSupabase.from("wallet_transactions") as any).insert({
+    wallet_id: wallet.id,
+    amount: -amount,
+    type: "payment",
+    description: `Pembayaran pesanan #${orderId.slice(0, 8)}`,
+    reference_id: orderId,
+  });
+
+  return { success: true };
+}
+
+export async function getWalletTransactions(userId: string) {
+  const supabase = await createClient();
+  const { data: wallet } = await (supabase.from("wallets") as any)
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!wallet) return [];
+
+  // Use Admin Client to ensure we can read transactions reliably
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data: transactions } = await (
+    adminSupabase.from("wallet_transactions") as any
+  )
+    .select("*")
+    .eq("wallet_id", wallet.id)
+    .order("created_at", { ascending: false });
+
+  return transactions || [];
+}
+
+export async function requestBuyerWithdrawal(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Unauthorized" };
+
+  const bankName = formData.get("bankName") as string;
+  const accountNumber = formData.get("accountNumber") as string;
+  const bankHolderName = formData.get("bankHolderName") as string;
+  const amount = Number(formData.get("amount"));
+
+  if (amount < 20000) {
+    return { error: "Minimal penarikan adalah Rp 20.000" };
+  }
+
+  // Use Admin Client for wallet ops
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data: wallet } = await (adminSupabase.from("wallets") as any)
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!wallet || (wallet as any).balance < amount) {
+    return { error: "Saldo tidak mencukupi" };
+  }
+
+  // 1. Deduct Balance
+  const newBalance = Number((wallet as any).balance) - amount;
+  const { error: balanceError } = await (adminSupabase.from("wallets") as any)
+    .update({ balance: newBalance })
+    .eq("id", (wallet as any).id);
+
+  if (balanceError)
+    return { error: "Gagal memproses saldo: " + balanceError.message };
+
+  // 2. Create Withdrawal Record
+  const { data: withdrawal, error: withdrawalError } = await (
+    adminSupabase.from("withdrawals") as any
+  )
+    .insert({
+      wallet_id: (wallet as any).id,
+      amount: amount,
+      status: "pending",
+      bank_name: bankName,
+      account_number: accountNumber,
+      account_holder: bankHolderName || "Unknown",
+    })
+    .select()
+    .single();
+
+  if (withdrawalError) {
+    // Rollback
+    await (adminSupabase.from("wallets") as any)
+      .update({ balance: Number((wallet as any).balance) })
+      .eq("id", (wallet as any).id);
+    return { error: "Gagal membuat pengajuan: " + withdrawalError.message };
+  }
+
+  // 3. Log Transaction
+  await (adminSupabase.from("wallet_transactions") as any).insert({
+    wallet_id: (wallet as any).id,
+    type: "withdrawal",
+    amount: -amount,
+    reference_id: (withdrawal as any).id,
+    description: `Penarikan ke ${bankName} (${accountNumber})`,
+  });
+
+  revalidatePath("/buyer/profile");
+  return { success: true };
+}

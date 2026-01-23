@@ -16,8 +16,9 @@ export default async function AdminBalancePage() {
 
   // Calculate some simple stats from transactions
   // 1. Total In: Only from Digital Orders/Income
+  // We trust the backend query to only return relevant "paid" orders (completed, cancelled, refunded)
   const totalIn = transactions
-    .filter(tx => tx.type === 'income' && tx.status === 'completed')
+    .filter(tx => tx.type === 'income')
     .reduce((sum, tx) => sum + tx.amount, 0)
     
   // 2. Total Out: Only Approved/Completed Withdrawals
@@ -31,7 +32,6 @@ export default async function AdminBalancePage() {
   const todayIn = transactions
     .filter(tx => 
       tx.type === 'income' && 
-      tx.status === 'completed' && 
       new Date(tx.created_at).toLocaleDateString('id-ID') === today
     )
     .reduce((sum, tx) => sum + tx.amount, 0)

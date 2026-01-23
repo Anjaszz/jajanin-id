@@ -90,10 +90,17 @@ CREATE TABLE IF NOT EXISTS shops (
 -- WALLETS (Sistem Saldo)
 CREATE TABLE IF NOT EXISTS wallets (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  shop_id UUID REFERENCES shops(id) ON DELETE CASCADE UNIQUE,
+  shop_id UUID REFERENCES shops(id) ON DELETE CASCADE, -- Nullable for buyer wallets
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE, -- Nullable for shop wallets
   balance DECIMAL(12, 2) DEFAULT 0 CHECK (balance >= 0),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT wallets_shop_link_key UNIQUE (shop_id),
+  CONSTRAINT wallets_user_link_key UNIQUE (user_id),
+  CONSTRAINT wallet_owner_check CHECK (
+    (shop_id IS NOT NULL AND user_id IS NULL) OR 
+    (shop_id IS NULL AND user_id IS NOT NULL)
+  )
 );
 
 -- CATEGORIES (Global Categories used by all shops)
@@ -120,6 +127,7 @@ CREATE TABLE IF NOT EXISTS products (
   image_url TEXT,
   images TEXT[] DEFAULT '{}',
   is_active BOOLEAN DEFAULT TRUE,
+  admin_note TEXT, -- Alasan jika dinonaktifkan oleh admin
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -305,6 +313,20 @@ DROP POLICY IF EXISTS "Shop owners can view their transactions" ON wallet_transa
 CREATE POLICY "Shop owners can view their transactions" 
 ON wallet_transactions FOR SELECT USING (
   EXISTS (SELECT 1 FROM wallets JOIN shops ON wallets.shop_id = shops.id WHERE wallets.id = wallet_transactions.wallet_id AND shops.owner_id = auth.uid())
+);
+
+DROP POLICY IF EXISTS "Users can view their own wallet" ON wallets;
+CREATE POLICY "Users can view their own wallet" 
+ON wallets FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can initialize their own wallet" ON wallets;
+CREATE POLICY "Users can initialize their own wallet" 
+ON wallets FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can view their transactions" ON wallet_transactions;
+CREATE POLICY "Users can view their transactions" 
+ON wallet_transactions FOR SELECT USING (
+  EXISTS (SELECT 1 FROM wallets WHERE wallets.id = wallet_transactions.wallet_id AND wallets.user_id = auth.uid())
 );
 
 DROP POLICY IF EXISTS "Shop owners can create withdrawal transactions" ON wallet_transactions;

@@ -107,8 +107,28 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                     <CompleteOrderButton orderId={order.id} className="w-full" />
                  </div>
               )}
-           </CardHeader>
-        </Card>
+            </CardHeader>
+             {/* Refund Notification Top */}
+             {(order.status === 'rejected' || order.status === 'cancelled_by_seller' || order.status === 'cancelled_by_buyer') && 
+              ['gateway', 'balance'].includes(order.payment_method) && (
+                <div className="mx-4 mb-4 bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm flex gap-4 text-yellow-800 text-left">
+                   <div className="shrink-0 mt-1 bg-yellow-100 p-2 rounded-full h-fit">
+                      <RefreshCw className="h-5 w-5 text-yellow-700" />
+                   </div>
+                   <div>
+                      <p className="font-bold text-lg">Dana Dikembalikan</p>
+                      <p className="text-yellow-700/90 mt-1 mb-2">
+                         Dana sebesar <span className="font-black bg-yellow-200/50 px-1 rounded">{formatCurrency(Number(order.total_amount))}</span> telah dikembalikan ke saldo dompet Anda.
+                      </p>
+                      <Button asChild size="sm" variant="outline" className="bg-white border-yellow-300 text-yellow-800 hover:bg-yellow-100 hover:text-yellow-900 font-bold h-8 text-xs rounded-lg shadow-sm">
+                         <Link href="/buyer/profile">
+                            Cek Saldo Saya
+                         </Link>
+                      </Button>
+                   </div>
+                </div>
+             )}
+         </Card>
 
         {/* Shop Info */}
         <Card className="border-none shadow-lg">
@@ -198,9 +218,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                  <p className="font-bold">{order.guest_info?.phone || '-'}</p>
               </div>
               <div>
-                 <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">Metode Pembayaran</p>
-                 <p className="font-bold uppercase">{order.payment_method === 'gateway' ? 'Digital / QRIS' : 'Tunai / Cash'}</p>
-              </div>
+                  <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">Metode Pembayaran</p>
+                  <p className="font-bold uppercase">
+                     {order.payment_method === 'gateway' ? 'Digital / QRIS' : 
+                      order.payment_method === 'balance' ? 'Saldo Dompet' : 'Tunai / Cash'}
+                  </p>
+               </div>
+               
+
               {order.scheduled_for && (
                  <div>
                     <p className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">Dijadwalkan Untuk</p>

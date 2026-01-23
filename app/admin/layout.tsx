@@ -11,7 +11,9 @@ import {
   LogOut,
   ChevronRight,
   Activity,
-  Tag
+  Tag,
+  ShoppingBag,
+  Package
 } from 'lucide-react'
 
 import { signOutSeller } from '@/app/actions/auth'
@@ -53,6 +55,12 @@ export default async function AdminLayout({
           </AdminNavItem>
           <AdminNavItem href="/admin/categories" icon={<Tag className="h-5 w-5" />}>
             Master Kategori
+          </AdminNavItem>
+          <AdminNavItem href="/admin/orders" icon={<ShoppingBag className="h-5 w-5" />}>
+            Master Pesanan
+          </AdminNavItem>
+          <AdminNavItem href="/admin/products" icon={<Package className="h-5 w-5" />}>
+            Master Produk
           </AdminNavItem>
           <AdminNavItem href="/admin/settings" icon={<Settings className="h-5 w-5" />}>
             Pengaturan

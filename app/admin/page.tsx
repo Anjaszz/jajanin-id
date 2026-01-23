@@ -136,16 +136,18 @@ export default async function AdminDashboard() {
             </Card>
           </Link>
           
-          <Card className="border-none shadow-md bg-white h-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Pesanan</CardTitle>
-              <ShoppingBag className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.orderCount} Transaksi</div>
-              <div className="h-[15px] mt-1" /> {/* Spacer to match Total User height */}
-            </CardContent>
-          </Card>
+          <Link href="/admin/orders" className="block outline-none group">
+            <Card className="border-none shadow-md bg-white transition-all hover:shadow-xl hover:-translate-y-1 h-full">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Pesanan</CardTitle>
+                <ShoppingBag className="h-4 w-4 text-blue-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.orderCount} Transaksi</div>
+                <div className="h-[15px] mt-1" /> {/* Spacer to match Total User height */}
+              </CardContent>
+            </Card>
+          </Link>
 
           <Link href="/admin/balance" className="block outline-none group text-left">
             <Card className="border-none shadow-md bg-white transition-all hover:shadow-xl hover:-translate-y-1 h-full">
@@ -160,16 +162,18 @@ export default async function AdminDashboard() {
             </Card>
           </Link>
 
-          <Card className="border-none shadow-md bg-white border-l-4 border-l-orange-500 h-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Produk</CardTitle>
-              <Package className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.productCount} Item</div>
-              <div className="h-[15px] mt-1" /> {/* Spacer to match Total User height */}
-            </CardContent>
-          </Card>
+          <Link href="/admin/products" className="block outline-none group text-left">
+            <Card className="border-none shadow-md bg-white border-l-4 border-l-orange-500 transition-all hover:shadow-xl hover:-translate-y-1 h-full">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Produk</CardTitle>
+                <Package className="h-4 w-4 text-orange-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.productCount} Item</div>
+                <div className="h-[15px] mt-1" /> {/* Spacer to match Total User height */}
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       )}
 
