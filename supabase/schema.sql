@@ -209,10 +209,20 @@ CREATE TABLE IF NOT EXISTS withdrawals (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- GUEST_BALANCES (Shadow Wallet for Guests)
+CREATE TABLE IF NOT EXISTS guest_balances (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  balance DECIMAL(12, 2) DEFAULT 0 CHECK (balance >= 0),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 3. ROW LEVEL SECURITY (RLS) POLICIES
 -- Aktifkan RLS di semua tabel
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wallets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guest_balances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shops ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
@@ -385,7 +395,11 @@ CREATE POLICY "Shop owners manage their withdrawals" ON withdrawals FOR ALL USIN
 -- Function to handle new user signup
 CREATE OR REPLACE FUNCTION public.handle_new_user() 
 RETURNS TRIGGER AS $$
+DECLARE
+  guest_bal DECIMAL(12, 2);
+  new_wallet_id UUID;
 BEGIN
+  -- 1. Create Profile
   INSERT INTO public.profiles (id, email, name, role, phone)
   VALUES (
     new.id, 
@@ -399,6 +413,24 @@ BEGIN
     new.raw_user_meta_data->>'phone'
   );
   
+  -- 2. Check for Guest Balance (Shadow Wallet)
+  SELECT balance INTO guest_bal FROM public.guest_balances WHERE email = new.email;
+  
+  -- 3. Create Wallet for Buyer (with migrated balance if exists)
+  IF (COALESCE(new.raw_user_meta_data->>'role', 'buyer') = 'buyer') THEN
+    INSERT INTO public.wallets (user_id, balance)
+    VALUES (new.id, COALESCE(guest_bal, 0))
+    RETURNING id INTO new_wallet_id;
+    
+    -- 4. If balance migrated, record transaction and delete from guest_balances
+    IF guest_bal > 0 THEN
+      INSERT INTO public.wallet_transactions (wallet_id, amount, type, description)
+      VALUES (new_wallet_id, guest_bal, 'deposit', 'Migrasi saldo dari Guest Email');
+      
+      DELETE FROM public.guest_balances WHERE email = new.email;
+    END IF;
+  END IF;
+
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

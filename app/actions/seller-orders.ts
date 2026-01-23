@@ -173,19 +173,31 @@ export async function updateOrderStatus(orderId: string, status: string) {
   }
 
   // REFUND LOGIC
-  // If order is being cancelled/rejected and it was paid (gateway/balance), refund to buyer wallet
-  if (isCancelling && !wasCancelled && currentOrder.buyer_id) {
+  // If order is being cancelled/rejected and it was paid (gateway/balance), refund
+  if (isCancelling && !wasCancelled) {
     const isPaidMethod = ["gateway", "balance"].includes(
       currentOrder.payment_method,
     );
-    // Assuming status pending_payment implies money not yet captured/deducted
     const isPaidStatus = currentOrder.status !== "pending_payment";
 
     if (isPaidMethod && isPaidStatus) {
-      // Refund only the product total (excluding gateway fees as per user request)
       const refundAmount = currentOrder.total_amount || 0;
-      const { processRefundToBuyer } = await import("./wallet");
-      await processRefundToBuyer(currentOrder.buyer_id, refundAmount, orderId);
+      const { processRefundToBuyer, processGuestRefund } =
+        await import("./wallet");
+
+      if (currentOrder.buyer_id) {
+        await processRefundToBuyer(
+          currentOrder.buyer_id,
+          refundAmount,
+          orderId,
+        );
+      } else {
+        // Handle Guest Refund using email from guest_info
+        const guestEmail = (currentOrder.guest_info as any)?.email;
+        if (guestEmail) {
+          await processGuestRefund(guestEmail, refundAmount, orderId);
+        }
+      }
     }
   }
 

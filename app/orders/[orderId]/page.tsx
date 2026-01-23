@@ -115,17 +115,34 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                    <div className="shrink-0 mt-1 bg-yellow-100 p-2 rounded-full h-fit">
                       <RefreshCw className="h-5 w-5 text-yellow-700" />
                    </div>
-                   <div>
-                      <p className="font-bold text-lg">Dana Dikembalikan</p>
-                      <p className="text-yellow-700/90 mt-1 mb-2">
-                         Dana sebesar <span className="font-black bg-yellow-200/50 px-1 rounded">{formatCurrency(Number(order.total_amount))}</span> telah dikembalikan ke saldo dompet Anda.
-                      </p>
-                      <Button asChild size="sm" variant="outline" className="bg-white border-yellow-300 text-yellow-800 hover:bg-yellow-100 hover:text-yellow-900 font-bold h-8 text-xs rounded-lg shadow-sm">
-                         <Link href="/buyer/profile">
-                            Cek Saldo Saya
-                         </Link>
-                      </Button>
-                   </div>
+                   {order.buyer_id ? (
+                    <div>
+                        <p className="font-bold text-lg">Dana Dikembalikan</p>
+                        <p className="text-yellow-700/90 mt-1 mb-2">
+                           Dana sebesar <span className="font-black bg-yellow-200/50 px-1 rounded">{formatCurrency(Number(order.total_amount))}</span> telah dikembalikan ke saldo dompet Anda.
+                        </p>
+                        <Button asChild size="sm" variant="outline" className="bg-white border-yellow-300 text-yellow-800 hover:bg-yellow-100 hover:text-yellow-900 font-bold h-8 text-xs rounded-lg shadow-sm">
+                           <Link href="/buyer/profile">
+                              Cek Saldo Saya
+                           </Link>
+                        </Button>
+                    </div>
+                   ) : (
+                    <div>
+                        <p className="font-bold text-lg">Dana Disimpan Sementara</p>
+                        <p className="text-yellow-700/90 mt-1 mb-2">
+                           Dana sebesar <span className="font-black bg-yellow-200/50 px-1 rounded">{formatCurrency(Number(order.total_amount))}</span> telah aman disimpan di sistem.
+                        </p>
+                        <p className="text-xs text-yellow-700/80 mb-3 leading-relaxed">
+                           Silakan <span className="font-bold">Daftar Akun</span> menggunakan email <span className="font-black underline decoration-yellow-500/50">{order.guest_info?.email}</span> untuk mengklaim saldo ini.
+                        </p>
+                        <Button asChild size="sm" className="bg-yellow-600 border-none text-white hover:bg-yellow-700 font-bold h-9 text-xs rounded-lg shadow-md transition-all active:scale-95">
+                           <Link href="/buyer/register">
+                              Daftar & Klaim Saldo
+                           </Link>
+                        </Button>
+                    </div>
+                   )}
                 </div>
              )}
          </Card>

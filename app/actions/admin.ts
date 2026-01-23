@@ -153,9 +153,21 @@ export async function getAdminStats() {
     .from("wallets")
     .select("balance");
 
-  const totalBalance =
+  const { data: guestBalances } = await adminSupabase
+    .from("guest_balances")
+    .select("balance");
+
+  const walletTotal =
     (wallets as any[])?.reduce((sum, w) => sum + Number(w.balance || 0), 0) ||
     0;
+
+  const guestTotal =
+    (guestBalances as any[])?.reduce(
+      (sum, w) => sum + Number(w.balance || 0),
+      0,
+    ) || 0;
+
+  const totalBalance = walletTotal + guestTotal;
 
   const { count: pendingWithdrawals } = await adminSupabase
     .from("withdrawals")
@@ -422,11 +434,21 @@ export async function getAdminGlobalBalance() {
     .from("wallets")
     .select("balance");
 
-  const totalBalance =
+  const { data: guestBalances } = await adminSupabase
+    .from("guest_balances")
+    .select("balance");
+
+  const walletTotal =
     (wallets as any[])?.reduce((sum, w) => sum + Number(w.balance || 0), 0) ||
     0;
 
-  return totalBalance;
+  const guestTotal =
+    (guestBalances as any[])?.reduce(
+      (sum, w) => sum + Number(w.balance || 0),
+      0,
+    ) || 0;
+
+  return walletTotal + guestTotal;
 }
 
 export async function getAdminGlobalTransactions() {

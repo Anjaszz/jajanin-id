@@ -25,7 +25,9 @@ async function getAdminClient() {
 /**
  * Get all categories (Global categories for Admin)
  */
-export async function getAllCategoriesAdmin() {
+export async function getAllCategoriesAdmin(): Promise<
+  Database["public"]["Tables"]["categories"]["Row"][]
+> {
   const supabase = await createClient();
   if (!(await isAdmin())) return [];
 
@@ -35,7 +37,7 @@ export async function getAllCategoriesAdmin() {
     .order("created_at", { ascending: false });
 
   if (error || !categories) {
-    console.error(error);
+    if (error) console.error(error);
     return [];
   }
 

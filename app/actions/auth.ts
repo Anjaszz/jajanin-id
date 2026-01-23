@@ -61,33 +61,83 @@ export async function signup(formData: FormData) {
   const password = formData.get("password") as string;
   const name = formData.get("name") as string;
   const whatsapp = formData.get("whatsapp") as string;
-  const role = (formData.get("role") as string) || "buyer"; // Default role for testing
+  const role = (formData.get("role") as string) || "buyer";
 
   const origin = (await headers()).get("origin");
 
-  const { error } = await supabase.auth.signUp({
+  // 1. Sign Up to Auth
+  const { data: authData, error: signupError } = await supabase.auth.signUp({
     email,
     password,
     options: {
       emailRedirectTo: `${origin}/api/auth/callback?next=/verify_success`,
-      data: {
-        name,
-        phone: whatsapp,
-        role,
-      },
+      data: { name, phone: whatsapp, role },
     },
   });
 
-  if (error) {
-    let errorMessage = error.message;
-    if (error.message.includes("User already registered")) {
-      errorMessage = "Email ini sudah terdaftar. Silakan gunakan email lain.";
-    } else if (
-      error.message.includes("Password should be at least 6 characters")
-    ) {
-      errorMessage = "Kata sandi harus minimal 6 karakter.";
+  if (signupError) {
+    console.error("Signup Auth Error:", signupError);
+    return { error: signupError.message };
+  }
+
+  const userId = authData.user?.id;
+  if (userId) {
+    // 2. Initialize Admin Client for Manual Data Creation (Bypass RLS)
+    const { createClient: createAdminClient } =
+      await import("@supabase/supabase-js");
+    const adminSupabase = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+
+    try {
+      // 3. Create Profile
+      await adminSupabase.from("profiles").upsert({
+        id: userId,
+        email,
+        name,
+        phone: whatsapp,
+        role: role as any,
+      });
+
+      // 4. If Buyer, Handle Wallet & Guest Balance
+      if (role === "buyer") {
+        // A. Check Guest Balance
+        const { data: guestBal } = await adminSupabase
+          .from("guest_balances")
+          .select("balance")
+          .eq("email", email)
+          .maybeSingle();
+
+        const initialBalance = Number(guestBal?.balance || 0);
+
+        // B. Create Wallet
+        const { data: wallet } = await adminSupabase
+          .from("wallets")
+          .insert({ user_id: userId, balance: initialBalance })
+          .select()
+          .single();
+
+        // C. Record Transaction if migrated
+        if (initialBalance > 0 && wallet) {
+          await adminSupabase.from("wallet_transactions").insert({
+            wallet_id: wallet.id,
+            amount: initialBalance,
+            type: "deposit",
+            description: "Migrasi saldo pengembalian dana Guest",
+          });
+
+          // Delete shadow balance
+          await adminSupabase
+            .from("guest_balances")
+            .delete()
+            .eq("email", email);
+        }
+      }
+    } catch (dbError) {
+      console.error("Database initialization error during signup:", dbError);
+      // We don't return error here because the Auth account is already created
     }
-    return { error: errorMessage };
   }
 
   revalidatePath("/", "layout");

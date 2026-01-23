@@ -125,8 +125,12 @@ export default function CheckoutClient({ shop, userProfile, walletBalance = 0 }:
   const total = subtotal + gatewayFee
 
   const handlePlaceOrder = async () => {
-    if (!guestInfo.name || !guestInfo.phone) {
-      alert('Mohon lengkapi nama dan nomor HP Anda')
+    const isDigitalPayment = paymentMethod === 'gateway' || paymentMethod === 'balance'
+    
+    if (!guestInfo.name || !guestInfo.phone || (isDigitalPayment && !guestInfo.email)) {
+      alert(isDigitalPayment 
+        ? 'Mohon lengkapi nama, nomor HP, dan email Anda untuk pembayaran digital' 
+        : 'Mohon lengkapi nama dan nomor HP Anda')
       return
     }
 
@@ -455,6 +459,19 @@ export default function CheckoutClient({ shop, userProfile, walletBalance = 0 }:
                 value={guestInfo.phone} 
                 onChange={e => setGuestInfo(prev => ({ ...prev, phone: e.target.value }))}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="cust_email">Email (Wajib untuk Pembayaran Digital)</Label>
+              <Input 
+                id="cust_email" 
+                placeholder="alex@example.com" 
+                type="email"
+                value={guestInfo.email} 
+                onChange={e => setGuestInfo(prev => ({ ...prev, email: e.target.value }))}
+              />
+              <p className="text-[10px] text-muted-foreground italic">
+                * Email digunakan untuk pengembalian dana otomatis jika pesanan dibatalkan.
+              </p>
             </div>
           </CardContent>
         </Card>

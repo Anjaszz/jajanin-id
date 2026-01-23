@@ -412,6 +412,41 @@ export async function processRefundToBuyer(
   return { success: true };
 }
 
+export async function processGuestRefund(
+  email: string,
+  amount: number,
+  orderId: string,
+) {
+  const { createClient: createAdminClient } =
+    await import("@supabase/supabase-js");
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  // 1. Check if record exists
+  const { data: existing } = await adminSupabase
+    .from("guest_balances")
+    .select("balance")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (existing) {
+    // 2. Update existing
+    await (adminSupabase.from("guest_balances") as any)
+      .update({ balance: Number(existing.balance) + amount })
+      .eq("email", email);
+  } else {
+    // 3. Create new
+    await (adminSupabase.from("guest_balances") as any).insert({
+      email,
+      balance: amount,
+    });
+  }
+
+  return { success: true };
+}
+
 export async function processPaymentFromBuyer(
   userId: string,
   amount: number,
