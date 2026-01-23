@@ -206,7 +206,42 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
   }, [])
 
   return (
-    <div className="min-h-screen bg-muted/5 pb-32 relative">
+    <div className="min-h-screen bg-muted/5 flex flex-col">
+      {/* Navigation Header */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl shrink-0">
+        <div className="container max-w-6xl mx-auto flex h-16 items-center justify-between px-4">
+          <Link href="/" className="flex items-center gap-2 font-heading font-black text-2xl tracking-tighter text-primary">
+            <ShoppingBag className="h-7 w-7 fill-primary/10" />
+            <span>YukJajan<span className="text-foreground">.</span></span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-8 text-sm font-bold">
+            <Link href="/" className="transition-colors hover:text-primary text-muted-foreground">
+              Belanja
+            </Link>
+            <Link href="/buyer/orders" className="transition-colors hover:text-primary text-muted-foreground">
+              Pesanan Saya
+            </Link>
+            <Link href="/buyer/profile" className="transition-colors hover:text-primary text-muted-foreground">
+              Profil
+            </Link>
+          </nav>
+          <div className="flex items-center gap-4">
+             {isLoggedIn ? (
+                <Button asChild variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:text-primary transition-all">
+                   <Link href="/buyer/profile">
+                      <User className="h-5 w-5" />
+                   </Link>
+                </Button>
+             ) : (
+                <Button asChild size="sm" className="rounded-xl font-bold px-6 shadow-lg shadow-primary/20">
+                    <Link href="/buyer/login">Masuk</Link>
+                </Button>
+             )}
+          </div>
+        </div>
+      </header>
+
+      <div className="flex-1 pb-32 relative">
       {/* Deactivation Overlay for Buyer */}
       {isDeactivated && (
         <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md flex items-center justify-center p-6 text-center">
@@ -906,6 +941,9 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
           </div>
         </div>
       )}
+      </div>
+
+      {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background flex justify-around p-4 pb-8 z-50">
           <Link href="/" className="flex flex-col items-center text-xs text-muted-foreground hover:text-primary">
              <ShoppingBag className="h-5 w-5 mb-1" />

@@ -34,15 +34,27 @@ export async function getSellerOrders(
     )
     .eq("shop_id", (shop as any).id);
 
+  const now = new Date().toISOString();
+
   // Tab dynamic filtering
   if (tab === "payment_pending") {
     query = query
       .eq("status", "pending_payment")
       .contains("payment_details", { type: "pos_transaction" });
+  } else if (tab === "scheduled") {
+    query = query
+      .gt("scheduled_for", now)
+      .in("status", ["pending_confirmation", "paid", "accepted", "ready"]);
   } else if (tab === "pending") {
-    query = query.in("status", ["pending_confirmation", "paid"]);
+    // Normal pending OR Scheduled for the past and still pending
+    query = query
+      .in("status", ["pending_confirmation", "paid"])
+      .or(`scheduled_for.is.null,scheduled_for.lte.${now}`);
   } else if (tab === "processing") {
-    query = query.in("status", ["accepted", "processing", "ready"]);
+    // Normal processing OR Scheduled for the past and already accepted
+    query = query
+      .in("status", ["accepted", "processing", "ready"])
+      .or(`scheduled_for.is.null,scheduled_for.lte.${now}`);
   } else if (tab === "completed") {
     query = query.eq("status", "completed");
   } else if (tab === "cancelled") {

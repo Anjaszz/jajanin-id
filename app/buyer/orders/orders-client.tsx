@@ -24,15 +24,27 @@ export default function OrdersClient({ initialOrders }: { initialOrders: any[] }
   const [orders, setOrders] = useState(initialOrders)
   const [loading, setLoading] = useState(false)
 
-  const getStatusConfig = (status: string) => {
+  const getStatusConfig = (order: any) => {
+    const status = order.status
+    const isScheduled = !!order.scheduled_for
+    
     switch (status) {
       case 'pending_payment': 
         return { label: 'Menunggu Pembayaran', color: 'bg-amber-500', icon: Clock }
       case 'pending_confirmation': 
         return { label: 'Menunggu Konfirmasi', color: 'bg-blue-500', icon: Clock }
       case 'paid': 
-        return { label: 'Sudah Dibayar', color: 'bg-emerald-500', icon: CheckCircle2 }
+        return { label: isScheduled ? 'Sudah Dijadwalkan' : 'Sudah Dibayar', color: 'bg-emerald-500', icon: isScheduled ? Clock : CheckCircle2 }
       case 'accepted': 
+        if (isScheduled) {
+          const formattedDate = new Date(order.scheduled_for).toLocaleString('id-ID', { 
+            day: 'numeric', 
+            month: 'short', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })
+          return { label: `Dijadwalkan: ${formattedDate}`, color: 'bg-blue-600', icon: Clock }
+        }
         return { label: 'Sedang Diproses', color: 'bg-sky-500', icon: Timer }
       case 'processing': 
         return { label: 'Sedang Diproses', color: 'bg-indigo-500', icon: Timer }
@@ -115,7 +127,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: any[] }
       </div>
 
       {orders.map((order: any) => {
-        const status = getStatusConfig(order.status)
+        const status = getStatusConfig(order)
         const StatusIcon = status.icon
         
         return (

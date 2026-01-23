@@ -350,16 +350,26 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                                     <h3 className="font-black text-base text-slate-900 truncate">
                                         {order.guest_info?.name || 'Pelanggan'}
                                     </h3>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <Clock className="h-3 w-3 text-slate-300" />
-                                        <span className="text-[10px] font-bold text-slate-400">
-                                            {format(new Date(order.created_at), 'HH:mm', { locale: id })}
-                                        </span>
+                                    <div className="flex flex-col gap-1 mt-1">
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="h-3 w-3 text-slate-300" />
+                                            <span className="text-[10px] font-bold text-slate-400">
+                                                Dibuat: {format(new Date(order.created_at), 'HH:mm', { locale: id })}
+                                            </span>
+                                        </div>
+                                        {order.scheduled_for && (
+                                            <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 rounded-lg border border-amber-100 w-fit">
+                                                <CalendarIcon className="h-3 w-3 text-amber-600" />
+                                                <span className="text-[10px] font-black text-amber-700 uppercase">
+                                                    Jadwal: {format(new Date(order.scheduled_for), 'dd MMM, HH:mm', { locale: id })}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
                                 {/* Middle Section: List Pesanan (Simple) */}
-                                <div className="flex-[2] py-2 md:py-0 border-y md:border-y-0 md:border-x border-slate-50 px-0 md:px-6">
+                                <div className="flex-2 py-2 md:py-0 border-y md:border-y-0 md:border-x border-slate-50 px-0 md:px-6">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Daftar Pesanan</p>
                                     <div className="flex flex-wrap gap-x-3 gap-y-1">
                                         {order.order_items?.map((item: any) => (
@@ -400,7 +410,8 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                                                 </Button>
                                             </div>
                                         )}
-                                        {order.status === 'accepted' && (
+                                        
+                                        {order.status === 'accepted' && tab !== 'scheduled' && (
                                             <Button 
                                                 onClick={() => handleStatusUpdate(order.id, 'ready')}
                                                 size="sm"
@@ -409,6 +420,7 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                                                 Siap
                                             </Button>
                                         )}
+
                                         {order.status === 'ready' && (
                                             <CompleteOrderButton 
                                                 orderId={order.id} 

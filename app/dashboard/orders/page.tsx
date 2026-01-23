@@ -30,21 +30,25 @@ export default async function OrdersPage({
 
   const shopId = (shop as any)?.id
 
+  const now = new Date().toISOString()
+
   // Fetch counts in parallel if possible, or just a few small queries
   const getCount = async (tabName: string) => {
     let query = supabase.from('orders').select('*', { count: 'exact', head: true }).eq('shop_id', shopId)
     if (tabName === 'payment_pending') query = query.eq('status', 'pending_payment').contains('payment_details', { type: 'pos_transaction' })
-    else if (tabName === 'pending') query = query.in('status', ['pending_confirmation', 'paid'])
-    else if (tabName === 'processing') query = query.in('status', ['accepted', 'processing', 'ready'])
+    else if (tabName === 'scheduled') query = query.gt('scheduled_for', now).in('status', ['pending_confirmation', 'paid', 'accepted', 'ready'])
+    else if (tabName === 'pending') query = query.in('status', ['pending_confirmation', 'paid']).or(`scheduled_for.is.null,scheduled_for.lte.${now}`)
+    else if (tabName === 'processing') query = query.in('status', ['accepted', 'processing', 'ready']).or(`scheduled_for.is.null,scheduled_for.lte.${now}`)
     else if (tabName === 'completed') query = query.eq('status', 'completed')
     else if (tabName === 'cancelled') query = query.in('status', ['rejected', 'cancelled_by_seller', 'cancelled_by_buyer'])
     const { count } = await query
     return count || 0
   }
 
-  const [countPaymentPending, countPending, countProcessing, countCompleted, countCancelled] = await Promise.all([
+  const [countPaymentPending, countPending, countScheduled, countProcessing, countCompleted, countCancelled] = await Promise.all([
     getCount('payment_pending'),
     getCount('pending'),
+    getCount('scheduled'),
     getCount('processing'),
     getCount('completed'),
     getCount('cancelled')
@@ -53,6 +57,7 @@ export default async function OrdersPage({
   const tabs = [
     { id: 'payment_pending', label: 'Menunggu Bayar', count: countPaymentPending },
     { id: 'pending', label: 'Pesanan Masuk', count: countPending },
+    { id: 'scheduled', label: 'Dijadwalkan', count: countScheduled },
     { id: 'processing', label: 'Proses', count: countProcessing },
     { id: 'completed', label: 'Selesai', count: countCompleted },
     { id: 'cancelled', label: 'Batal', count: countCancelled },

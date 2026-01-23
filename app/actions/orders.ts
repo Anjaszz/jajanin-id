@@ -73,7 +73,7 @@ export async function placeOrder(params: PlaceOrderParams) {
       guest_info: params.guest_info || null,
       status:
         params.payment_method === "cash"
-          ? isAutoAccept
+          ? isAutoAccept && !params.scheduled_for
             ? "accepted"
             : "pending_confirmation"
           : "pending_payment",

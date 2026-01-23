@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { Loader2, CreditCard, Banknote, Receipt, CheckCircle2, Clock } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { CompleteOrderButton } from "@/components/complete-order-button"
 
 const DetailCountdownTimer = ({ createdAt, onExpire }: { createdAt: string, onExpire?: () => void }) => {
     const [timeLeft, setTimeLeft] = useState<string>("")
@@ -181,14 +182,31 @@ export function OrderDetailActions({ orderId, status, paymentMethod, snapToken, 
                     </>
                 )}
 
-                {['pending_confirmation', 'paid', 'processing'].includes(status) && (
-                     <Button 
-                        onClick={() => handleUpdateStatus('completed')}
+                {['pending_confirmation', 'paid'].includes(status) && (
+                    <Button 
+                        onClick={() => handleUpdateStatus('accepted')}
+                        disabled={isLoading}
+                        className="h-12 rounded-xl bg-green-600 hover:bg-green-700 font-bold shadow-lg shadow-green-900/10"
+                    >
+                        {isLoading ? <Loader2 className="animate-spin" /> : "Terima Pesanan"}
+                    </Button>
+                )}
+
+                {status === 'accepted' && (
+                    <Button 
+                        onClick={() => handleUpdateStatus('ready')}
                         disabled={isLoading}
                         className="h-12 rounded-xl bg-primary hover:bg-primary/90 font-bold shadow-lg shadow-primary/20"
                     >
-                         {isLoading ? <Loader2 className="animate-spin" /> : "Selesaikan Pesanan"}
+                        {isLoading ? <Loader2 className="animate-spin" /> : "Siap (Mark as Ready)"}
                     </Button>
+                )}
+
+                {status === 'ready' && (
+                    <CompleteOrderButton 
+                        orderId={orderId} 
+                        className="h-12 w-full"
+                    />
                 )}
 
                  {/* Cancel Option */}

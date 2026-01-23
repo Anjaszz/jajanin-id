@@ -37,6 +37,7 @@ export async function POST(req: Request) {
           shop_id, 
           total_amount, 
           platform_fee,
+          scheduled_for,
           shop:shops(auto_accept_order)
         `,
         )
@@ -45,7 +46,8 @@ export async function POST(req: Request) {
 
       if (order) {
         const isAutoAccept = (order as any).shop?.auto_accept_order || false;
-        if (isAutoAccept) {
+        const isScheduled = !!(order as any).scheduled_for;
+        if (isAutoAccept && !isScheduled) {
           orderStatus = "accepted";
         }
 
