@@ -20,6 +20,22 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "YukJajan | Jajan Lokal Jadi Mudah",
   description: "Platform marketplace modern untuk menemukan jajanan favorit dan produk lokal terbaik.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "YukJajan",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport = {
+  themeColor: "#22c55e",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 import { ThemeProvider } from "@/components/theme-provider";
