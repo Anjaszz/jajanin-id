@@ -110,8 +110,18 @@ export default function ProductForm({
     const files = event.target.files
     if (!files) return
 
-    const selectedFiles = Array.from(files).slice(0, 5)
-    const newPreviews = selectedFiles.map(file => URL.createObjectURL(file))
+    const selectedFiles = Array.from(files)
+    const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+    
+    // Check for file size
+    const overSizedFiles = selectedFiles.filter(file => file.size > MAX_SIZE)
+    if (overSizedFiles.length > 0) {
+      setError(`Beberapa file terlalu besar (Maksimal 5MB). File: ${overSizedFiles.map(f => f.name).join(', ')}`)
+      event.target.value = '' // Clear input
+      return
+    }
+
+    const newPreviews = selectedFiles.slice(0, 5).map(file => URL.createObjectURL(file))
     
     // Combine with existing previews if not exceeding limit
     setPreviews(prev => [...prev, ...newPreviews].slice(0, 5))

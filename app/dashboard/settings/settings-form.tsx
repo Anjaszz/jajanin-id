@@ -390,10 +390,21 @@ export default function SettingsForm({ shop, isAdmin, sellerName }: SettingsForm
                           name="logo" 
                           type="file" 
                           accept="image/*" 
-                          onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null
+                            if (file) {
+                              const MAX_SIZE = 5 * 1024 * 1024
+                              if (file.size > MAX_SIZE) {
+                                toast.error("Ukuran logo terlalu besar. Maksimal 5MB.")
+                                e.target.value = ""
+                                return
+                              }
+                            }
+                            setLogoFile(file)
+                          }}
                           className="rounded-xl h-10 text-xs bg-background cursor-pointer" 
                         />
-                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">Format: .JPG, .PNG • Max: 2MB {logoFile && <span className="text-primary ml-2">• File Terpilih!</span>}</p>
+                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">Format: .JPG, .PNG • Max: 5MB {logoFile && <span className="text-primary ml-2">• File Terpilih!</span>}</p>
                      </div>
                   </div>
                </div>
@@ -416,10 +427,21 @@ export default function SettingsForm({ shop, isAdmin, sellerName }: SettingsForm
                        name="cover" 
                        type="file" 
                        accept="image/*" 
-                       onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                       onChange={(e) => {
+                         const file = e.target.files?.[0] || null
+                         if (file) {
+                            const MAX_SIZE = 5 * 1024 * 1024
+                            if (file.size > MAX_SIZE) {
+                              toast.error("Ukuran banner terlalu besar. Maksimal 5MB.")
+                              e.target.value = ""
+                              return
+                            }
+                         }
+                         setCoverFile(file)
+                       }}
                        className="rounded-xl h-10 text-xs bg-card cursor-pointer" 
                      />
-                     {coverFile && <p className="text-[10px] font-bold text-primary italic">Banner baru siap diupload!</p>}
+                     {coverFile && <p className="text-[10px] font-bold text-primary italic">Banner baru (Maks 5MB) siap diupload!</p>}
                   </div>
                </div>
             </CardContent>

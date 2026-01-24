@@ -425,7 +425,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                     )}
                 </div>
 
-                <div className="p-5 pb-32 xl:pb-5 bg-slate-50 border-t border-slate-100 space-y-4">
+                <div className="p-5 pb-32 xl:pb-12 bg-slate-50 border-t border-slate-100 space-y-4">
                      {/* Summary */}
                     <div className="space-y-2">
                         <div className="flex justify-between text-sm text-slate-500 font-medium">

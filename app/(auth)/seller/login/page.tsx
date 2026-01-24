@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -27,6 +27,13 @@ export default function SellerLoginPage() {
       password: '',
     },
   })
+
+  // Reset PWA banner dismissal state when user is at login screen
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('pwa-banner-dismissed')
+    }
+  }, [])
 
   async function onSubmit(data: LoginForm) {
     setIsLoading(true)

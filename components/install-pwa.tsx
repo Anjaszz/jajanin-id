@@ -10,6 +10,10 @@ export function InstallPWA() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
+    // Check if user has already dismissed the banner in this session
+    const isDismissed = sessionStorage.getItem('pwa-banner-dismissed')
+    if (isDismissed) return
+
     const handler = (e: any) => {
       // Stash the event so it can be triggered later.
       setDeferredPrompt(e)
@@ -27,6 +31,11 @@ export function InstallPWA() {
       window.removeEventListener('beforeinstallprompt', handler)
     }
   }, [])
+
+  const handleDismiss = () => {
+    sessionStorage.setItem('pwa-banner-dismissed', 'true')
+    setIsVisible(false)
+  }
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return
@@ -47,7 +56,7 @@ export function InstallPWA() {
 
   return (
     <div className="fixed bottom-24 left-4 right-4 md:left-auto md:right-8 md:bottom-8 z-50 animate-in fade-in slide-in-from-bottom-10 duration-700">
-      <div className="bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-900 shadow-[0_20px_50px_rgba(34,197,94,0.15)] rounded-2xl p-4 md:w-[350px] flex items-center gap-4 relative overflow-hidden group">
+      <div className="bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-900 shadow-[0_20px_50px_rgba(34,197,94,0.15)] rounded-xl px-6 py-4 md:w-[400px] flex items-center gap-4 relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
         
         <div className="h-12 w-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
@@ -68,16 +77,16 @@ export function InstallPWA() {
             <Download className="mr-1.5 h-3.5 w-3.5" /> Pasang
           </Button>
           <button 
-            onClick={() => setIsVisible(false)}
-            className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold uppercase tracking-tighter"
+            onClick={handleDismiss}
+            className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 border rounded-2xl px-3 py-1 font-bold uppercase tracking-tighter"
           >
             Nanti saja
           </button>
         </div>
 
         <button 
-          onClick={() => setIsVisible(false)}
-          className="absolute top-2 right-2 text-slate-300 hover:text-slate-500"
+          onClick={handleDismiss}
+          className="absolute top-1 right-1 text-slate-600 hover:text-slate-300"
         >
           <X className="h-4 w-4" />
         </button>

@@ -65,11 +65,20 @@ export async function createShop(formData: FormData) {
     whatsapp: formData.get("whatsapp") as string,
   };
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const logoFile = formData.get("logo") as File | null;
   const coverFile = formData.get("cover_image") as File | null;
 
   if (!logoFile || logoFile.size === 0) {
     return { error: "Logo toko wajib diupload" };
+  }
+
+  if (logoFile.size > MAX_FILE_SIZE) {
+    return { error: "Ukuran logo terlalu besar. Maksimal 5MB." };
+  }
+
+  if (coverFile && coverFile.size > MAX_FILE_SIZE) {
+    return { error: "Ukuran foto sampul terlalu besar. Maksimal 5MB." };
   }
 
   const result = CreateShopSchema.safeParse(rawData);

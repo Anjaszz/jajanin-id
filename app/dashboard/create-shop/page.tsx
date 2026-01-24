@@ -240,6 +240,13 @@ export default function CreateShopPage() {
                                 onChange={(e) => {
                                     const file = e.target.files?.[0]
                                     if (file) {
+                                        const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+                                        if (file.size > MAX_SIZE) {
+                                            setError("Ukuran logo terlalu besar. Maksimal 5MB.")
+                                            e.target.value = ''
+                                            setLogoPreview(null)
+                                            return
+                                        }
                                         setLogoPreview(URL.createObjectURL(file))
                                     }
                                 }}
@@ -248,7 +255,7 @@ export default function CreateShopPage() {
                                 className="text-xs file:mr-4 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                             />
                         </div>
-                        <p className="text-[10px] text-muted-foreground text-center">Format: JPG, PNG. Maks 2MB.</p>
+                        <p className="text-[10px] text-muted-foreground text-center">Format: JPG, PNG. Maks 5MB.</p>
                     </div>
 
                     <div className="grid gap-2">
@@ -282,6 +289,13 @@ export default function CreateShopPage() {
                                 onChange={(e) => {
                                     const file = e.target.files?.[0]
                                     if (file) {
+                                        const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+                                        if (file.size > MAX_SIZE) {
+                                            setError("Ukuran foto sampul terlalu besar. Maksimal 5MB.")
+                                            e.target.value = ''
+                                            setCoverPreview(null)
+                                            return
+                                        }
                                         setCoverPreview(URL.createObjectURL(file))
                                     }
                                 }}
@@ -289,7 +303,7 @@ export default function CreateShopPage() {
                                 className="text-xs file:mr-4 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-secondary-foreground hover:file:bg-secondary/80"
                             />
                         </div>
-                        <p className="text-[10px] text-muted-foreground text-center">Format: JPG, PNG. Disarankan 16:9.</p>
+                        <p className="text-[10px] text-muted-foreground text-center">Format: JPG, PNG. Maks 5MB. Disarankan 16:9.</p>
                     </div>
                 </div>
 

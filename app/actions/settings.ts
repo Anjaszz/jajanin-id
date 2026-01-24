@@ -41,8 +41,13 @@ export async function updateShopSettings(formData: FormData) {
   let logoUrl = shop.logo_url;
   let coverUrl = shop.cover_url;
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
   // Handle Logo Upload
   if (logoFile && logoFile.size > 0) {
+    if (logoFile.size > MAX_FILE_SIZE) {
+      return { error: "Ukuran logo terlalu besar. Maksimal 5MB." };
+    }
     const fileExt = logoFile.name.split(".").pop();
     const filePath = `${user.id}/logo_${Date.now()}.${fileExt}`;
     const { error: uploadError } = await supabase.storage
@@ -56,6 +61,9 @@ export async function updateShopSettings(formData: FormData) {
 
   // Handle Cover Upload
   if (coverFile && coverFile.size > 0) {
+    if (coverFile.size > MAX_FILE_SIZE) {
+      return { error: "Ukuran foto sampul terlalu besar. Maksimal 5MB." };
+    }
     const fileExt = coverFile.name.split(".").pop();
     const filePath = `${user.id}/cover_${Date.now()}.${fileExt}`;
     const { error: uploadError } = await supabase.storage

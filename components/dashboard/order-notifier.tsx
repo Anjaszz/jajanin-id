@@ -14,12 +14,15 @@ export function OrderNotifier({ shopId }: OrderNotifierProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
+    console.log("OrderNotifier: Initializing subscription for shop:", shopId)
+    
     // Hidden audio element for notification sound
     const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3")
+    audio.preload = "auto"
     audioRef.current = audio
 
     const channel = supabase
-      .channel(`new-orders-${shopId}`)
+      .channel(`realtime-orders-${shopId}`)
       .on(
         "postgres_changes",
         {
@@ -29,28 +32,34 @@ export function OrderNotifier({ shopId }: OrderNotifierProps) {
           filter: `shop_id=eq.${shopId}`,
         },
         (payload) => {
-          console.log("New order received!", payload)
+          console.log("OrderNotifier: NEW ORDER RECEIVED!", payload)
           
           // Play sound
           if (audioRef.current) {
-            audioRef.current.play().catch(err => console.log("Audio play failed:", err))
+            audioRef.current.play().catch(err => console.warn("OrderNotifier: Audio play failed (user interaction might be needed):", err))
           }
 
           // Show toast
-          toast("Pesanan Baru Masuk!", {
-            description: `Ada pesanan baru dengan ID #${payload.new.id.slice(0, 8)}`,
-            icon: <ShoppingBag className="h-5 w-5 text-primary" />,
+          toast.success("Pesanan Baru!", {
+            description: `Pesanan #${payload.new.id.slice(0, 8)} telah masuk.`,
+            icon: <ShoppingBag className="h-5 w-5" />,
             action: {
-              label: "Lihat Pesanan",
+              label: "Buka Pesanan",
               onClick: () => window.location.href = `/dashboard/orders?tab=pending`
             },
-            duration: 10000,
+            duration: 15000,
           })
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log("OrderNotifier: Subscription status:", status)
+        if (status === 'CHANNEL_ERROR') {
+          console.error("OrderNotifier: System failed to connect to real-time. Please ensure 'Realtime' is enabled for 'orders' table in Supabase Dashboard.")
+        }
+      })
 
     return () => {
+      console.log("OrderNotifier: Cleaning up subscription")
       supabase.removeChannel(channel)
     }
   }, [shopId, supabase])

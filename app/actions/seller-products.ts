@@ -137,9 +137,13 @@ export async function createProduct(formData: FormData) {
   let imageUrls: string[] = [];
 
   // Handle Multiple Image Uploads (Max 5)
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const filesToUpload = imageFiles.filter((f) => f.size > 0).slice(0, 5);
 
   for (const file of filesToUpload) {
+    if (file.size > MAX_FILE_SIZE) {
+      return { error: `File ${file.name} terlalu besar. Maksimal 5MB.` };
+    }
     const fileExt = file.name.split(".").pop();
     const fileName = `${Math.random()}-${Date.now()}.${fileExt}`;
     const filePath = `${user.id}/${fileName}`;
@@ -304,8 +308,12 @@ export async function updateProduct(id: string, formData: FormData) {
   }
 
   // Handle New Image Uploads
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const filesToUpload = imageFiles.filter((f) => f.size > 0).slice(0, 5);
   for (const file of filesToUpload) {
+    if (file.size > MAX_FILE_SIZE) {
+      return { error: `File ${file.name} terlalu besar. Maksimal 5MB.` };
+    }
     const fileExt = file.name.split(".").pop();
     const fileName = `${Math.random()}-${Date.now()}.${fileExt}`;
     const filePath = `${user.id}/${fileName}`;
