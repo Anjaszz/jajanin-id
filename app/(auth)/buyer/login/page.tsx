@@ -85,6 +85,14 @@ export default function BuyerLoginPage() {
              {form.formState.errors.password && (
                 <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
             )}
+            <div className="flex justify-end">
+              <Link 
+                href="/forgot-password?role=buyer" 
+                className="text-xs text-primary hover:underline underline-offset-4"
+              >
+                Lupa password?
+              </Link>
+            </div>
             </div>
             <Button className="w-full h-11 font-bold" type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -12,3 +12,18 @@ export const SignupSchema = z.object({
   whatsapp: z.string().min(10, { message: "Nomor WhatsApp minimal 10 digit" }),
   role: z.enum(["buyer", "seller"]).optional(),
 });
+export const ForgotPasswordSchema = z.object({
+  email: z.string().email({ message: "Email tidak valid" }),
+});
+
+export const UpdatePasswordSchema = z
+  .object({
+    password: z.string().min(6, { message: "Password minimal 6 karakter" }),
+    confirmPassword: z
+      .string()
+      .min(6, { message: "Konfirmasi password minimal 6 karakter" }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Password tidak cocok",
+    path: ["confirmPassword"],
+  });

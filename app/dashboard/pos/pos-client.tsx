@@ -268,7 +268,7 @@ export default function PosClient({ products, settings }: { products: Product[],
             {/* LEFT SIDE: CATALOG */}
             <div className={cn(
                 "flex-1 flex flex-col h-full overflow-hidden transition-all duration-300",
-                isMobileCartOpen ? "hidden md:flex" : "flex"
+                isMobileCartOpen ? "hidden xl:flex" : "flex"
             )}>
                 <div className="relative mb-4 shrink-0">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -281,7 +281,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                 </div>
 
                 <ScrollArea className="flex-1 pr-2">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 pb-20">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 2xl:grid-cols-4 gap-3 md:gap-4 pb-20">
                         {filteredProducts.map(product => {
                              const hasStock = (product.product_variants.length > 0 
                                 ? product.product_variants.some(v => v.stock > 0) 
@@ -320,9 +320,14 @@ export default function PosClient({ products, settings }: { products: Product[],
                                             )}
                                         </div>
                                     </div>
-                                    <div className="p-3">
-                                        <h3 className="font-bold text-sm text-slate-900 truncate">{product.name}</h3>
-                                        <p className="text-primary font-black text-sm">{formatCurrency(product.price)}</p>
+                                    <div className="p-3 bg-white group-hover:bg-slate-50 transition-colors">
+                                        <h3 className="font-bold text-xs sm:text-sm text-slate-900 truncate leading-tight mb-1">{product.name}</h3>
+                                        <div className="flex items-center justify-between gap-1">
+                                            <p className="text-primary font-black text-sm sm:text-base">{formatCurrency(product.price)}</p>
+                                            <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center sm:hidden">
+                                                <Plus className="h-3 w-3 text-primary" />
+                                            </div>
+                                        </div>
                                     </div>
                                 </Card>
                             )
@@ -339,8 +344,8 @@ export default function PosClient({ products, settings }: { products: Product[],
 
             {/* RIGHT SIDE: CART */}
             <div className={cn(
-                "fixed inset-0 z-50 bg-white md:relative md:inset-auto md:z-0 md:flex w-full md:w-[320px] lg:w-[380px] shrink-0 flex flex-col h-dvh md:h-full rounded-none md:rounded-3xl shadow-xl border-none md:border md:border-slate-100 overflow-hidden transition-all duration-300",
-                isMobileCartOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
+                "fixed inset-0 z-50 bg-white xl:relative xl:inset-auto xl:z-0 xl:flex w-full xl:w-[350px] 2xl:w-[420px] shrink-0 flex flex-col h-dvh xl:h-full rounded-none xl:rounded-3xl shadow-xl border-none xl:border xl:border-slate-100 overflow-hidden transition-all duration-300",
+                isMobileCartOpen ? "translate-x-0" : "translate-x-full xl:translate-x-0"
             )}>
                 <div className="p-4 md:p-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
                     <h2 className="font-black text-xl flex items-center gap-2">
@@ -351,7 +356,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                     <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="md:hidden rounded-full h-10 w-10 p-0" 
+                        className="xl:hidden rounded-full h-10 w-10 p-0" 
                         onClick={() => setIsMobileCartOpen(false)}
                     >
                         <X className="h-6 w-6" />
@@ -420,7 +425,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                     )}
                 </div>
 
-                <div className="p-5 pb-32 md:pb-5 bg-slate-50 border-t border-slate-100 space-y-4">
+                <div className="p-5 pb-32 xl:pb-5 bg-slate-50 border-t border-slate-100 space-y-4">
                      {/* Summary */}
                     <div className="space-y-2">
                         <div className="flex justify-between text-sm text-slate-500 font-medium">
@@ -588,23 +593,25 @@ export default function PosClient({ products, settings }: { products: Product[],
 
             {/* MOBILE FLOATING CART BUTTON */}
             {!isMobileCartOpen && cart.length > 0 && (
-                <div className="fixed bottom-32 left-0 right-0 px-6 z-40 md:hidden animate-in fade-in slide-in-from-bottom-4">
+                <div className="fixed bottom-24 sm:bottom-32 left-0 right-0 px-4 sm:px-6 z-40 xl:hidden animate-in fade-in slide-in-from-bottom-6 duration-500">
                     <Button 
                         onClick={() => setIsMobileCartOpen(true)}
-                        className="w-full h-16 rounded-2xl shadow-2xl shadow-primary/40 text-lg font-black flex items-center justify-between px-8"
+                        className="w-full h-16 sm:h-20 rounded-3xl shadow-[0_20px_50px_rgba(34,197,94,0.3)] text-base sm:text-lg font-black flex items-center justify-between px-6 sm:px-10 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 border-none group transition-all hover:scale-[1.02] active:scale-95"
                     >
-                        <div className="flex items-center gap-3">
-                            <div className="bg-white/20 p-2 rounded-xl">
-                                <ShoppingCart className="h-6 w-6" />
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="bg-white/20 backdrop-blur-md p-2 sm:p-3 rounded-2xl group-hover:rotate-12 transition-transform">
+                                <ShoppingCart className="h-6 w-6 sm:h-7 sm:w-7" />
                             </div>
-                            <span>Cek Keranjang</span>
+                            <div className="text-left">
+                                <span className="block leading-none">Cek Keranjang</span>
+                                <span className="text-white/70 font-bold text-[10px] sm:text-xs uppercase tracking-widest mt-1 block">
+                                    {cart.reduce((s, i) => s + i.quantity, 0)} Items
+                                </span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-white/60 font-medium text-sm">
-                                {cart.reduce((s, i) => s + i.quantity, 0)} Items
-                            </span>
-                            <div className="h-8 w-px bg-white/20" />
-                            <span>{formatCurrency(totalAmount)}</span>
+                        <div className="flex items-center gap-4 sm:gap-6">
+                            <div className="h-10 w-px bg-white/20 hidden sm:block" />
+                            <span className="text-xl sm:text-2xl font-black bg-white/10 px-4 py-2 rounded-2xl backdrop-blur-sm">{formatCurrency(totalAmount)}</span>
                         </div>
                     </Button>
                 </div>

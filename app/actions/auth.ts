@@ -182,3 +182,32 @@ export async function getUserProfile(userId: string) {
     .single();
   return profile;
 }
+export async function resetPassword(formData: FormData) {
+  const supabase = await createClient();
+  const email = formData.get("email") as string;
+  const role = formData.get("role") as string;
+  const origin = (await headers()).get("origin");
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/api/auth/callback?next=/update-password&role=${role}`,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: "Link reset password telah dikirim ke email Anda." };
+}
+
+export async function updatePassword(formData: FormData) {
+  const supabase = await createClient();
+  const password = formData.get("password") as string;
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: "Password berhasil diperbarui." };
+}

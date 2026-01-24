@@ -64,6 +64,12 @@ export default function AdminLoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
+              <Link 
+                href="/forgot-password?role=admin" 
+                className="text-xs text-blue-600 font-medium hover:underline"
+              >
+                Lupa password?
+              </Link>
             </div>
             <PasswordInput
               id="password"
