@@ -9,6 +9,7 @@ import { getShop } from '@/app/actions/shop'
 import { ModeToggle } from '@/components/mode-toggle'
 import { Sidebar, MobileNav } from '@/components/dashboard/sidebar'
 import { Button } from '@/components/ui/button'
+import { OrderNotifier } from '@/components/dashboard/order-notifier'
 
 export default async function DashboardLayout({
   children,
@@ -79,6 +80,7 @@ export default async function DashboardLayout({
         )}
         
         <div className="flex-1 p-4 md:p-6 pb-24 md:pb-6 relative">
+            {shop && <OrderNotifier shopId={shop.id} />}
             {children}
         </div>
 
