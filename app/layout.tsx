@@ -41,6 +41,8 @@ export const viewport = {
 import { ThemeProvider } from "@/components/theme-provider";
 
 import NextTopLoader from 'nextjs-toploader';
+import { SWRegistration } from "@/components/sw-registration";
+import { InstallPWA } from "@/components/install-pwa";
 
 export default function RootLayout({
   children,
@@ -69,6 +71,8 @@ export default function RootLayout({
             speed={200}
             shadow="0 0 10px #2563eb,0 0 5px #2563eb"
           />
+          <SWRegistration />
+          <InstallPWA />
           {children}
           <Toaster richColors position="top-right" />
           <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}></script>
