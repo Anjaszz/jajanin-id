@@ -10,7 +10,8 @@ import {
   LogOut,
   ShoppingBag,
   Headset,
-  Trophy
+  Trophy,
+  Star
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { signOutSeller } from '@/app/actions/auth'
@@ -60,6 +61,13 @@ export default async function MobileMenuPage() {
       href: '/dashboard/best-selling',
       icon: <Trophy className="h-6 w-6" />,
       color: 'bg-yellow-50 text-yellow-600'
+    },
+    {
+      title: 'Ulasan Pelanggan',
+      desc: 'Penilaian & masukan dari pembeli',
+      href: '/dashboard/ratings',
+      icon: <Star className="h-6 w-6" />,
+      color: 'bg-amber-50 text-amber-600'
     },
     {
       title: 'Pengaturan Toko',

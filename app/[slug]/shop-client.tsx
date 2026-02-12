@@ -4,10 +4,19 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRef } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { ShoppingBag, ChevronRight, Plus, Minus, MapPin, Instagram, Facebook, Clock, X, ChevronLeft, User, Package, Save, ShieldOff, Share2, Copy, Check } from 'lucide-react'
+import { ShoppingBag, ChevronRight, Plus, Minus, MapPin, Instagram, Facebook, Clock, X, ChevronLeft, User, Package, Save, ShieldOff, Share2, Copy, Check, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { cn } from '@/lib/utils'
+import { formatDistanceToNow } from 'date-fns'
+import { id } from 'date-fns/locale'
 
 import { isShopOpen } from '@/lib/shop-status'
 
@@ -30,6 +39,11 @@ interface Product {
     name: string
     price: number
   }[]
+  rating?: {
+    average: number
+    count: number
+    reviews?: any[]
+  }
 }
 
 interface CategoryWithProducts {
@@ -51,7 +65,25 @@ interface Shop {
   is_active?: boolean
 }
 
-export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Shop, categories: CategoryWithProducts[], isLoggedIn?: boolean }) {
+export default function ShopClient({ 
+  shop, 
+  categories, 
+  isLoggedIn,
+  shopRating 
+}: { 
+  shop: Shop, 
+  categories: CategoryWithProducts[], 
+  isLoggedIn: boolean,
+  shopRating?: { 
+    average: number; 
+    count: number; 
+    reviews?: any[] 
+  }
+}) {
+  const [isReviewsOpen, setIsReviewsOpen] = useState(false)
+  const [isProductReviewsOpen, setIsProductReviewsOpen] = useState(false)
+  const [selectedProductForReviews, setSelectedProductForReviews] = useState<Product | null>(null)
+  
   const shopStatus = isShopOpen(shop)
   const isDeactivated = shop.is_active === false
   const [cart, setCart] = useState<Record<string, number>>({})
@@ -306,6 +338,30 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                })()}
             </div>
             {shop.description && <p className="text-muted-foreground text-sm max-w-md">{shop.description}</p>}
+            
+            {shopRating && shopRating.count > 0 && (
+               <button 
+                onClick={() => setIsReviewsOpen(true)}
+                className="flex items-center gap-2 mt-2 bg-yellow-50 dark:bg-yellow-950/20 px-4 py-1.5 rounded-full border border-yellow-200 dark:border-yellow-900/30 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-all group active:scale-95 shadow-sm"
+               >
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star 
+                        key={s} 
+                        className={cn(
+                          "h-3.5 w-3.5 transition-all duration-300 group-hover:scale-110",
+                          s <= Math.round(shopRating.average) 
+                            ? "fill-yellow-400 text-yellow-400" 
+                            : "text-slate-200 dark:text-slate-700"
+                        )} 
+                        style={{ transitionDelay: `${s * 50}ms` }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm font-black text-yellow-700 dark:text-yellow-400 ml-1">{shopRating.average}</span>
+                  <span className="text-[10px] text-yellow-600/60 dark:text-yellow-400/50 font-bold">({shopRating.count} ulasan)</span>
+               </button>
+            )}
           </div>
 
           <div className="flex gap-2">
@@ -434,6 +490,34 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
                             </span>
                           )}
                         </div>
+                      )}
+
+                      {/* Product Rating */}
+                      {(product as any).rating && (product as any).rating.count > 0 && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedProductForReviews(product)
+                            setIsProductReviewsOpen(true)
+                          }}
+                          className="flex items-center gap-1 group/rating"
+                        >
+                          <div className="flex items-center">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star 
+                                key={s} 
+                                className={cn(
+                                  "h-2.5 w-2.5 transition-transform group-hover/rating:scale-110",
+                                  s <= Math.round((product as any).rating.average) 
+                                    ? "fill-yellow-400 text-yellow-400" 
+                                    : "text-slate-200 dark:text-slate-700"
+                                )} 
+                              />
+                            ))}
+                          </div>
+                          <span className="text-[10px] font-black ml-1 group-hover/rating:text-primary transition-colors">{(product as any).rating.average}</span>
+                          <span className="text-[9px] text-muted-foreground font-medium group-hover/rating:text-primary transition-colors">({(product as any).rating.count})</span>
+                        </button>
                       )}
                     </div>
                     
@@ -958,6 +1042,131 @@ export default function ShopClient({ shop, categories, isLoggedIn }: { shop: Sho
              Profil
           </Link>
       </nav>
+
+      {/* Shop Reviews Dialog */}
+      <Dialog open={isReviewsOpen} onOpenChange={setIsReviewsOpen}>
+        <DialogContent className="sm:max-w-md rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
+          <DialogHeader className="p-6 bg-yellow-50 dark:bg-yellow-950/20 border-b border-yellow-100 dark:border-yellow-900/30">
+            <div className="flex items-center gap-2 mb-1">
+               <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+               <DialogTitle className="text-xl font-black text-yellow-800 dark:text-yellow-400">Ulasan Toko</DialogTitle>
+            </div>
+            <DialogDescription className="text-yellow-700/70 dark:text-yellow-400/60 font-medium">
+               Apa kata mereka tentang {shop.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[60vh] overflow-y-auto p-6 space-y-6">
+            {shopRating?.reviews && shopRating.reviews.length > 0 ? (
+              shopRating.reviews.map((review, i) => (
+                <div key={review.id} className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: `${i * 100}ms` }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
+                        {(review.orders?.guest_info?.name || 'C').charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900 dark:text-white">
+                          {review.orders?.guest_info?.name || 'Pelanggan'}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          {formatDistanceToNow(new Date(review.created_at), { addSuffix: true, locale: id })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-0.5 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
+                       <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                       <span className="text-[11px] font-black text-yellow-700 dark:text-yellow-400">{review.rating}</span>
+                    </div>
+                  </div>
+                  {review.comment && (
+                    <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 relative">
+                       <div className="absolute -top-2 left-4 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-slate-100 dark:border-b-slate-800" />
+                       <p className="text-sm text-slate-700 dark:text-slate-300 font-medium italic">"{review.comment}"</p>
+                    </div>
+                  )}
+                  {i < shopRating.reviews.length - 1 && <div className="h-px bg-slate-100 dark:bg-slate-800 w-full pt-2" />}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-10 space-y-2">
+                <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
+                  <Star className="h-8 w-8 text-slate-400" />
+                </div>
+                <p className="font-black text-slate-900 dark:text-white">Belum ada ulasan</p>
+                <p className="text-sm text-slate-500">Jadilah yang pertama memberikan ulasan!</p>
+              </div>
+            )}
+          </div>
+          <div className="p-4 bg-slate-50/50 dark:bg-slate-900/50 border-t">
+             <Button onClick={() => setIsReviewsOpen(false)} variant="outline" className="w-full rounded-2xl font-black uppercase tracking-widest text-xs h-12 shadow-sm">
+                Tutup
+             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Product Reviews Dialog */}
+      <Dialog open={isProductReviewsOpen} onOpenChange={setIsProductReviewsOpen}>
+        <DialogContent className="sm:max-w-md rounded-3xl p-0 overflow-hidden border-none shadow-xl">
+          <DialogHeader className="p-6 bg-primary/5 border-b border-primary/10">
+            <div className="flex items-center gap-2 mb-1">
+               <Star className="h-5 w-5 fill-primary text-primary" />
+               <DialogTitle className="text-xl font-black text-slate-900 dark:text-white">Ulasan Produk</DialogTitle>
+            </div>
+            <DialogDescription className="text-slate-500 font-medium">
+               Apa kata mereka tentang {selectedProductForReviews?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[60vh] overflow-y-auto p-6 space-y-6">
+            {selectedProductForReviews?.rating?.reviews && selectedProductForReviews.rating.reviews.length > 0 ? (
+              selectedProductForReviews.rating.reviews.map((review: any, i: number) => (
+                <div key={review.id} className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: `${i * 100}ms` }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-black text-xs uppercase">
+                        {(review.orders?.guest_info?.name || 'C').charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900 dark:text-white">
+                          {review.orders?.guest_info?.name || 'Pelanggan'}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          {formatDistanceToNow(new Date(review.created_at), { addSuffix: true, locale: id })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-0.5 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
+                       <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                       <span className="text-[11px] font-black text-yellow-700 dark:text-yellow-400">{review.rating}</span>
+                    </div>
+                  </div>
+                  {review.comment && (
+                    <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                       <p className="text-sm text-slate-700 dark:text-slate-300 font-medium italic">"{review.comment}"</p>
+                    </div>
+                  )}
+                  {i < selectedProductForReviews.rating.reviews.length - 1 && <div className="h-px bg-slate-100 dark:bg-slate-800 w-full pt-2" />}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-10 space-y-2">
+                <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
+                  <Star className="h-8 w-8 text-slate-400" />
+                </div>
+                <p className="font-black text-slate-900 dark:text-white">Belum ada ulasan</p>
+                <p className="text-sm text-slate-500">Produk ini belum memiliki ulasan.</p>
+              </div>
+            )}
+          </div>
+          <div className="p-4 bg-slate-50/50 dark:bg-slate-900/50 border-t">
+             <Button onClick={() => setIsProductReviewsOpen(false)} variant="outline" className="w-full rounded-2xl font-black uppercase tracking-widest text-xs h-12">
+                Tutup
+             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

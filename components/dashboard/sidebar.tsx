@@ -12,10 +12,11 @@ import {
   ShoppingBag,
   LogOut,
   Store,
-  Grid2X2,
   ChevronLeft,
   ChevronRight,
-  Trophy
+  Trophy,
+  Star,
+  Grid2X2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signOutSeller } from '@/app/actions/auth'
@@ -101,6 +102,13 @@ export function Sidebar({ shopName }: SidebarProps) {
           active={pathname.startsWith('/dashboard/pos')}
           isCollapsed={isCollapsed}
           label="Kasir (POS)"
+        />
+        <SidebarNavItem 
+          href="/dashboard/ratings" 
+          icon={<Star className="h-5 w-5" />} 
+          active={pathname.startsWith('/dashboard/ratings')}
+          isCollapsed={isCollapsed}
+          label="Ulasan"
         />
         <SidebarNavItem 
           href="/dashboard/income" 

@@ -10,6 +10,8 @@ import { DeleteProductButton } from '@/components/dashboard/delete-product-butto
 import { ShareProductButton } from '@/components/dashboard/share-product-button'
 import { AdminNoteModal } from "@/components/dashboard/admin-note-modal";
 import { QuickStockEdit } from '@/components/dashboard/quick-stock-edit'
+import { getProductRating } from '@/app/actions/ratings'
+import { Star } from 'lucide-react'
 
 export default async function ProductsPage({
   searchParams,
@@ -20,7 +22,14 @@ export default async function ProductsPage({
   const currentPage = parseInt(page)
   const limit = 10
   
-  const { data: products, count = 0 } = await getSellerProducts(currentPage, limit, q)
+  const { data: productsData, count = 0 } = await getSellerProducts(currentPage, limit, q)
+  
+  // Fetch ratings for each product
+  const products = await Promise.all((productsData || []).map(async (p) => ({
+    ...p,
+    rating: await getProductRating(p.id)
+  })))
+
   const shop = await getShop()
   const isShopDeactivated = shop?.is_active === false
   
@@ -112,6 +121,13 @@ export default async function ProductsPage({
                                                  currentStock={product.stock}
                                                  disabled={isShopDeactivated}
                                                />
+                                              {(product as any).rating && (product as any).rating.count > 0 && (
+                                                  <div className="flex items-center gap-1 ml-auto sm:ml-0 bg-yellow-50 dark:bg-yellow-950/20 px-2 py-0.5 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
+                                                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                                      <span className="text-[10px] font-black text-yellow-700 dark:text-yellow-400">{(product as any).rating.average}</span>
+                                                      <span className="text-[9px] text-yellow-600/60 font-bold">({(product as any).rating.count})</span>
+                                                  </div>
+                                              )}
                                           </div>
                                       </div>
                                   </div>

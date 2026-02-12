@@ -9,7 +9,10 @@ import { cn } from "@/lib/utils"
 
 import { CompleteOrderButton } from "@/components/complete-order-button"
 import { PayNowButton } from "@/components/pay-now-button"
+import { RatingTrigger } from "@/components/rating-trigger"
+import { checkIfRated, getOrderRatings } from "@/app/actions/ratings"
 import Script from "next/script"
+import { Star } from "lucide-react"
 
 export const dynamic = 'force-dynamic'
 
@@ -59,6 +62,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
 
   const statusInfo = getStatusInfo(order.status, order.scheduled_for)
   const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
+  
+  // Prepare items for RatingModal
+  const ratingItems = order.order_items.map((item: any) => ({
+    product_id: item.product_id,
+    name: item.products?.name || "Produk",
+  }))
+
+  const isRated = await checkIfRated(orderId)
+  const orderRatings = isRated ? await getOrderRatings(orderId) : []
+  const shopReview = orderRatings.find(r => r.type === 'shop')
+  const itemReviews = orderRatings.filter(r => r.type === 'product')
 
   return (
     <>
@@ -146,6 +160,51 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                 </div>
              )}
          </Card>
+
+        {/* Display Ratings if already rated */}
+        {isRated && (
+          <Card className="border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 ring-2 ring-primary/20">
+            <CardHeader className="pb-2 bg-primary/5">
+              <div className="flex items-center gap-2">
+                <Star className="h-5 w-5 fill-primary text-primary" />
+                <CardTitle className="text-lg font-black text-slate-900 dark:text-white">Ulasan Anda</CardTitle>
+              </div>
+              <CardDescription className="text-slate-500 font-medium">Terima kasih telah memberikan masukan!</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              {shopReview && (
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                   <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Ulasan Toko</p>
+                   <div className="flex items-center gap-1 mb-2">
+                      {[1,2,3,4,5].map(s => (
+                        <Star key={s} className={cn("h-4 w-4", s <= shopReview.rating ? "fill-yellow-400 text-yellow-400" : "text-slate-200 dark:text-slate-700")} />
+                      ))}
+                   </div>
+                   {shopReview.comment && <p className="text-sm font-bold italic text-slate-700 dark:text-slate-300">"{shopReview.comment}"</p>}
+                </div>
+              )}
+
+              {itemReviews.length > 0 && (
+                <div className="space-y-3">
+                   <p className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Ulasan Produk</p>
+                   {itemReviews.map((rev: any, i: number) => (
+                      <div key={i} className="flex gap-3 items-start bg-slate-50 dark:bg-slate-800/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <div className="flex-1">
+                           <p className="text-xs font-black mb-1 text-slate-900 dark:text-white">{rev.products?.name}</p>
+                           <div className="flex items-center gap-1 mb-1">
+                              {[1,2,3,4,5].map(s => (
+                                <Star key={s} className={cn("h-3 w-3", s <= rev.rating ? "fill-yellow-400 text-yellow-400" : "text-slate-200 dark:text-slate-700")} />
+                              ))}
+                           </div>
+                           {rev.comment && <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400 italic">"{rev.comment}"</p>}
+                        </div>
+                      </div>
+                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Shop Info */}
         <Card className="border-none shadow-lg">
@@ -253,6 +312,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
         </Card>
       </div>
     </div>
+    {!isRated && (
+      <RatingTrigger 
+          orderStatus={order.status}
+          orderId={order.id}
+          shopId={order.shop_id}
+          shopName={order.shops.name}
+          items={ratingItems}
+      />
+    )}
     </>
   )
 }

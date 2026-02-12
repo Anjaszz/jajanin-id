@@ -218,6 +218,19 @@ CREATE TABLE IF NOT EXISTS guest_balances (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- RATINGS (Ulasan)
+CREATE TABLE IF NOT EXISTS ratings (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+  buyer_id UUID REFERENCES profiles(id) ON DELETE SET NULL, -- Nullable for Guest
+  shop_id UUID REFERENCES shops(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE, -- Nullable for Shop Rating
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT,
+  type TEXT CHECK (type IN ('shop', 'product')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 3. ROW LEVEL SECURITY (RLS) POLICIES
 -- Aktifkan RLS di semua tabel
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -232,6 +245,7 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wallet_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE withdrawals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ratings ENABLE ROW LEVEL SECURITY;
 
 -- Policy Profiles
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
@@ -389,6 +403,15 @@ DROP POLICY IF EXISTS "Shop owners manage their withdrawals" ON withdrawals;
 CREATE POLICY "Shop owners manage their withdrawals" ON withdrawals FOR ALL USING (
   EXISTS (SELECT 1 FROM wallets JOIN shops ON wallets.shop_id = shops.id WHERE wallets.id = withdrawals.wallet_id AND shops.owner_id = auth.uid())
 );
+
+-- Policy Ratings
+DROP POLICY IF EXISTS "Ratings are viewable by everyone" ON ratings;
+CREATE POLICY "Ratings are viewable by everyone" 
+ON ratings FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Anyone can insert ratings" ON ratings;
+CREATE POLICY "Anyone can insert ratings" 
+ON ratings FOR INSERT WITH CHECK (true);
 
 -- 4. TRIGGERS & FUNCTIONS
 

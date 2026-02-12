@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { 
   Package, 
   Clock, 
@@ -45,6 +46,7 @@ import { formatCurrency } from "@/lib/utils"
 interface OrderListProps {
     initialOrders: any[]
     tab: string
+    className?: string
 }
 
 function BadgeItem({ children, variant = 'default' }: { children: React.ReactNode, variant?: string }) {
@@ -58,7 +60,7 @@ function BadgeItem({ children, variant = 'default' }: { children: React.ReactNod
     return <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tight", (classes as any)[variant])}>{children}</span>
 }
 
-export function OrderList({ initialOrders, tab }: OrderListProps) {
+export function OrderList({ initialOrders, tab, className }: OrderListProps) {
     const [orders, setOrders] = useState(initialOrders)
     const [page, setPage] = useState(1)
     const [loading, setLoading] = useState(false)
@@ -68,6 +70,10 @@ export function OrderList({ initialOrders, tab }: OrderListProps) {
     const [searchTerm, setSearchTerm] = useState('')
     const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc')
     const [date, setDate] = useState<Date | undefined>(undefined)
+
+
+    const router = useRouter()
+    const [processingState, setProcessingState] = useState<{ id: string, action: string } | null>(null)
 
     const observer = useRef<IntersectionObserver | null>(null)
     const lastOrderElementRef = useCallback((node: HTMLDivElement | null) => {
@@ -136,6 +142,7 @@ export function OrderList({ initialOrders, tab }: OrderListProps) {
     }
 
     const handleStatusUpdate = async (orderId: string, status: string) => {
+        setProcessingState({ id: orderId, action: status })
         const result = await updateOrderStatus(orderId, status)
         if (result.success) {
             toast.success("Status pesanan diperbarui")
@@ -145,6 +152,12 @@ export function OrderList({ initialOrders, tab }: OrderListProps) {
         } else {
             toast.error(result.error || "Gagal memperbarui status")
         }
+        setProcessingState(null)
+    }
+
+    const handleViewDetail = (orderId: string) => {
+        setProcessingState({ id: orderId, action: 'detail' })
+        router.push(`/dashboard/orders/${orderId}`)
     }
 
 
@@ -237,7 +250,7 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
     }
 
     return (
-        <div className="space-y-4">
+        <div className={cn("space-y-4 flex flex-col h-full", className)}>
             {/* Filter Controls */}
             <div className="flex flex-col gap-3">
                 {/* Search Bar */}
@@ -336,146 +349,172 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
             </div>
 
             {/* Orders List */}
-            <div className="grid gap-3">
-                {filteredAndSortedOrders.length > 0 ? (
-                    filteredAndSortedOrders.map((order: any, index: number) => (
-                        <Card 
-                            key={order.id} 
-                            ref={index === filteredAndSortedOrders.length - 1 ? lastOrderElementRef : null}
-                            className="overflow-hidden border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition-all group bg-white dark:bg-slate-900 rounded-2xl"
-                        >
-                            <div className="p-4 flex flex-col md:flex-row md:items-center gap-4">
-                                {/* Left Section: ID, Name, Time */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-mono text-[9px] font-black text-slate-400">#{(order.id as string).slice(0, 8)}</span>
-                                        {getStatusBadge(order)}
-                                    </div>
-                                    <h3 className="font-black text-base text-slate-900 dark:text-white truncate">
-                                        {order.guest_info?.name || 'Pelanggan'}
-                                    </h3>
-                                    <div className="flex flex-col gap-1 mt-1">
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="h-3 w-3 text-slate-300" />
-                                            <span className="text-[10px] font-bold text-slate-400">
-                                                Dibuat: {format(new Date(order.created_at), 'HH:mm', { locale: id })}
-                                            </span>
+            {/* Orders List Container - Scrollable */}
+            <div className="flex-1 overflow-y-auto min-h-0 pr-2 pb-20 scrollbar-hide">
+                <div className="grid gap-3">
+                    {filteredAndSortedOrders.length > 0 ? (
+                        filteredAndSortedOrders.map((order: any, index: number) => (
+                            <Card 
+                                key={order.id} 
+                                ref={index === filteredAndSortedOrders.length - 1 ? lastOrderElementRef : null}
+                                className="overflow-hidden border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition-all group bg-white dark:bg-slate-900 rounded-2xl"
+                            >
+                                <div className="p-4 flex flex-col md:flex-row md:items-center gap-4">
+                                    {/* Left Section: ID, Name, Time */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-mono text-[9px] font-black text-slate-400">#{(order.id as string).slice(0, 8)}</span>
+                                            {getStatusBadge(order)}
                                         </div>
-                                         {order.scheduled_for && (
-                                            <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-100 dark:border-amber-900/50 w-fit">
-                                                <CalendarIcon className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                                                <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase">
-                                                    Jadwal: {format(new Date(order.scheduled_for), 'dd MMM, HH:mm', { locale: id })}
+                                        <h3 className="font-black text-base text-slate-900 dark:text-white truncate">
+                                            {order.guest_info?.name || 'Pelanggan'}
+                                        </h3>
+                                        <div className="flex flex-col gap-1 mt-1">
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="h-3 w-3 text-slate-300" />
+                                                <span className="text-[10px] font-bold text-slate-400">
+                                                    Dibuat: {format(new Date(order.created_at), 'HH:mm', { locale: id })}
                                                 </span>
                                             </div>
-                                         )}
-                                    </div>
-                                </div>
-
-                                {/* Middle Section: List Pesanan (Simple) */}
-                                <div className="flex-2 py-2 md:py-0 border-y md:border-y-0 md:border-x border-slate-50 dark:border-slate-800 px-0 md:px-6">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Daftar Pesanan</p>
-                                    <div className="flex flex-wrap gap-x-3 gap-y-1">
-                                        {order.order_items?.map((item: any) => (
-                                            <div key={item.id} className="flex items-center gap-1.5 py-0.5 px-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100/50 dark:border-slate-700/50">
-                                                <span className="font-black text-[11px] text-primary">{item.quantity}x</span>
-                                                <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">{item.products?.name}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Right Section: Total & Main Actions */}
-                                <div className="flex items-center justify-between md:justify-end gap-6 shrink-0">
-                                    <div className="text-right">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Total Pesanan</p>
-                                        <p className="font-black text-lg text-slate-900 dark:text-white tracking-tight">
-                                            {formatCurrency(Number(order.total_amount))}
-                                        </p>
+                                             {order.scheduled_for && (
+                                                <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-100 dark:border-amber-900/50 w-fit">
+                                                    <CalendarIcon className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                                                    <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase">
+                                                        Jadwal: {format(new Date(order.scheduled_for), 'dd MMM, HH:mm', { locale: id })}
+                                                    </span>
+                                                </div>
+                                             )}
+                                        </div>
                                     </div>
 
-                                    <div className="flex gap-2">
-                                        {['pending_confirmation', 'paid'].includes(order.status) && (
-                                            <div className="flex gap-1.5">
+                                    {/* Middle Section: List Pesanan (Simple) */}
+                                    <div className="flex-2 py-2 md:py-0 border-y md:border-y-0 md:border-x border-slate-50 dark:border-slate-800 px-0 md:px-6">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Daftar Pesanan</p>
+                                        <div className="flex flex-wrap gap-x-3 gap-y-1">
+                                            {order.order_items?.map((item: any) => (
+                                                <div key={item.id} className="flex items-center gap-1.5 py-0.5 px-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100/50 dark:border-slate-700/50">
+                                                    <span className="font-black text-[11px] text-primary">{item.quantity}x</span>
+                                                    <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">{item.products?.name}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Right Section: Total & Main Actions */}
+                                    <div className="flex items-center justify-between md:justify-end gap-6 shrink-0">
+                                        <div className="text-right">
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Total Pesanan</p>
+                                            <p className="font-black text-lg text-slate-900 dark:text-white tracking-tight">
+                                                {formatCurrency(Number(order.total_amount))}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            {['pending_confirmation', 'paid'].includes(order.status) && (
+                                                <div className="flex gap-1.5">
+                                                    <Button 
+                                                        onClick={() => handleStatusUpdate(order.id, 'accepted')}
+                                                        disabled={processingState?.id === order.id}
+                                                        size="sm"
+                                                        className="h-9 px-4 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest min-w-[80px]"
+                                                    >
+                                                        {processingState?.id === order.id && processingState?.action === 'accepted' ? (
+                                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                                        ) : (
+                                                            "Terima"
+                                                        )}
+                                                    </Button>
+                                                    <Button 
+                                                        onClick={() => handleStatusUpdate(order.id, 'rejected')}
+                                                        disabled={processingState?.id === order.id}
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        className="h-9 px-4 text-destructive border-red-100 hover:bg-red-50 rounded-xl text-[10px] font-black uppercase tracking-widest min-w-[80px]"
+                                                    >
+                                                        {processingState?.id === order.id && processingState?.action === 'rejected' ? (
+                                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                                        ) : (
+                                                            "Tolak"
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            )}
+                                            
+                                            {order.status === 'accepted' && tab !== 'scheduled' && (
                                                 <Button 
-                                                    onClick={() => handleStatusUpdate(order.id, 'accepted')}
+                                                    onClick={() => handleStatusUpdate(order.id, 'ready')}
+                                                    disabled={processingState?.id === order.id}
                                                     size="sm"
-                                                    className="h-9 px-4 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
+                                                    className="h-9 px-4 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest min-w-[80px]"
                                                 >
-                                                    Terima
+                                                    {processingState?.id === order.id && processingState?.action === 'ready' ? (
+                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                    ) : (
+                                                        "Siap"
+                                                    )}
                                                 </Button>
-                                                <Button 
-                                                    onClick={() => handleStatusUpdate(order.id, 'rejected')}
-                                                    variant="outline" 
-                                                    size="sm"
-                                                    className="h-9 px-4 text-destructive border-red-100 hover:bg-red-50 rounded-xl text-[10px] font-black uppercase tracking-widest"
-                                                >
-                                                    Tolak
-                                                </Button>
-                                            </div>
-                                        )}
-                                        
-                                        {order.status === 'accepted' && tab !== 'scheduled' && (
+                                            )}
+
+                                            {order.status === 'ready' && (
+                                                <CompleteOrderButton 
+                                                    orderId={order.id} 
+                                                    className="h-9 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl" 
+                                                    onSuccess={async () => {
+                                                        const updated = await getSellerOrders(1, page * 10, tab)
+                                                        setOrders(updated)
+                                                    }}
+                                                />
+                                            )}
                                             <Button 
-                                                onClick={() => handleStatusUpdate(order.id, 'ready')}
-                                                size="sm"
-                                                className="h-9 px-4 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-9 w-9 rounded-md border text-slate-400 hover:text-primary hover:bg-primary/5"
+                                                onClick={() => handleViewDetail(order.id)}
+                                                disabled={processingState?.id === order.id}
                                             >
-                                                Siap
+                                                {processingState?.id === order.id && processingState?.action === 'detail' ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Eye className="h-4 w-4" />
+                                                )}
                                             </Button>
-                                        )}
-
-                                        {order.status === 'ready' && (
-                                            <CompleteOrderButton 
-                                                orderId={order.id} 
-                                                className="h-9 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl" 
-                                                onSuccess={async () => {
-                                                    const updated = await getSellerOrders(1, page * 10, tab)
-                                                    setOrders(updated)
-                                                }}
-                                            />
-                                        )}
-                                        <Button asChild variant="ghost" size="icon" className="h-9 w-9 rounded-md border text-slate-400 hover:text-primary hover:bg-primary/5">
-                                            <Link href={`/dashboard/orders/${order.id}`}>
-                                                <Eye className="h-4 w-4" />
-                                            </Link>
-                                        </Button>
+                                        </div>
                                     </div>
                                 </div>
+                            </Card>
+                        ))
+                    ) : (
+                        <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-xs">
+                            <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
+                                <Search className="h-8 w-8 text-muted-foreground" />
                             </div>
-                        </Card>
-                    ))
-                ) : (
-                    <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-xs">
-                        <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
-                            <Search className="h-8 w-8 text-muted-foreground" />
+                            <h3 className="text-xl font-bold">Hasil tidak ditemukan</h3>
+                            <p className="text-muted-foreground text-sm mt-1">Coba kata kunci atau filter tanggal lain.</p>
+                            <Button 
+                                variant="link" 
+                                className="mt-4 text-primary font-black uppercase text-[10px]"
+                                onClick={() => {
+                                    setSearchTerm('')
+                                    setDate(undefined)
+                                }}
+                            >
+                                Reset Semua Filter
+                            </Button>
                         </div>
-                        <h3 className="text-xl font-bold">Hasil tidak ditemukan</h3>
-                        <p className="text-muted-foreground text-sm mt-1">Coba kata kunci atau filter tanggal lain.</p>
-                        <Button 
-                            variant="link" 
-                            className="mt-4 text-primary font-black uppercase text-[10px]"
-                            onClick={() => {
-                                setSearchTerm('')
-                                setDate(undefined)
-                            }}
-                        >
-                            Reset Semua Filter
-                        </Button>
-                    </div>
-                )}
+                    )}
 
-                {loading && (
-                    <div className="flex justify-center py-6">
-                        <Loader2 className="h-6 w-6 text-primary animate-spin" />
-                    </div>
-                )}
-                
-                {!hasMore && filteredAndSortedOrders.length > 5 && (
-                    <div className="text-center py-6 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        Semua pesanan telah dimuat
-                    </div>
-                )}
+                    {loading && (
+                        <div className="flex justify-center py-6">
+                            <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                        </div>
+                    )}
+                    
+                    {!hasMore && filteredAndSortedOrders.length > 5 && (
+                        <div className="text-center py-6 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                            Semua pesanan telah dimuat
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     )
