@@ -49,13 +49,13 @@ interface OrderListProps {
 
 function BadgeItem({ children, variant = 'default' }: { children: React.ReactNode, variant?: string }) {
     const classes = {
-        default: "bg-primary/10 text-primary",
-        success: "bg-green-100 text-green-700",
-        warning: "bg-yellow-100 text-yellow-700",
-        destructive: "bg-red-100 text-red-700",
-        info: "bg-blue-100 text-blue-700",
+        default: "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary",
+        success: "bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-transparent dark:border-green-900/50",
+        warning: "bg-yellow-100 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 border border-transparent dark:border-yellow-900/50",
+        destructive: "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-transparent dark:border-red-900/50",
+        info: "bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border border-transparent dark:border-blue-900/50",
     }
-    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tight ${(classes as any)[variant]}`}>{children}</span>
+    return <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tight", (classes as any)[variant])}>{children}</span>
 }
 
 export function OrderList({ initialOrders, tab }: OrderListProps) {
@@ -197,7 +197,7 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
     if (isExpired) return <BadgeItem variant="destructive">Expired</BadgeItem>
 
     return (
-        <div className="flex items-center gap-1 ml-2 px-2 py-0.5 bg-red-50 text-red-600 rounded-full border border-red-100 animate-pulse">
+        <div className="flex items-center gap-1 ml-2 px-2 py-0.5 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-full border border-red-100 dark:border-red-900/50 animate-pulse">
             <Clock className="h-3 w-3" />
             <span className="text-[10px] font-black font-mono">{timeLeft}</span>
         </div>
@@ -244,7 +244,7 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                 <div className="relative group">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <input 
-                        className="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-10 pr-4 text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 outline-hidden transition-all shadow-xs"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 pl-10 pr-4 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 outline-hidden transition-all shadow-xs"
                         placeholder="Cari ID Pesanan atau Nama Pelanggan..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -258,7 +258,7 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                             <Button 
                                 variant="outline" 
                                 className={cn(
-                                    "rounded-xl h-10 px-3 bg-white border-slate-200 text-xs font-bold hover:bg-slate-50 transition-all",
+                                    "rounded-xl h-10 px-3 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all",
                                     date && "text-primary border-primary/20 bg-primary/5"
                                 )}
                             >
@@ -290,14 +290,16 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                     </Popover>
 
                     {/* Sort Order Toggle */}
-                    <div className="flex bg-slate-100 p-1 rounded-xl shadow-xs border border-white">
+                    <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl shadow-xs border border-white dark:border-slate-800">
                         <Button 
                             variant={sortOrder === 'desc' ? 'default' : 'ghost'} 
                             size="sm" 
                             onClick={() => setSortOrder('desc')}
                             className={cn(
                                 "h-8 px-3 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all",
-                                sortOrder === 'desc' ? "bg-white text-primary shadow-xs hover:bg-white" : "text-slate-500"
+                                sortOrder === 'desc' 
+                                  ? "bg-white dark:bg-slate-700 text-primary dark:text-green-400 shadow-xs hover:bg-white dark:hover:bg-slate-600" 
+                                  : "text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                             )}
                         >
                             Terbaru
@@ -308,7 +310,9 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                             onClick={() => setSortOrder('asc')}
                             className={cn(
                                 "h-8 px-3 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all",
-                                sortOrder === 'asc' ? "bg-white text-primary shadow-xs hover:bg-white" : "text-slate-500"
+                                sortOrder === 'asc' 
+                                  ? "bg-white dark:bg-slate-700 text-primary dark:text-green-400 shadow-xs hover:bg-white dark:hover:bg-slate-600" 
+                                  : "text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                             )}
                         >
                             Terlama
@@ -338,7 +342,7 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                         <Card 
                             key={order.id} 
                             ref={index === filteredAndSortedOrders.length - 1 ? lastOrderElementRef : null}
-                            className="overflow-hidden border border-slate-100 shadow-xs hover:shadow-md transition-all group bg-white rounded-2xl"
+                            className="overflow-hidden border border-slate-100 dark:border-slate-800 shadow-xs hover:shadow-md transition-all group bg-white dark:bg-slate-900 rounded-2xl"
                         >
                             <div className="p-4 flex flex-col md:flex-row md:items-center gap-4">
                                 {/* Left Section: ID, Name, Time */}
@@ -347,7 +351,7 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                                         <span className="font-mono text-[9px] font-black text-slate-400">#{(order.id as string).slice(0, 8)}</span>
                                         {getStatusBadge(order)}
                                     </div>
-                                    <h3 className="font-black text-base text-slate-900 truncate">
+                                    <h3 className="font-black text-base text-slate-900 dark:text-white truncate">
                                         {order.guest_info?.name || 'Pelanggan'}
                                     </h3>
                                     <div className="flex flex-col gap-1 mt-1">
@@ -357,25 +361,25 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                                                 Dibuat: {format(new Date(order.created_at), 'HH:mm', { locale: id })}
                                             </span>
                                         </div>
-                                        {order.scheduled_for && (
-                                            <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 rounded-lg border border-amber-100 w-fit">
-                                                <CalendarIcon className="h-3 w-3 text-amber-600" />
-                                                <span className="text-[10px] font-black text-amber-700 uppercase">
+                                         {order.scheduled_for && (
+                                            <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-100 dark:border-amber-900/50 w-fit">
+                                                <CalendarIcon className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                                                <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase">
                                                     Jadwal: {format(new Date(order.scheduled_for), 'dd MMM, HH:mm', { locale: id })}
                                                 </span>
                                             </div>
-                                        )}
+                                         )}
                                     </div>
                                 </div>
 
                                 {/* Middle Section: List Pesanan (Simple) */}
-                                <div className="flex-2 py-2 md:py-0 border-y md:border-y-0 md:border-x border-slate-50 px-0 md:px-6">
+                                <div className="flex-2 py-2 md:py-0 border-y md:border-y-0 md:border-x border-slate-50 dark:border-slate-800 px-0 md:px-6">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Daftar Pesanan</p>
                                     <div className="flex flex-wrap gap-x-3 gap-y-1">
                                         {order.order_items?.map((item: any) => (
-                                            <div key={item.id} className="flex items-center gap-1.5 py-0.5 px-2 bg-slate-50 rounded-lg border border-slate-100/50">
+                                            <div key={item.id} className="flex items-center gap-1.5 py-0.5 px-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100/50 dark:border-slate-700/50">
                                                 <span className="font-black text-[11px] text-primary">{item.quantity}x</span>
-                                                <span className="font-bold text-[11px] text-slate-700">{item.products?.name}</span>
+                                                <span className="font-bold text-[11px] text-slate-700 dark:text-slate-300">{item.products?.name}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -385,7 +389,7 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                                 <div className="flex items-center justify-between md:justify-end gap-6 shrink-0">
                                     <div className="text-right">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-0.5">Total Pesanan</p>
-                                        <p className="font-black text-lg text-slate-900 tracking-tight">
+                                        <p className="font-black text-lg text-slate-900 dark:text-white tracking-tight">
                                             {formatCurrency(Number(order.total_amount))}
                                         </p>
                                     </div>
@@ -442,7 +446,7 @@ const CountdownTimer = ({ createdAt, onExpire, orderId }: { createdAt: string, o
                         </Card>
                     ))
                 ) : (
-                    <div className="text-center py-20 bg-white rounded-3xl border border-dashed shadow-xs">
+                    <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 shadow-xs">
                         <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
                             <Search className="h-8 w-8 text-muted-foreground" />
                         </div>

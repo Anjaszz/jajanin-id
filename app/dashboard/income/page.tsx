@@ -98,11 +98,11 @@ export default async function IncomePage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-700 pb-10">
       {/* Header */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
+      <div className="flex flex-col gap-2 px-4 sm:px-0">
+        <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
           Laporan <span className="text-green-600">Pemasukan</span>
         </h1>
-        <p className="text-slate-500 text-sm sm:text-lg font-medium max-w-2xl">
+        <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-lg font-medium max-w-2xl">
           Analisis performa finansial toko Anda secara detail dan transparan.
         </p>
       </div>
@@ -129,12 +129,12 @@ export default async function IncomePage() {
         </Card>
 
         {/* Monthly Income */}
-        <Card className="border-none shadow-xl bg-white border border-green-50 rounded-3xl overflow-hidden relative group">
+        <Card className="border-none shadow-xl bg-white dark:bg-slate-900 border border-green-50 dark:border-slate-800 rounded-3xl overflow-hidden relative group">
           <CardHeader className="pb-2">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400">Bulan Ini ({months[currentMonthIdx]})</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black tracking-tight text-slate-900">{formatCurrency(thisMonthIncome)}</div>
+            <div className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{formatCurrency(thisMonthIncome)}</div>
             <GrowthIndicator percent={Math.abs(monthPercent)} diff={monthDiff} />
           </CardContent>
           <div className="absolute -right-6 -bottom-6 opacity-5 group-hover:scale-110 transition-transform duration-500">

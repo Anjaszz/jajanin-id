@@ -49,8 +49,8 @@ export function ToggleProductStatusButton({
         size="icon" 
         disabled={isShopDeactivated || isPending}
         className={cn(
-            "rounded-xl h-10 w-10 border-slate-200 bg-white transition-colors",
-            isActive ? "text-green-600 hover:bg-green-50" : "text-slate-400 hover:bg-slate-100"
+            "rounded-xl h-10 w-10 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors shadow-sm",
+            isActive ? "text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30" : "text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
         )}
         title={isActive ? "Nonaktifkan" : "Aktifkan"}
       >

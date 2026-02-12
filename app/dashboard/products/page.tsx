@@ -29,10 +29,10 @@ export default async function ProductsPage({
     <div className="max-w-6xl mx-auto space-y-6 sm:space-y-10 px-4 py-6 sm:py-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
          <div>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
                Produk <span className="text-primary italic">Saya</span>
             </h1>
-            <p className="text-slate-500 text-sm sm:text-lg font-medium mt-1">Kelola katalog dan status tampilan produk Anda.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-lg font-medium mt-1">Kelola katalog dan status tampilan produk Anda.</p>
          </div>
          <Button asChild disabled={isShopDeactivated} size="lg" className="rounded-2xl h-14 px-8 text-base font-black uppercase tracking-widest shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95">
             {isShopDeactivated ? (
@@ -61,7 +61,7 @@ export default async function ProductsPage({
         <input 
           name="q"
           defaultValue={q}
-          className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 outline-none transition-all shadow-sm"
+          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-4 focus:ring-primary/10 outline-none transition-all shadow-sm"
           placeholder="Cari nama produk atau deskripsi..."
         />
         <input type="hidden" name="page" value="1" />
@@ -72,25 +72,25 @@ export default async function ProductsPage({
               <div className="grid gap-4">
                   {products.map((product) => (
                       <Card key={product.id} className={cn(
-                        "overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-300 group rounded-3xl bg-white",
-                        !product.is_active && "bg-slate-100 border-2 border-slate-200 opacity-90 grayscale-[0.3]"
+                        "overflow-hidden border-none shadow-sm hover:shadow-xl transition-all duration-300 group rounded-3xl bg-white dark:bg-slate-900",
+                        !product.is_active && "bg-slate-100 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 opacity-90 grayscale-[0.3]"
                       )}>
                           <CardContent className="p-0">
                               <div className="flex flex-col md:flex-row items-center">
                                   {/* Product Image & Basic Info */}
-                                  <div className="p-4 flex-1 flex items-center gap-4 w-full">
-                                      <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white border border-slate-200 overflow-hidden shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-500">
+                                   <div className="p-4 flex-1 flex items-center gap-4 w-full">
+                                      <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-500">
                                           {product.image_url ? (
                                               <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                                           ) : (
-                                              <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                              <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600">
                                                   <ShoppingBag className="h-8 w-8" />
                                               </div>
                                           )}
                                       </div>
                                       <div className="flex-1 min-w-0">
                                           <div className="flex flex-wrap items-center gap-2 mb-1">
-                                              <h3 className="font-black text-base sm:text-lg text-slate-900 truncate tracking-tight">{product.name}</h3>
+                                              <h3 className="font-black text-base sm:text-lg text-slate-900 dark:text-white truncate tracking-tight">{product.name}</h3>
                                               {product.is_active ? (
                                                   <span className="bg-green-100 text-green-700 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-tighter">Aktif</span>
                                               ) : (
@@ -111,7 +111,7 @@ export default async function ProductsPage({
                                   </div>
 
                                   {/* Actions Section */}
-                                  <div className="bg-slate-50/50 md:bg-transparent p-4 flex items-center justify-between md:justify-end gap-2 w-full md:w-auto border-t md:border-t-0 border-slate-100">
+                                  <div className="bg-slate-50/50 dark:bg-slate-950/50 md:bg-transparent p-4 flex items-center justify-between md:justify-end gap-2 w-full md:w-auto border-t md:border-t-0 border-slate-100 dark:border-slate-800">
                                       <div className="flex items-center gap-2">
                                           <ShareProductButton 
                                             shopSlug={shop?.slug || ''}
@@ -119,13 +119,13 @@ export default async function ProductsPage({
                                             productName={product.name}
                                           />
 
-                                          <Button variant="outline" size="sm" asChild className="rounded-xl h-10 px-4 font-bold text-xs border-slate-200 bg-white hover:bg-slate-50">
+                                          <Button variant="outline" size="sm" asChild className="rounded-xl h-10 px-4 font-bold text-xs border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800">
                                               <Link href={`/dashboard/products/${product.id}`}>
                                                   <Eye className="h-4 w-4 mr-2" /> Detail
                                               </Link>
                                           </Button>
                                           
-                                          <Button variant="outline" size="icon" asChild disabled={isShopDeactivated} className="rounded-xl h-10 w-10 border-slate-200 bg-white hover:text-primary transition-all">
+                                          <Button variant="outline" size="icon" asChild disabled={isShopDeactivated} className="rounded-xl h-10 w-10 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:text-primary transition-all">
                                             <Link href={`/dashboard/products/edit/${product.id}`}>
                                                 <Pencil className="h-4 w-4" />
                                             </Link>
@@ -152,20 +152,20 @@ export default async function ProductsPage({
 
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between bg-white p-4 rounded-3xl shadow-sm border border-slate-100 mt-6">
+                <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 mt-6">
                   <p className="text-xs font-bold text-slate-500">
-                    Halaman <span className="text-slate-900">{currentPage}</span> dari <span className="text-slate-900">{totalPages}</span>
+                    Halaman <span className="text-slate-900 dark:text-white">{currentPage}</span> dari <span className="text-slate-900 dark:text-white">{totalPages}</span>
                   </p>
                   <div className="flex items-center gap-2">
                     {currentPage > 1 && (
-                      <Button variant="outline" size="sm" asChild className="rounded-xl h-10 border-slate-200">
+                      <Button variant="outline" size="sm" asChild className="rounded-xl h-10 border-slate-200 dark:border-slate-800">
                         <Link href={`?q=${q}&page=${currentPage - 1}`}>
                           <ChevronLeft className="h-4 w-4 mr-1" /> Sebelum
                         </Link>
                       </Button>
                     )}
                     {currentPage < totalPages && (
-                      <Button variant="outline" size="sm" asChild className="rounded-xl h-10 border-slate-200">
+                      <Button variant="outline" size="sm" asChild className="rounded-xl h-10 border-slate-200 dark:border-slate-800">
                         <Link href={`?q=${q}&page=${currentPage + 1}`}>
                           Berikut <ChevronRight className="h-4 w-4 ml-1" />
                         </Link>
@@ -176,12 +176,12 @@ export default async function ProductsPage({
               )}
           </div>
       ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100 shadow-xs">
-              <div className="rounded-full bg-slate-50 p-8 mb-6 group-hover:scale-110 transition-transform duration-500">
-                  <ShoppingBag className="h-12 w-12 text-slate-200" />
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-slate-100 dark:border-slate-800 shadow-xs">
+              <div className="rounded-full bg-slate-50 dark:bg-slate-950 p-8 mb-6 group-hover:scale-110 transition-transform duration-500">
+                  <ShoppingBag className="h-12 w-12 text-slate-200 dark:text-slate-700" />
               </div>
-              <h3 className="font-black text-2xl text-slate-900 tracking-tight">Produk Tidak Ditemukan</h3>
-              <p className="text-slate-400 max-w-sm mb-8 font-medium">
+              <h3 className="font-black text-2xl text-slate-900 dark:text-white tracking-tight">Produk Tidak Ditemukan</h3>
+              <p className="text-slate-400 dark:text-slate-500 max-w-sm mb-8 font-medium">
                   {q ? `Tidak ada hasil untuk pencarian "${q}". Coba kata kunci lain.` : "Yuk, mulai tambahkan produk pertama Anda agar pelanggan bisa berbelanja di toko Anda."}
               </p>
               {q ? (

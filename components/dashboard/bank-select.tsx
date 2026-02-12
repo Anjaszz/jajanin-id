@@ -65,10 +65,10 @@ export function BankSelect({ defaultValue, name, onChange }: BankSelectProps) {
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full h-11 justify-between rounded-xl border-muted-foreground/10 bg-background px-3 font-medium hover:bg-slate-50 transition-all focus:ring-2 focus:ring-primary/20 shadow-sm"
+            className="w-full h-11 justify-between rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 font-medium hover:bg-slate-50 dark:hover:bg-slate-900 transition-all focus:ring-2 focus:ring-primary/20 shadow-sm"
           >
             {selectedBank ? (
-              <span className="text-slate-900">{selectedBank}</span>
+              <span className="text-slate-900 dark:text-white">{selectedBank}</span>
             ) : (
               <span className="text-muted-foreground">Pilih Bank</span>
             )}
@@ -76,15 +76,15 @@ export function BankSelect({ defaultValue, name, onChange }: BankSelectProps) {
           </Button>
         </PopoverTrigger>
         <PopoverContent 
-          className="p-0 border-none shadow-2xl rounded-2xl overflow-hidden w-[--radix-popover-trigger-width] min-w-[260px]" 
+          className="p-0 border-none shadow-2xl rounded-2xl overflow-hidden w-[--radix-popover-trigger-width] min-w-[260px] bg-white dark:bg-slate-900" 
           align="start"
           sideOffset={8}
         >
-          <div className="p-2 border-b bg-slate-50/50">
+          <div className="p-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
               <input 
-                className="w-full bg-white border-none rounded-lg py-2 pl-8 pr-3 text-xs font-bold focus:ring-1 focus:ring-primary/20 outline-hidden placeholder:text-slate-400 shadow-sm"
+                className="w-full bg-white dark:bg-slate-900 border-none rounded-lg py-2 pl-8 pr-3 text-xs font-bold focus:ring-1 focus:ring-primary/20 outline-hidden placeholder:text-slate-400 dark:placeholder:text-slate-600 text-slate-900 dark:text-white shadow-sm"
                 placeholder="Cari nama bank..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -92,11 +92,11 @@ export function BankSelect({ defaultValue, name, onChange }: BankSelectProps) {
               />
             </div>
           </div>
-          <div className="max-h-[350px] overflow-y-auto bg-white p-1">
+          <div className="max-h-[350px] overflow-y-auto bg-white dark:bg-slate-900 p-1">
             {filteredGroups.length > 0 ? (
               filteredGroups.map((group) => (
                 <div key={group.label} className="mb-2 last:mb-0">
-                  <div className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                  <div className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
                     {group.label}
                   </div>
                   {group.banks.map((bank) => (
@@ -113,7 +113,7 @@ export function BankSelect({ defaultValue, name, onChange }: BankSelectProps) {
                         "flex w-full items-center justify-between px-3 py-2.5 text-sm font-bold rounded-xl transition-all mb-0.5",
                         value === bank 
                           ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
                       )}
                     >
                       {bank}

@@ -30,10 +30,10 @@ export default async function WalletPage() {
               <Activity className="h-5 w-5 text-white" />
            </div>
            <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900">
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                  Dompet <span className="text-blue-600">Toko</span>
               </h1>
-              <p className="text-slate-500 text-xs font-medium">Kelola saldo dan penarikan dana ke rekening Anda.</p>
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">Kelola saldo dan penarikan dana ke rekening Anda.</p>
            </div>
         </div>
         <SyncWalletButton />
@@ -41,7 +41,7 @@ export default async function WalletPage() {
 
       <div className="grid gap-4 md:grid-cols-12">
         {/* Balance Card */}
-        <Card className="md:col-span-5 bg-blue-600 text-white shadow-lg shadow-blue-200 relative overflow-hidden flex flex-col justify-center min-h-[160px] border-none rounded-3xl">
+        <Card className="md:col-span-5 bg-blue-600 dark:bg-slate-900 text-white shadow-lg shadow-blue-200 dark:shadow-none relative overflow-hidden flex flex-col justify-center min-h-[160px] border-none dark:border dark:border-slate-800 rounded-3xl">
            <CardContent className="pt-6 relative z-10">
               <p className="text-[10px] font-black uppercase tracking-widest text-blue-100 mb-1">Saldo Tersedia</p>
               <div className="text-4xl font-black">{formatCurrency((wallet as any).balance)}</div>
@@ -56,7 +56,7 @@ export default async function WalletPage() {
         </Card>
 
         {/* Withdrawal Form Card */}
-        <Card className="md:col-span-7 shadow-xs border-none bg-white rounded-3xl overflow-hidden">
+        <Card className="md:col-span-7 shadow-xs border-none bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
            <CardHeader className="pb-3 pt-5">
               <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Tarik Saldo</CardTitle>
            </CardHeader>
@@ -75,11 +75,11 @@ export default async function WalletPage() {
       {/* Transaction History Section */}
       <div className="space-y-4 pt-2">
          <div className="flex items-center justify-between">
-            <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
+            <h3 className="font-black text-lg text-slate-900 dark:text-white flex items-center gap-2">
                <Clock className="h-5 w-5 text-blue-600" />
                Riwayat Transaksi
             </h3>
-            <span className="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded-full font-bold">HISTORY</span>
+            <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-bold">HISTORY</span>
          </div>
          
          <WalletHistory initialTransactions={transactions} />

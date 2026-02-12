@@ -47,7 +47,7 @@ export function DeleteProductButton({
         variant="outline" 
         size="icon" 
         disabled={disabled || isPending}
-        className="rounded-xl h-10 w-10 text-destructive border-red-100 hover:bg-red-50"
+        className="rounded-xl h-10 w-10 text-destructive border-red-100 dark:border-red-900/50 bg-white dark:bg-slate-900 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all shadow-sm"
         title="Hapus Produk"
       >
         {isPending ? (

@@ -33,7 +33,7 @@ export function SyncWalletButton() {
       size="sm" 
       onClick={handleSync}
       disabled={isSyncing}
-      className="bg-background/50 backdrop-blur-sm border-primary/20 hover:bg-primary/10 transition-all font-bold"
+      className="bg-background/50 backdrop-blur-sm border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-bold dark:text-white"
     >
       {isSyncing ? (
         <Loader2 className="h-4 w-4 mr-2 animate-spin" />

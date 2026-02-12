@@ -9,7 +9,8 @@ import {
   ChevronRight,
   LogOut,
   ShoppingBag,
-  Headset
+  Headset,
+  Trophy
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { signOutSeller } from '@/app/actions/auth'
@@ -52,6 +53,13 @@ export default async function MobileMenuPage() {
       href: '/dashboard/income',
       icon: <TrendingUp className="h-6 w-6" />,
       color: 'bg-purple-50 text-purple-600'
+    },
+    {
+      title: 'Produk Terlaris',
+      desc: 'Daftar produk dengan penjualan terbanyak',
+      href: '/dashboard/best-selling',
+      icon: <Trophy className="h-6 w-6" />,
+      color: 'bg-yellow-50 text-yellow-600'
     },
     {
       title: 'Pengaturan Toko',

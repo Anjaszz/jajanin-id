@@ -67,13 +67,13 @@ export default async function OrdersPage({
     <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
             Pesanan <span className="text-primary">Toko</span>
           </h1>
-          <p className="text-slate-500 text-sm font-medium mt-1">Pantau dan kelola semua pesanan masuk secara real-time.</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-1">Pantau dan kelola semua pesanan masuk secara real-time.</p>
         </div>
         
-        <div className="flex flex-wrap bg-slate-100 p-1.5 rounded-2xl w-fit gap-1">
+        <div className="flex flex-wrap bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl w-fit gap-1">
           {tabs.map((t) => (
             <Button
               key={t.id}
@@ -82,8 +82,8 @@ export default async function OrdersPage({
               className={cn(
                 "rounded-xl h-10 px-4 text-xs font-black uppercase tracking-wider transition-all",
                 tab === t.id 
-                  ? "bg-white text-primary shadow-sm hover:bg-white" 
-                  : "text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+                  ? "bg-white dark:bg-slate-800 text-primary shadow-sm hover:bg-white dark:hover:bg-slate-800" 
+                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200"
               )}
             >
               <Link href={`?tab=${t.id}`}>
@@ -91,7 +91,7 @@ export default async function OrdersPage({
                 {t.count > 0 && (
                   <span className={cn(
                     "ml-2 flex h-5 min-w-5 items-center justify-center rounded-full text-[10px] px-1.5",
-                    tab === t.id ? "bg-primary text-white" : "bg-slate-200 text-slate-500"
+                    tab === t.id ? "bg-primary text-white" : "bg-slate-200 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-black"
                   )}>
                     {t.count}
                   </span>

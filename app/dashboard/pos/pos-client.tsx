@@ -275,7 +275,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                     <input 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full h-14 pl-12 pr-6 rounded-2xl border-none shadow-sm font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 outline-hidden"
+                        className="w-full h-14 pl-12 pr-6 rounded-2xl border-none bg-white dark:bg-slate-900 shadow-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/20 outline-hidden"
                         placeholder="Cari produk..."
                     />
                 </div>
@@ -291,7 +291,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                                 <Card 
                                     key={product.id} 
                                     className={cn(
-                                        "group cursor-pointer overflow-hidden border-none shadow-sm hover:shadow-lg transition-all active:scale-95 duration-200 rounded-3xl",
+                                        "group cursor-pointer overflow-hidden border-none shadow-sm hover:shadow-lg transition-all active:scale-95 duration-200 rounded-3xl bg-white dark:bg-slate-900",
                                         !hasStock && "opacity-60 grayscale"
                                     )}
                                     onClick={() => hasStock && handleProductClick(product)}
@@ -312,7 +312,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                                             </div>
                                         )}
                                         {/* Stock Badge */}
-                                        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm text-slate-500">
+                                        <div className="absolute top-2 right-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-black shadow-sm text-slate-500 dark:text-slate-400">
                                             {product.product_variants.length > 0 ? (
                                                 <span className="text-primary italic">Varian</span>
                                             ) : (
@@ -320,8 +320,8 @@ export default function PosClient({ products, settings }: { products: Product[],
                                             )}
                                         </div>
                                     </div>
-                                    <div className="p-3 bg-white group-hover:bg-slate-50 transition-colors">
-                                        <h3 className="font-bold text-xs sm:text-sm text-slate-900 truncate leading-tight mb-1">{product.name}</h3>
+                                    <div className="p-3 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 transition-colors">
+                                        <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate leading-tight mb-1">{product.name}</h3>
                                         <div className="flex items-center justify-between gap-1">
                                             <p className="text-primary font-black text-sm sm:text-base">{formatCurrency(product.price)}</p>
                                             <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center sm:hidden">
@@ -344,10 +344,10 @@ export default function PosClient({ products, settings }: { products: Product[],
 
             {/* RIGHT SIDE: CART */}
             <div className={cn(
-                "fixed inset-0 z-50 bg-white xl:relative xl:inset-auto xl:z-0 xl:flex w-full xl:w-[350px] 2xl:w-[420px] shrink-0 flex flex-col h-dvh xl:h-full rounded-none xl:rounded-3xl shadow-xl border-none xl:border xl:border-slate-100 overflow-hidden transition-all duration-300",
+                "fixed inset-0 z-50 bg-white dark:bg-slate-950 xl:relative xl:inset-auto xl:z-0 xl:flex w-full xl:w-[350px] 2xl:w-[420px] shrink-0 flex flex-col h-dvh xl:h-full rounded-none xl:rounded-3xl shadow-xl border-none xl:border xl:border-slate-100 dark:xl:border-slate-800 overflow-hidden transition-all duration-300",
                 isMobileCartOpen ? "translate-x-0" : "translate-x-full xl:translate-x-0"
             )}>
-                <div className="p-4 md:p-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+                <div className="p-4 md:p-5 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
                     <h2 className="font-black text-xl flex items-center gap-2">
                         <ShoppingCart className="h-5 w-5 text-primary" />
                         Keranjang
@@ -366,8 +366,8 @@ export default function PosClient({ products, settings }: { products: Product[],
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {cart.length > 0 ? (
                         cart.map((item, idx) => (
-                            <div key={item.cartId} className="flex gap-3 p-3 bg-white border border-slate-100 rounded-2xl shadow-sm group">
-                                <div className="h-14 w-14 bg-slate-100 rounded-xl overflow-hidden shrink-0">
+                            <div key={item.cartId} className="flex gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm group">
+                                <div className="h-14 w-14 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden shrink-0">
                                     {item.image_url ? (
                                         <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
                                     ) : (
@@ -377,7 +377,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h4 className="font-bold text-sm text-slate-900 truncate">{item.name}</h4>
+                                    <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{item.name}</h4>
                                     
                                     {/* Variant & Addons Info */}
                                     <div className="text-[10px] text-slate-500 leading-tight mb-1">
@@ -390,10 +390,10 @@ export default function PosClient({ products, settings }: { products: Product[],
                                     <p className="text-xs text-primary font-black">{formatCurrency(item.finalPrice)}</p>
                                     
                                     <div className="flex items-center gap-3 mt-2">
-                                        <div className="flex items-center gap-1 bg-slate-50 rounded-lg p-0.5 border border-slate-200">
+                                        <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700">
                                             <button 
                                                 onClick={() => updateQuantity(item.cartId, -1)}
-                                                className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-white hover:shadow-xs transition-all disabled:opacity-50"
+                                                className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-white dark:hover:bg-slate-700 hover:shadow-xs transition-all disabled:opacity-50"
                                                 disabled={item.quantity <= 1}
                                             >
                                                 <Minus className="h-3 w-3" />
@@ -401,7 +401,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                                             <span className="w-6 text-center text-xs font-bold">{item.quantity}</span>
                                             <button 
                                                 onClick={() => updateQuantity(item.cartId, 1)}
-                                                className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-white hover:shadow-xs transition-all"
+                                                className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-white dark:hover:bg-slate-700 hover:shadow-xs transition-all"
                                             >
                                                 <Plus className="h-3 w-3" />
                                             </button>
@@ -425,7 +425,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                     )}
                 </div>
 
-                <div className="p-5 pb-32 xl:pb-12 bg-slate-50 border-t border-slate-100 space-y-4">
+                <div className="p-5 pb-32 xl:pb-12 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 space-y-4">
                      {/* Summary */}
                     <div className="space-y-2">
                         <div className="flex justify-between text-sm text-slate-500 font-medium">
@@ -440,7 +440,7 @@ export default function PosClient({ products, settings }: { products: Product[],
                                 <span>{formatCurrency(gatewayFee)}</span>
                             </div>
                         )}
-                        <div className="flex justify-between text-xl font-black text-slate-900 border-t border-slate-100 pt-2">
+                        <div className="flex justify-between text-xl font-black text-slate-900 dark:text-white border-t border-slate-100 dark:border-slate-800 pt-2">
                             <span>Total</span>
                             <span className="text-primary">{formatCurrency(totalAmount)}</span>
                         </div>
@@ -452,10 +452,10 @@ export default function PosClient({ products, settings }: { products: Product[],
                             onClick={() => setPaymentMethod('cash')}
                             className={cn(
                                 "h-12 border-2 rounded-xl text-xs font-black uppercase tracking-wide",
-                                paymentMethod === 'cash' 
-                                    ? "border-primary bg-primary/5 text-primary" 
-                                    : "border-slate-200 text-slate-400 bg-white"
-                            )}
+                                 paymentMethod === 'cash' 
+                                     ? "border-primary bg-primary/5 text-primary" 
+                                     : "border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900"
+                             )}
                         >
                             <Banknote className="mr-2 h-4 w-4" /> Tunai
                         </Button>
@@ -464,10 +464,10 @@ export default function PosClient({ products, settings }: { products: Product[],
                             onClick={() => setPaymentMethod('gateway')}
                             className={cn(
                                 "h-12 border-2 rounded-xl text-xs font-black uppercase tracking-wide",
-                                paymentMethod === 'gateway' 
-                                    ? "border-blue-500 bg-blue-50 text-blue-600" 
-                                    : "border-slate-200 text-slate-400 bg-white"
-                            )}
+                                 paymentMethod === 'gateway' 
+                                     ? "border-blue-500 bg-blue-50 text-blue-600" 
+                                     : "border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900"
+                             )}
                         >
                             <CreditCard className="mr-2 h-4 w-4" /> Digital
                         </Button>
@@ -486,15 +486,15 @@ export default function PosClient({ products, settings }: { products: Product[],
 
             {/* OPTION MODAL */}
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden">
+                <DialogContent className="max-w-md rounded-3xl p-0 overflow-hidden bg-white dark:bg-slate-900 border-none">
                     <DialogHeader className="p-6 pb-2">
-                        <DialogTitle className="text-xl font-black">{selectedProduct?.name}</DialogTitle>
+                        <DialogTitle className="text-xl font-black dark:text-white">{selectedProduct?.name}</DialogTitle>
                     </DialogHeader>
                     
                     <div className="p-6 pt-0 space-y-6 max-h-[60vh] overflow-y-auto">
                         {selectedProduct?.product_variants && selectedProduct.product_variants.length > 0 && (
                             <div className="space-y-3">
-                                <h4 className="font-bold text-sm text-slate-900 border-b pb-2">Pilih Varian</h4>
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-white border-b dark:border-slate-800 pb-2">Pilih Varian</h4>
                                 <div className="grid gap-2">
                                     {selectedProduct.product_variants.map(variant => (
                                         <div 
@@ -502,11 +502,11 @@ export default function PosClient({ products, settings }: { products: Product[],
                                             onClick={() => variant.stock > 0 && setSelectedVariantId(variant.id)} 
                                             className={cn(
                                                 "flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all",
-                                                selectedVariantId === variant.id 
-                                                    ? "border-primary bg-primary/5" 
-                                                    : "border-slate-100 hover:border-slate-200",
-                                                variant.stock === 0 && "opacity-50 cursor-not-allowed bg-slate-50"
-                                            )}
+                                                 selectedVariantId === variant.id 
+                                                     ? "border-primary bg-primary/5" 
+                                                     : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700",
+                                                 variant.stock === 0 && "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-950"
+                                             )}
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className={cn(
@@ -515,10 +515,10 @@ export default function PosClient({ products, settings }: { products: Product[],
                                                 )}>
                                                     {selectedVariantId === variant.id && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
                                                 </div>
-                                                <span className="font-medium text-sm">{variant.name}</span>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="font-bold text-sm text-slate-900">
+                                                 <span className="font-medium text-sm dark:text-slate-200">{variant.name}</span>
+                                             </div>
+                                             <div className="text-right">
+                                                 <div className="font-bold text-sm text-slate-900 dark:text-white">
                                                     {variant.price_override ? formatCurrency(variant.price_override) : formatCurrency(selectedProduct.price)}
                                                 </div>
                                                 <div className="text-[10px] font-medium text-slate-500">
@@ -533,7 +533,7 @@ export default function PosClient({ products, settings }: { products: Product[],
 
                         {selectedProduct?.product_addons && selectedProduct.product_addons.length > 0 && (
                              <div className="space-y-3">
-                                <h4 className="font-bold text-sm text-slate-900 border-b pb-2">Tambahan (Add-ons)</h4>
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-white border-b dark:border-slate-800 pb-2">Tambahan (Add-ons)</h4>
                                 <div className="grid gap-2">
                                     {selectedProduct.product_addons.map(addon => (
                                         <div 
@@ -541,21 +541,21 @@ export default function PosClient({ products, settings }: { products: Product[],
                                             onClick={() => toggleAddon(addon.id)}
                                             className={cn(
                                                 "flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all",
-                                                selectedAddonIds.includes(addon.id)
-                                                    ? "border-green-500 bg-green-50" 
-                                                    : "border-slate-100 hover:border-slate-200"
-                                            )}
+                                                 selectedAddonIds.includes(addon.id)
+                                                     ? "border-green-500 bg-green-50 dark:bg-green-950/20" 
+                                                     : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                                             )}
                                         >
                                              <div className="flex items-center gap-3">
                                                 <div className={cn(
                                                     "h-5 w-5 rounded-md border-2 flex items-center justify-center",
                                                     selectedAddonIds.includes(addon.id) ? "border-green-600 bg-green-600 text-white" : "border-slate-300"
                                                 )}>
-                                                     {selectedAddonIds.includes(addon.id) && <CheckCircle2 className="h-3.5 w-3.5" />}
-                                                </div>
-                                                <span className="font-medium text-sm">{addon.name}</span>
-                                            </div>
-                                            <div className="font-bold text-sm text-slate-900">
+                                                      {selectedAddonIds.includes(addon.id) && <CheckCircle2 className="h-3.5 w-3.5" />}
+                                                 </div>
+                                                 <span className="font-medium text-sm dark:text-slate-200">{addon.name}</span>
+                                             </div>
+                                             <div className="font-bold text-sm text-slate-900 dark:text-white">
                                                 +{formatCurrency(addon.price)}
                                             </div>
                                         </div>
@@ -563,9 +563,9 @@ export default function PosClient({ products, settings }: { products: Product[],
                                 </div>
                             </div>
                         )}
-                    </div>
-
-                    <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                     </div>
+ 
+                     <div className="p-6 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                         <div>
                             <p className="text-xs font-medium text-slate-500">Total Harga Item</p>
                             <p className="text-xl font-black text-primary">{formatCurrency(modalReviewPrice)}</p>

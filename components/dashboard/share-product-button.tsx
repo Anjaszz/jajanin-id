@@ -49,7 +49,7 @@ export function ShareProductButton({ shopSlug, productId, productName }: SharePr
       variant="outline" 
       size="icon" 
       onClick={handleShare}
-      className="rounded-xl h-10 w-10 border-slate-200 bg-white hover:text-blue-600 transition-all"
+      className="rounded-xl h-10 w-10 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:text-blue-600 dark:hover:text-blue-400 transition-all shadow-sm"
       title="Bagikan Produk"
     >
       {isCopied ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}

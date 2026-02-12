@@ -10,7 +10,7 @@ import {
   Cell
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, cn } from "@/lib/utils"
 
 interface IncomeChartProps {
   data: {
@@ -21,10 +21,10 @@ interface IncomeChartProps {
 
 export function IncomeChart({ data }: IncomeChartProps) {
   return (
-    <Card className="border-none shadow-xl bg-white rounded-3xl overflow-hidden">
+    <Card className="border-none shadow-xl bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-black tracking-tight">Grafik Pemasukan Bulanan</CardTitle>
-        <CardDescription className="text-xs font-medium">Visualisasi pendapatan toko Anda tahun ini</CardDescription>
+        <CardTitle className="text-lg font-black tracking-tight dark:text-white">Grafik Pemasukan Bulanan</CardTitle>
+        <CardDescription className="text-xs font-medium dark:text-slate-400">Visualisasi pendapatan toko Anda tahun ini</CardDescription>
       </CardHeader>
       <CardContent className="pt-4">
         <div className="h-[250px] w-full">
@@ -47,7 +47,7 @@ export function IncomeChart({ data }: IncomeChartProps) {
                 tickFormatter={(value) => `Rp ${value / 1000}k`}
               />
               <Tooltip
-                cursor={{ fill: '#f8fafc' }}
+                cursor={{ fill: 'currentColor', opacity: 0.1 }}
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     return (
@@ -67,11 +67,16 @@ export function IncomeChart({ data }: IncomeChartProps) {
                 radius={[6, 6, 0, 0]}
                 barSize={30}
               >
-                {data.map((entry, index) => (
+                 {data.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
-                    fill={index === data.length - 1 ? "#16a34a" : "#dcfce7"} 
-                    className="hover:fill-green-500 transition-colors duration-300"
+                    fill={index === new Date().getMonth() ? "#16a34a" : "currentColor"} 
+                    className={cn(
+                        "transition-colors duration-300",
+                        index === new Date().getMonth() 
+                            ? "fill-green-600 dark:fill-green-500" 
+                            : "fill-green-100 dark:fill-green-900/40 hover:fill-green-200 dark:hover:fill-green-900/60"
+                    )}
                   />
                 ))}
               </Bar>
