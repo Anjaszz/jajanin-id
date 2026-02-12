@@ -606,7 +606,7 @@ export default function ShopClient({
 
       {/* Cart Edit Modal */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center sm:p-4 transition-all duration-300">
+        <div className="fixed inset-0 z-80 flex items-end sm:items-center justify-center sm:p-4 transition-all duration-300">
            <div 
             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => setIsCartOpen(false)}
@@ -1085,7 +1085,7 @@ export default function ShopClient({
                        <p className="text-sm text-slate-700 dark:text-slate-300 font-medium italic">"{review.comment}"</p>
                     </div>
                   )}
-                  {i < shopRating.reviews.length - 1 && <div className="h-px bg-slate-100 dark:bg-slate-800 w-full pt-2" />}
+                  {i < (shopRating?.reviews?.length || 0) - 1 && <div className="h-px bg-slate-100 dark:bg-slate-800 w-full pt-2" />}
                 </div>
               ))
             ) : (
@@ -1147,7 +1147,7 @@ export default function ShopClient({
                        <p className="text-sm text-slate-700 dark:text-slate-300 font-medium italic">"{review.comment}"</p>
                     </div>
                   )}
-                  {i < selectedProductForReviews.rating.reviews.length - 1 && <div className="h-px bg-slate-100 dark:bg-slate-800 w-full pt-2" />}
+                  {i < (selectedProductForReviews?.rating?.reviews?.length || 0) - 1 && <div className="h-px bg-slate-100 dark:bg-slate-800 w-full pt-2" />}
                 </div>
               ))
             ) : (
