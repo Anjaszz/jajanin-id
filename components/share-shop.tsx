@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { 
   Copy, 
@@ -28,7 +28,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
 
 interface ShareShopProps {
   shopName: string
@@ -42,9 +41,13 @@ export default function ShareShop({ shopName, shopSlug }: ShareShopProps) {
   const [copied, setCopied] = useState(false)
   const qrRef = useRef<HTMLDivElement>(null)
   
-  // In a real app, you might want to use dynamic origin
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-  const shopUrl = `${baseUrl}/${safeShopSlug}`
+  const [shopUrl, setShopUrl] = useState('')
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setShopUrl(`${window.location.origin}/${safeShopSlug}`)
+    }
+  }, [safeShopSlug])
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shopUrl)
@@ -390,30 +393,36 @@ export default function ShareShop({ shopName, shopSlug }: ShareShopProps) {
                                                     <span>Ukuran</span>
                                                     <span>{bannerConfig.qrSize}px</span>
                                                 </div>
-                                                <Slider 
-                                                    value={[bannerConfig.qrSize]} 
+                                                <input 
+                                                    type="range"
+                                                    value={bannerConfig.qrSize} 
                                                     min={50} max={300} step={10}
-                                                    onValueChange={([v]) => setBannerConfig(prev => ({ ...prev, qrSize: v }))} 
+                                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary dark:bg-slate-700"
+                                                    onChange={(e) => setBannerConfig(prev => ({ ...prev, qrSize: Number(e.target.value) }))} 
                                                 />
                                             </div>
                                             <div className="space-y-1">
                                                 <div className="flex justify-between text-[10px] text-muted-foreground">
                                                     <span>Posisi Horizontal (X)</span>
                                                 </div>
-                                                <Slider 
-                                                    value={[bannerConfig.qrX]} 
+                                                <input 
+                                                    type="range"
+                                                    value={bannerConfig.qrX} 
                                                     min={0} max={100} step={1}
-                                                    onValueChange={([v]) => setBannerConfig(prev => ({ ...prev, qrX: v }))} 
+                                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary dark:bg-slate-700"
+                                                    onChange={(e) => setBannerConfig(prev => ({ ...prev, qrX: Number(e.target.value) }))} 
                                                 />
                                             </div>
                                             <div className="space-y-1">
                                                 <div className="flex justify-between text-[10px] text-muted-foreground">
                                                     <span>Posisi Vertikal (Y)</span>
                                                 </div>
-                                                <Slider 
-                                                    value={[bannerConfig.qrY]} 
+                                                <input 
+                                                    type="range"
+                                                    value={bannerConfig.qrY} 
                                                     min={0} max={100} step={1}
-                                                    onValueChange={([v]) => setBannerConfig(prev => ({ ...prev, qrY: v }))} 
+                                                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary dark:bg-slate-700"
+                                                    onChange={(e) => setBannerConfig(prev => ({ ...prev, qrY: Number(e.target.value) }))} 
                                                 />
                                             </div>
                                         </div>
@@ -437,30 +446,36 @@ export default function ShareShop({ shopName, shopSlug }: ShareShopProps) {
                                                         <span>Ukuran Font</span>
                                                         <span>{bannerConfig.nameSize}px</span>
                                                     </div>
-                                                    <Slider 
-                                                        value={[bannerConfig.nameSize]} 
+                                                    <input 
+                                                        type="range"
+                                                        value={bannerConfig.nameSize} 
                                                         min={12} max={100} step={2}
-                                                        onValueChange={([v]) => setBannerConfig(prev => ({ ...prev, nameSize: v }))} 
+                                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary dark:bg-slate-700"
+                                                        onChange={(e) => setBannerConfig(prev => ({ ...prev, nameSize: Number(e.target.value) }))} 
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
                                                     <div className="flex justify-between text-[10px] text-muted-foreground">
                                                         <span>Posisi X</span>
                                                     </div>
-                                                    <Slider 
-                                                        value={[bannerConfig.nameX]} 
+                                                    <input 
+                                                        type="range"
+                                                        value={bannerConfig.nameX} 
                                                         min={0} max={100} step={1}
-                                                        onValueChange={([v]) => setBannerConfig(prev => ({ ...prev, nameX: v }))} 
+                                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary dark:bg-slate-700"
+                                                        onChange={(e) => setBannerConfig(prev => ({ ...prev, nameX: Number(e.target.value) }))} 
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
                                                     <div className="flex justify-between text-[10px] text-muted-foreground">
                                                         <span>Posisi Y</span>
                                                     </div>
-                                                    <Slider 
-                                                        value={[bannerConfig.nameY]} 
+                                                    <input 
+                                                        type="range"
+                                                        value={bannerConfig.nameY} 
                                                         min={0} max={100} step={1}
-                                                        onValueChange={([v]) => setBannerConfig(prev => ({ ...prev, nameY: v }))} 
+                                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary dark:bg-slate-700"
+                                                        onChange={(e) => setBannerConfig(prev => ({ ...prev, nameY: Number(e.target.value) }))} 
                                                     />
                                                 </div>
                                                 <div className="flex items-center gap-2">

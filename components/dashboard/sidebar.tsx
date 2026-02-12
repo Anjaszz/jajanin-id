@@ -67,7 +67,7 @@ export function Sidebar({ shopName }: SidebarProps) {
         {!isCollapsed && <span className="truncate text-xl">{shopName}</span>}
       </div>
       
-      <nav className="flex-1 space-y-2">
+      <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar px-1">
         <SidebarNavItem 
           href="/dashboard" 
           icon={<LayoutDashboard className="h-5 w-5" />} 

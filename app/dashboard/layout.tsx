@@ -41,7 +41,7 @@ export default async function DashboardLayout({
   const waMessage = encodeURIComponent(`Halo Admin YukJajan, saya pemilik toko *${shop?.name || 'Baru'}* ingin bertanya mengenai layanan pelapak...`)
 
   return (
-    <div className="flex min-h-screen bg-slate-50/50 dark:bg-slate-950/50">
+    <div className="flex h-screen overflow-hidden bg-slate-50/50 dark:bg-slate-950/50">
       {/* Sidebar - Client Component for Active Links */}
       {showSidebar && <Sidebar shopName={shop?.name || ''} />}
 
