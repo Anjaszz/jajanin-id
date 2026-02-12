@@ -14,6 +14,11 @@ export function OrderNotifier({ shopId }: OrderNotifierProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
+    // Request notification permission on mount
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
     console.log("OrderNotifier: Initializing subscription for shop:", shopId)
     
     // Hidden audio element for notification sound
@@ -37,6 +42,15 @@ export function OrderNotifier({ shopId }: OrderNotifierProps) {
           // Play sound
           if (audioRef.current) {
             audioRef.current.play().catch(err => console.warn("OrderNotifier: Audio play failed (user interaction might be needed):", err))
+          }
+
+          // Native Browser Notification (System Bar)
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Pesanan Baru Masuk! 🛍️", {
+              body: `Total: Rp ${(payload.new.total_amount || 0).toLocaleString('id-ID')}`,
+              icon: "/icon-192x192.png",
+              tag: "new-order", // Prevents multiple notifications stacking if spammy
+            });
           }
 
           // Show toast

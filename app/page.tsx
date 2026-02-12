@@ -12,6 +12,17 @@ import { isShopOpen } from '@/lib/shop-status'
 export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  
+  let role = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    role = (profile as any)?.role;
+  }
+
   const shops = (await getAllShops()).filter(shop => isShopOpen(shop).isOpen)
   const currentYear = new Date().getFullYear()
 
@@ -28,12 +39,22 @@ export default async function Home() {
           <div className="flex items-center gap-2">
             {user ? (
               <div className="flex items-center gap-3">
-                 <Button asChild variant="ghost" className="rounded-xl font-bold text-sm hidden sm:flex">
-                    <Link href="/buyer/orders">Pesanan Saya</Link>
-                 </Button>
+                 {role === 'seller' ? (
+                   <Button asChild variant="ghost" className="rounded-xl font-bold text-sm hidden sm:flex text-primary">
+                      <Link href="/dashboard">Dashboard Toko</Link>
+                   </Button>
+                 ) : role === 'admin' ? (
+                   <Button asChild variant="ghost" className="rounded-xl font-bold text-sm hidden sm:flex text-blue-600">
+                      <Link href="/admin">Admin Panel</Link>
+                   </Button>
+                 ) : (
+                   <Button asChild variant="ghost" className="rounded-xl font-bold text-sm hidden sm:flex">
+                      <Link href="/buyer/orders">Pesanan Saya</Link>
+                   </Button>
+                 )}
                  <div className="h-4 w-px bg-border hidden sm:block" />
                  <Button asChild variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:text-primary transition-colors">
-                    <Link href="/buyer/profile">
+                    <Link href={role === 'seller' ? "/dashboard/settings" : role === 'admin' ? "/admin" : "/buyer/profile"}>
                        <User className="h-5 w-5" />
                     </Link>
                  </Button>

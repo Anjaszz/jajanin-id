@@ -413,3 +413,34 @@ export async function toggleProductStatus(id: string, currentStatus: boolean) {
   revalidatePath("/dashboard/products");
   return { success: true };
 }
+
+export async function updateProductStock(id: string, newStock: number) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: shop } = await supabase
+    .from("shops")
+    .select("is_active")
+    .eq("owner_id", user.id)
+    .single();
+
+  if (shop && (shop as any).is_active === false) {
+    return {
+      error: "Akun dinonaktifkan. Tidak dapat memperbarui stok.",
+    };
+  }
+
+  const { error } = await (supabase.from("products") as any)
+    .update({ stock: newStock })
+    .eq("id", id);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard/products");
+  return { success: true };
+}

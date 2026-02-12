@@ -9,6 +9,7 @@ import { ToggleProductStatusButton } from '@/components/dashboard/toggle-product
 import { DeleteProductButton } from '@/components/dashboard/delete-product-button'
 import { ShareProductButton } from '@/components/dashboard/share-product-button'
 import { AdminNoteModal } from "@/components/dashboard/admin-note-modal";
+import { QuickStockEdit } from '@/components/dashboard/quick-stock-edit'
 
 export default async function ProductsPage({
   searchParams,
@@ -105,7 +106,12 @@ export default async function ProductsPage({
                                           <div className="flex items-center gap-4">
                                               <p className="text-primary font-black text-sm">Rp {product.price.toLocaleString('id-ID')}</p>
                                               <span className="h-1 w-1 rounded-full bg-slate-300" />
-                                              <p className="text-slate-400 text-xs font-bold">Stok: <span className="text-slate-600">{product.stock}</span></p>
+                                              <QuickStockEdit 
+                                                 productId={product.id}
+                                                 productName={product.name}
+                                                 currentStock={product.stock}
+                                                 disabled={isShopDeactivated}
+                                               />
                                           </div>
                                       </div>
                                   </div>

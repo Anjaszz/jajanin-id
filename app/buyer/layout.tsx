@@ -3,6 +3,7 @@ import { ShoppingBag, User, LogOut, Package } from "lucide-react";
 import { signOutBuyer } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 export default async function BuyerLayout({
   children,
@@ -11,6 +12,18 @@ export default async function BuyerLayout({
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    
+    if ((profile as any)?.role === "seller") {
+      redirect("/dashboard");
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/5">

@@ -1,6 +1,6 @@
 
 import { getShopBySlug } from '@/app/actions/public-shop'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import CheckoutClient from './checkout-client'
 
 interface PageProps {
@@ -20,6 +20,10 @@ export default async function CheckoutPage({ params }: PageProps) {
 
   const user = await getCurrentUser()
   const profile = user ? await getUserProfile(user.id) : null
+
+  if ((profile as any)?.role === 'seller') {
+     redirect("/dashboard")
+  }
 
   const { getBuyerWallet } = await import("@/app/actions/wallet");
   const wallet = user ? await getBuyerWallet(user.id) : null;

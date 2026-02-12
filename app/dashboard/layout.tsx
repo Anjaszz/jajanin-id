@@ -23,6 +23,16 @@ export default async function DashboardLayout({
     redirect('/seller/login')
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if ((profile as any)?.role === "buyer") {
+    redirect("/");
+  }
+
   const shop = await getShop()
   
   const showSidebar = !!shop;
