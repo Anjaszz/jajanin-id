@@ -56,54 +56,73 @@ export async function POST(req: Request) {
       newStatus = "pending_payment";
     }
 
-    console.log(`Processing Order ${order_id} -> New Status: ${newStatus}`);
+    if (!newStatus) {
+      return NextResponse.json({ message: "OK, no status change needed" });
+    }
 
-    if (newStatus) {
-      // IMPORTANT: Use standard supabase client with direct ENV for Webhooks (No Cookies dependency)
-      // Since webhooks are server-to-server, they don't have access to browser cookies.
-      const { createClient } = await import("@supabase/supabase-js");
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY ||
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      );
+    // Initialize Supabase Client (Service Role)
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
 
-      const { data: updateData, error } = await supabase
+    // Check for auto-accept logic if paid
+    if (newStatus === "paid" || newStatus === "pending_confirmation") {
+      const { data: order } = await supabase
         .from("orders")
-        .update({
-          status: newStatus,
-          payment_details: body,
-          updated_at: new Date().toISOString(),
-        })
+        .select("id, scheduled_for, shop:shops(auto_accept_order)")
         .eq("id", order_id)
-        .select("id, shop_id, total_amount, platform_fee, status")
         .single();
 
-      if (error) {
-        console.error("Database Error updating status:", error.message);
-        return NextResponse.json(
-          {
-            message: "Failed to update order in database",
-            error: error.message,
-          },
-          { status: 500 },
-        );
+      if (order) {
+        const isAutoAccept = (order as any).shop?.auto_accept_order || false;
+        const isScheduled = !!order.scheduled_for;
+
+        // If auto-accept is on and not scheduled, move straight to accepted
+        if (newStatus === "paid" && isAutoAccept && !isScheduled) {
+          newStatus = "accepted";
+          console.log(`Auto-accepting order ${order_id}`);
+        }
       }
+    }
 
-      // NOTE: Wallet balance update is now handled by updateOrderStatus when status is 'completed'
-      // to ensure consistency across both cash and gateway payments. Money only enters
-      // the wallet after the seller fulfills the order.
+    console.log(`Processing Order ${order_id} -> New Status: ${newStatus}`);
 
-      console.log(`Success! Order ${order_id} is now ${newStatus}`);
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: newStatus,
+        payment_details: body,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", order_id);
 
-      // Auto-revalidate paths for real-time update feel
-      try {
-        revalidatePath(`/orders/${order_id}`);
-        revalidatePath("/dashboard/orders");
-        revalidatePath("/");
-      } catch (err) {
-        console.error("Revalidation Error (non-fatal):", err);
-      }
+    if (error) {
+      console.error("Database Error updating status:", error.message);
+      return NextResponse.json(
+        {
+          message: "Failed to update order in database",
+          error: error.message,
+        },
+        { status: 500 },
+      );
+    }
+
+    // NOTE: Wallet balance update is now handled by updateOrderStatus when status is 'completed'
+    // to ensure consistency across both cash and gateway payments. Money only enters
+    // the wallet after the seller fulfills the order.
+
+    console.log(`Success! Order ${order_id} is now ${newStatus}`);
+
+    // Auto-revalidate paths for real-time update feel
+    try {
+      revalidatePath(`/orders/${order_id}`);
+      revalidatePath("/dashboard/orders");
+      revalidatePath("/");
+    } catch (err) {
+      console.error("Revalidation Error (non-fatal):", err);
     }
 
     return NextResponse.json({ message: "OK" });

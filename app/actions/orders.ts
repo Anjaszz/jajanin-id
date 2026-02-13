@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { Database } from "@/types/database.types";
 import { revalidatePath } from "next/cache";
 import dns from "node:dns";
+import { headers } from "next/headers";
 
 dns.setDefaultResultOrder("ipv4first");
 
@@ -112,6 +113,13 @@ export async function placeOrder(params: PlaceOrderParams) {
     try {
       const { snap } = await import("@/lib/midtrans");
 
+      const headersList = await headers();
+      const origin =
+        headersList.get("origin") ||
+        process.env.NEXT_PUBLIC_BASE_URL ||
+        "http://localhost:3000";
+      const callbackUrl = `${origin}/orders/${(order as any).id}`;
+
       // Calculate final amount including gateway fee
       const finalAmount = total_amount + gateway_fee;
 
@@ -124,6 +132,9 @@ export async function placeOrder(params: PlaceOrderParams) {
           first_name: params.guest_info?.name || "Customer",
           email: params.guest_info?.email || "customer@example.com",
           phone: params.guest_info?.phone || "",
+        },
+        callbacks: {
+          finish: callbackUrl,
         },
       });
       snapToken = transaction.token;
