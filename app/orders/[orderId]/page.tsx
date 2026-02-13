@@ -13,6 +13,7 @@ import { RatingTrigger } from "@/components/rating-trigger"
 import { checkIfRated, getOrderRatings } from "@/app/actions/ratings"
 import Script from "next/script"
 import { Star } from "lucide-react"
+import { MIDTRANS_SNAP_URL } from "@/lib/midtrans"
 
 export const dynamic = 'force-dynamic'
 
@@ -78,7 +79,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
     <>
       {order.payment_method === 'gateway' && order.snap_token && (
         <Script 
-          src="https://app.sandbox.midtrans.com/snap/snap.js" 
+          src={MIDTRANS_SNAP_URL} 
           data-client-key={clientKey}
           strategy="afterInteractive"
         />

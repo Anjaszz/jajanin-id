@@ -9,6 +9,7 @@ interface PageProps {
 
 import Script from 'next/script'
 import { getCurrentUser, getUserProfile } from '@/app/actions/auth'
+import { MIDTRANS_SNAP_URL } from '@/lib/midtrans'
 
 export default async function CheckoutPage({ params }: PageProps) {
   const { slug } = await params
@@ -33,7 +34,7 @@ export default async function CheckoutPage({ params }: PageProps) {
   return (
     <>
       <Script 
-        src="https://app.sandbox.midtrans.com/snap/snap.js" 
+        src={MIDTRANS_SNAP_URL} 
         data-client-key={clientKey}
         strategy="afterInteractive"
       />

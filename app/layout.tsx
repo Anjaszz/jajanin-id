@@ -43,6 +43,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import NextTopLoader from 'nextjs-toploader';
 import { SWRegistration } from "@/components/sw-registration";
 import { InstallPWA } from "@/components/install-pwa";
+import { MIDTRANS_SNAP_URL } from "@/lib/midtrans";
 
 export default function RootLayout({
   children,
@@ -76,7 +77,7 @@ export default function RootLayout({
           <InstallPWA />
           {children}
           <Toaster richColors position="top-right" />
-          <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}></script>
+          <script src={MIDTRANS_SNAP_URL} data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}></script>
         </ThemeProvider>
       </body>
     </html>
